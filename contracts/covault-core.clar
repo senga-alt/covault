@@ -620,3 +620,15 @@
     (ok true)
   )
 )
+
+;; governance
+;; ---------------------------------------------------------------------------
+
+;; #[allow(unchecked_data)]
+(define-public (set-oracle (new-oracle principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set oracle new-oracle)
+    (ok true)
+  )
+)
