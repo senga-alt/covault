@@ -332,3 +332,17 @@
     (qty uint)
     (token (optional <sip010>))
   )
+  (let (
+      (s (unwrap! (map-get? series id) ERR-SERIES-NOT-FOUND))
+      (l (get-long id tx-sender))
+      (sh (get-short id tx-sender))
+      (sender tx-sender)
+    )
+    (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (>= l qty) ERR-INSUFFICIENT-LONG)
+    (asserts! (>= sh qty) ERR-INSUFFICIENT-SHORT)
+    (map-set longs {
+      series-id: id,
+      owner: sender,
+    } (- l qty)
+    )
