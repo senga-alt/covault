@@ -551,3 +551,40 @@
     (qty uint)
     (token (optional <sip010>))
   )
+  (let (
+      (o (unwrap! (map-get? offers offer-id) ERR-OFFER-NOT-FOUND))
+      (buyer tx-sender)
+      (escrow current-contract)
+    )
+    (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (<= qty (get qty o)) ERR-INSUFFICIENT-OFFER)
+    (let (
+        (cost (* qty (get price o)))
+        (sid (get series-id o))
+        (maker (get maker o))
+      )
+      (try! (pull-to (get quote-token o) token cost maker))
+      (map-set longs {
+        series-id: sid,
+        owner: escrow,
+      }
+        (- (get-long sid escrow) qty)
+      )
+      (map-set longs {
+        series-id: sid,
+        owner: buyer,
+      }
+        (+ (get-long sid buyer) qty)
+      )
+      (map-set offers offer-id (merge o { qty: (- (get qty o) qty) }))
+      (print {
+        event: "fill-offer",
+        offer-id: offer-id,
+        buyer: buyer,
+        qty: qty,
+        cost: cost,
+      })
+      (ok cost)
+    )
+  )
+)
