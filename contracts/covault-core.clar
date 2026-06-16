@@ -25,3 +25,10 @@
 ;; payoff + (C - payoff) == C, so escrow is conserved exactly with no rounding.
 
 (use-trait sip010 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard.sip-010-trait)
+
+;; --- errors ---
+(define-constant ERR-NOT-OWNER (err u100))
+(define-constant ERR-NOT-ORACLE (err u101))
+(define-constant ERR-SERIES-NOT-FOUND (err u102))
+(define-constant ERR-INVALID-PARAMS (err u103))
+(define-constant ERR-EXPIRED (err u104))
