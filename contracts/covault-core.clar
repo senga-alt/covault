@@ -299,3 +299,28 @@
     (qty uint)
     (recipient principal)
   )
+  (let ((bal (get-long id tx-sender)))
+    (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (>= bal qty) ERR-INSUFFICIENT-LONG)
+    (map-set longs {
+      series-id: id,
+      owner: tx-sender,
+    }
+      (- bal qty)
+    )
+    (map-set longs {
+      series-id: id,
+      owner: recipient,
+    }
+      (+ (get-long id recipient) qty)
+    )
+    (print {
+      event: "transfer-long",
+      id: id,
+      from: tx-sender,
+      to: recipient,
+      qty: qty,
+    })
+    (ok true)
+  )
+)
