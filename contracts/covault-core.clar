@@ -113,3 +113,14 @@
     (stx-transfer? amount tx-sender recipient)
   )
 )
+
+;; Move `amount` of the series asset FROM the contract's own escrow TO `recipient`.
+;; SIP-010: the contract is `sender`, so sBTC's (is-eq contract-caller sender) check
+;; authorizes it. Native STX: needs as-contract? to switch tx-sender to the contract,
+;; with a with-stx allowance bounding the outflow (Clarity 4 asset safety).
+(define-private (push-from-contract
+    (q (optional principal))
+    (token (optional <sip010>))
+    (amount uint)
+    (recipient principal)
+  )
