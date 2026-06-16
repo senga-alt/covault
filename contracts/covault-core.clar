@@ -202,3 +202,22 @@
     ERR-SERIES-NOT-FOUND
   )
 )
+
+;; ---------------------------------------------------------------------------
+;; series lifecycle
+;; ---------------------------------------------------------------------------
+
+;; Create a new option series. Pass (some token) to collateralize in a SIP-010 token
+;; such as sBTC, or none to collateralize in native STX.
+;; For puts the maximum loss is the strike, so collateral (max-payoff) must equal the
+;; strike. For calls, max-payoff is the chosen price cap above the strike (a capped /
+;; spread call), which is what makes calls fully collateralizable in cash.
+;; #[allow(unchecked_data)]
+(define-public (create-series
+    (quote-token (optional <sip010>))
+    (underlying (string-ascii 16))
+    (is-call bool)
+    (strike uint)
+    (max-payoff uint)
+    (expiry uint)
+  )
