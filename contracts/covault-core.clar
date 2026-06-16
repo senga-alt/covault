@@ -80,3 +80,15 @@
   }
   uint
 )
+
+;; minimal on-chain order book: makers escrow long positions for sale
+(define-map offers
+  uint
+  {
+    series-id: uint,
+    maker: principal,
+    qty: uint,
+    price: uint, ;; collateral units per contract
+    quote-token: (optional principal), ;; mirrors the series' settlement asset
+  }
+)
