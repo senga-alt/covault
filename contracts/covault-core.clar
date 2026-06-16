@@ -588,3 +588,35 @@
     )
   )
 )
+
+;; Cancel an offer and return escrowed long positions to the maker.
+;; #[allow(unchecked_data)]
+(define-public (cancel-offer (offer-id uint))
+  (let (
+      (o (unwrap! (map-get? offers offer-id) ERR-OFFER-NOT-FOUND))
+      (sid (get series-id o))
+      (maker (get maker o))
+      (qty (get qty o))
+      (escrow current-contract)
+    )
+    (asserts! (is-eq tx-sender maker) ERR-NOT-OFFER-MAKER)
+    (map-set longs {
+      series-id: sid,
+      owner: escrow,
+    }
+      (- (get-long sid escrow) qty)
+    )
+    (map-set longs {
+      series-id: sid,
+      owner: maker,
+    }
+      (+ (get-long sid maker) qty)
+    )
+    (map-delete offers offer-id)
+    (print {
+      event: "cancel-offer",
+      offer-id: offer-id,
+    })
+    (ok true)
+  )
+)
