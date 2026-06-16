@@ -153,3 +153,7 @@
   })
   )
 )
+
+(define-read-only (get-offer (id uint))
+  (map-get? offers id)
+)
