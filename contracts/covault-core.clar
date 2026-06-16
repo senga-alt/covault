@@ -262,3 +262,32 @@
     (qty uint)
     (token (optional <sip010>))
   )
+  (let ((s (unwrap! (map-get? series id) ERR-SERIES-NOT-FOUND)))
+    (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (not (get settled s)) ERR-ALREADY-SETTLED)
+    (asserts! (< burn-block-height (get expiry s)) ERR-EXPIRED)
+    (let ((collateral (* qty (get max-payoff s))))
+      (try! (pull-to (get quote-token s) token collateral current-contract))
+      (map-set longs {
+        series-id: id,
+        owner: tx-sender,
+      }
+        (+ (get-long id tx-sender) qty)
+      )
+      (map-set shorts {
+        series-id: id,
+        owner: tx-sender,
+      }
+        (+ (get-short id tx-sender) qty)
+      )
+      (print {
+        event: "write",
+        id: id,
+        writer: tx-sender,
+        qty: qty,
+        collateral: collateral,
+      })
+      (ok collateral)
+    )
+  )
+)
