@@ -167,3 +167,11 @@
 (define-read-only (get-series-count)
   (var-get next-series-id)
 )
+
+;; intrinsic value of one contract at a given price, capped at the locked collateral
+(define-private (calc-payoff
+    (is-call bool)
+    (strike uint)
+    (max-payoff uint)
+    (price uint)
+  )
