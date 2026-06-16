@@ -408,3 +408,11 @@
     (ok true)
   )
 )
+
+;; Holder claims the cash payoff for their long positions after settlement.
+;; #[allow(unchecked_data)]
+(define-public (exercise
+    (id uint)
+    (qty uint)
+    (token (optional <sip010>))
+  )
