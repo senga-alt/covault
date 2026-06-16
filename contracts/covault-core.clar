@@ -92,3 +92,16 @@
     quote-token: (optional principal), ;; mirrors the series' settlement asset
   }
 )
+
+;; asset movement helpers (native STX or SIP-010)
+;; ---------------------------------------------------------------------------
+
+;; Move `amount` of the series asset FROM the current tx-sender TO `recipient`.
+;; Used for collateral deposits (recipient = the contract) and order fills
+;; (recipient = the maker). The SIP-010 branch authorizes via tx-sender == sender.
+(define-private (pull-to
+    (q (optional principal))
+    (token (optional <sip010>))
+    (amount uint)
+    (recipient principal)
+  )
