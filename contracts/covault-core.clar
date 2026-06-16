@@ -346,3 +346,21 @@
       owner: sender,
     } (- l qty)
     )
+    (map-set shorts {
+      series-id: id,
+      owner: sender,
+    } (- sh qty)
+    )
+    (let ((refund (* qty (get max-payoff s))))
+      (try! (push-from-contract (get quote-token s) token refund sender))
+      (print {
+        event: "close-pair",
+        id: id,
+        owner: sender,
+        qty: qty,
+        refund: refund,
+      })
+      (ok refund)
+    )
+  )
+)
