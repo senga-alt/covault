@@ -503,3 +503,43 @@
     (qty uint)
     (price uint)
   )
+  (let (
+      (s (unwrap! (map-get? series id) ERR-SERIES-NOT-FOUND))
+      (bal (get-long id tx-sender))
+      (offer-id (var-get next-offer-id))
+      (escrow current-contract)
+    )
+    (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (> price u0) ERR-ZERO)
+    (asserts! (>= bal qty) ERR-INSUFFICIENT-LONG)
+    (map-set longs {
+      series-id: id,
+      owner: tx-sender,
+    }
+      (- bal qty)
+    )
+    (map-set longs {
+      series-id: id,
+      owner: escrow,
+    }
+      (+ (get-long id escrow) qty)
+    )
+    (map-set offers offer-id {
+      series-id: id,
+      maker: tx-sender,
+      qty: qty,
+      price: price,
+      quote-token: (get quote-token s),
+    })
+    (var-set next-offer-id (+ offer-id u1))
+    (print {
+      event: "list-offer",
+      offer-id: offer-id,
+      id: id,
+      maker: tx-sender,
+      qty: qty,
+      price: price,
+    })
+    (ok offer-id)
+  )
+)
