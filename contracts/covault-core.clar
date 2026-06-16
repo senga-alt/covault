@@ -191,3 +191,9 @@
     )
   )
 )
+
+;; what one contract would pay at an arbitrary price (for UIs / quoting)
+(define-read-only (quote-payoff
+    (id uint)
+    (price uint)
+  )
