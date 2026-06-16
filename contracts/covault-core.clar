@@ -175,3 +175,19 @@
     (max-payoff uint)
     (price uint)
   )
+  (let ((intrinsic (if is-call
+      (if (> price strike)
+        (- price strike)
+        u0
+      )
+      (if (> strike price)
+        (- strike price)
+        u0
+      )
+    )))
+    (if (> intrinsic max-payoff)
+      max-payoff
+      intrinsic
+    )
+  )
+)
