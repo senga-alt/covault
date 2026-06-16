@@ -492,3 +492,14 @@
     )
   )
 )
+
+;; ---------------------------------------------------------------------------
+;; order book (peer-to-peer trading of long positions)
+;; ---------------------------------------------------------------------------
+
+;; List long positions for sale. The longs are escrowed in the contract.
+(define-public (list-offer
+    (id uint)
+    (qty uint)
+    (price uint)
+  )
