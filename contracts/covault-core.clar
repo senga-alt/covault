@@ -124,3 +124,13 @@
     (amount uint)
     (recipient principal)
   )
+  (match q
+    p (let ((t (unwrap! token ERR-WRONG-TOKEN)))
+      (asserts! (is-eq (contract-of t) p) ERR-WRONG-TOKEN)
+      (contract-call? t transfer amount current-contract recipient none)
+    )
+    (as-contract? ((with-stx amount))
+      (try! (stx-transfer? amount tx-sender recipient))
+    )
+  )
+)
