@@ -240,3 +240,15 @@
       settled: false,
       settlement-price: u0,
     })
+    (var-set next-series-id (+ id u1))
+    (print {
+      event: "create-series",
+      id: id,
+      is-call: is-call,
+      strike: strike,
+      max-payoff: max-payoff,
+      expiry: expiry,
+    })
+    (ok id)
+  )
+)
