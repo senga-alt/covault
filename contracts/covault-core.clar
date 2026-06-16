@@ -157,3 +157,6 @@
 (define-read-only (get-offer (id uint))
   (map-get? offers id)
 )
+(define-read-only (get-owner)
+  (var-get contract-owner)
+)
