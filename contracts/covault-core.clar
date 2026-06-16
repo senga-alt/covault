@@ -46,3 +46,21 @@
 ;; --- governance ---
 (define-data-var contract-owner principal tx-sender)
 (define-data-var oracle principal tx-sender)
+
+;; --- series registry ---
+;; strike / max-payoff / settlement-price are all denominated in the collateral
+;; asset's smallest units, per single contract.
+(define-map series
+  uint
+  {
+    creator: principal,
+    quote-token: (optional principal), ;; none = native STX, (some P) = SIP-010 token P
+    underlying: (string-ascii 16), ;; informational price reference label, e.g. "BTC-USD"
+    is-call: bool,
+    strike: uint,
+    max-payoff: uint, ;; collateral locked per contract (caps the payoff)
+    expiry: uint, ;; burn-block-height at/after which settlement is allowed
+    settled: bool,
+    settlement-price: uint,
+  }
+)
