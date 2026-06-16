@@ -621,6 +621,7 @@
   )
 )
 
+;; ---------------------------------------------------------------------------
 ;; governance
 ;; ---------------------------------------------------------------------------
 
@@ -629,6 +630,15 @@
   (begin
     (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
     (var-set oracle new-oracle)
+    (ok true)
+  )
+)
+
+;; #[allow(unchecked_data)]
+(define-public (set-owner (new-owner principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set contract-owner new-owner)
     (ok true)
   )
 )
