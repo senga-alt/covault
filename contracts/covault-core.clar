@@ -380,3 +380,31 @@
     )
   )
 )
+
+;; ---------------------------------------------------------------------------
+;; settlement
+;; ---------------------------------------------------------------------------
+
+;; Record the settlement price for an expired series. Only the authorized oracle.
+(define-public (settle
+    (id uint)
+    (price uint)
+  )
+  (let ((s (unwrap! (map-get? series id) ERR-SERIES-NOT-FOUND)))
+    (asserts! (is-eq tx-sender (var-get oracle)) ERR-NOT-ORACLE)
+    (asserts! (>= burn-block-height (get expiry s)) ERR-NOT-EXPIRED)
+    (asserts! (not (get settled s)) ERR-ALREADY-SETTLED)
+    (map-set series id
+      (merge s {
+        settled: true,
+        settlement-price: price,
+      })
+    )
+    (print {
+      event: "settle",
+      id: id,
+      price: price,
+    })
+    (ok true)
+  )
+)
