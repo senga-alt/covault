@@ -73,3 +73,10 @@
   }
   uint
 )
+(define-map shorts
+  {
+    series-id: uint,
+    owner: principal,
+  }
+  uint
+)
