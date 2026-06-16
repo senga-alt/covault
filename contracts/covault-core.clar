@@ -449,3 +449,11 @@
     )
   )
 )
+
+;; Writer reclaims leftover collateral (collateral minus what holders are owed).
+;; #[allow(unchecked_data)]
+(define-public (reclaim
+    (id uint)
+    (qty uint)
+    (token (optional <sip010>))
+  )
