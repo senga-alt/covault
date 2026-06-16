@@ -457,3 +457,38 @@
     (qty uint)
     (token (optional <sip010>))
   )
+  (let (
+      (s (unwrap! (map-get? series id) ERR-SERIES-NOT-FOUND))
+      (bal (get-short id tx-sender))
+      (sender tx-sender)
+    )
+    (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (get settled s) ERR-NOT-SETTLED)
+    (asserts! (>= bal qty) ERR-INSUFFICIENT-SHORT)
+    (let ((leftover (* qty
+        (- (get max-payoff s)
+          (calc-payoff (get is-call s) (get strike s) (get max-payoff s)
+            (get settlement-price s)
+          ))
+      )))
+      (map-set shorts {
+        series-id: id,
+        owner: sender,
+      }
+        (- bal qty)
+      )
+      (and
+        (> leftover u0)
+        (try! (push-from-contract (get quote-token s) token leftover sender))
+      )
+      (print {
+        event: "reclaim",
+        id: id,
+        writer: sender,
+        qty: qty,
+        leftover: leftover,
+      })
+      (ok leftover)
+    )
+  )
+)
