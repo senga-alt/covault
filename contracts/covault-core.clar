@@ -42,3 +42,7 @@
 (define-constant ERR-OFFER-NOT-FOUND (err u112))
 (define-constant ERR-INSUFFICIENT-OFFER (err u113))
 (define-constant ERR-NOT-OFFER-MAKER (err u114))
+
+;; --- governance ---
+(define-data-var contract-owner principal tx-sender)
+(define-data-var oracle principal tx-sender)
