@@ -291,3 +291,11 @@
     )
   )
 )
+
+;; Transfer long (option) positions to another principal - options are tradable.
+;; #[allow(unchecked_data)]
+(define-public (transfer-long
+    (id uint)
+    (qty uint)
+    (recipient principal)
+  )
