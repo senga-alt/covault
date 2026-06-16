@@ -47,6 +47,10 @@
 (define-data-var contract-owner principal tx-sender)
 (define-data-var oracle principal tx-sender)
 
+;; --- counters ---
+(define-data-var next-series-id uint u0)
+(define-data-var next-offer-id uint u0)
+
 ;; --- series registry ---
 ;; strike / max-payoff / settlement-price are all denominated in the collateral
 ;; asset's smallest units, per single contract.
@@ -93,6 +97,7 @@
   }
 )
 
+;; ---------------------------------------------------------------------------
 ;; asset movement helpers (native STX or SIP-010)
 ;; ---------------------------------------------------------------------------
 
@@ -148,6 +153,17 @@
     (who principal)
   )
   (default-to u0 (map-get? longs {
+    series-id: id,
+    owner: who,
+  })
+  )
+)
+
+(define-read-only (get-short
+    (id uint)
+    (who principal)
+  )
+  (default-to u0 (map-get? shorts {
     series-id: id,
     owner: who,
   })
