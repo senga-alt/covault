@@ -157,6 +157,13 @@
 (define-read-only (get-offer (id uint))
   (map-get? offers id)
 )
+
+(define-read-only (get-oracle)
+  (var-get oracle)
+)
 (define-read-only (get-owner)
   (var-get contract-owner)
+)
+(define-read-only (get-series-count)
+  (var-get next-series-id)
 )
