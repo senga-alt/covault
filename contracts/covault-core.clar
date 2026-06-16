@@ -221,3 +221,22 @@
     (max-payoff uint)
     (expiry uint)
   )
+  (let ((id (var-get next-series-id)))
+    (asserts! (> strike u0) ERR-INVALID-PARAMS)
+    (asserts! (> max-payoff u0) ERR-INVALID-PARAMS)
+    (asserts! (> expiry burn-block-height) ERR-INVALID-PARAMS)
+    (asserts! (or is-call (is-eq max-payoff strike)) ERR-INVALID-PARAMS)
+    (map-set series id {
+      creator: tx-sender,
+      quote-token: (match quote-token
+        t (some (contract-of t))
+        none
+      ),
+      underlying: underlying,
+      is-call: is-call,
+      strike: strike,
+      max-payoff: max-payoff,
+      expiry: expiry,
+      settled: false,
+      settlement-price: u0,
+    })
