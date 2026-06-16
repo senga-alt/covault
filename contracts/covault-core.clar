@@ -252,3 +252,13 @@
     (ok id)
   )
 )
+
+;; Lock collateral and mint matched long + short positions to the writer.
+;; The writer can then sell the longs (premium) and keep the shorts (obligation).
+;; `token` must be (some asset) matching the series for SIP-010 series, or none for STX.
+;; #[allow(unchecked_data)]
+(define-public (write-options
+    (id uint)
+    (qty uint)
+    (token (optional <sip010>))
+  )
