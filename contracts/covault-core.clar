@@ -324,3 +324,11 @@
     (ok true)
   )
 )
+
+;; Net out matching long+short positions before expiry and reclaim collateral.
+;; #[allow(unchecked_data)]
+(define-public (close-pair
+    (id uint)
+    (qty uint)
+    (token (optional <sip010>))
+  )
