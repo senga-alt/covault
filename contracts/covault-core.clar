@@ -543,3 +543,11 @@
     (ok offer-id)
   )
 )
+
+;; Buy some/all of an offer: buyer pays the maker and receives the long positions.
+;; #[allow(unchecked_data)]
+(define-public (fill-offer
+    (offer-id uint)
+    (qty uint)
+    (token (optional <sip010>))
+  )
