@@ -197,3 +197,8 @@
     (id uint)
     (price uint)
   )
+  (match (map-get? series id)
+    s (ok (calc-payoff (get is-call s) (get strike s) (get max-payoff s) price))
+    ERR-SERIES-NOT-FOUND
+  )
+)
