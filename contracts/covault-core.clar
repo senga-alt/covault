@@ -64,3 +64,12 @@
     settlement-price: uint,
   }
 )
+
+;; long positions (option holders) and short positions (collateral providers)
+(define-map longs
+  {
+    series-id: uint,
+    owner: principal,
+  }
+  uint
+)
