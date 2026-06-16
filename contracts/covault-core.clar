@@ -142,3 +142,14 @@
 (define-read-only (get-series (id uint))
   (map-get? series id)
 )
+
+(define-read-only (get-long
+    (id uint)
+    (who principal)
+  )
+  (default-to u0 (map-get? longs {
+    series-id: id,
+    owner: who,
+  })
+  )
+)
