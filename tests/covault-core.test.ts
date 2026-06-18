@@ -21,3 +21,8 @@ const INIT = 1_000_000_000;
 // `token` argument for the contract: (some sBTC) for sBTC series, none for native STX.
 const sbtcArg = Cl.some(Cl.principal(SBTC));
 const stxArg = Cl.none();
+
+// Assert a wallet's sBTC balance equals genesis +/- a delta.
+function expectSbtcDelta(who: string, delta: number) {
+  const r = simnet.callReadOnlyFn(SBTC, "get-balance", [Cl.principal(who)], deployer);
+  expect(r.result).toBeOk(Cl.uint(INIT + delta));
