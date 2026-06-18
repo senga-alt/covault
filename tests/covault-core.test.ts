@@ -73,3 +73,11 @@ function createSeries(opts: {
   // (ok uX) -> extract the uint
   return Number((r.result as any).value.value);
 }
+
+const ERR_NOT_ORACLE = 101;
+const ERR_INVALID_PARAMS = 103;
+const ERR_EXPIRED = 104;
+const ERR_NOT_EXPIRED = 105;
+const ERR_NOT_SETTLED = 107;
+const ERR_INSUFFICIENT_LONG = 108;
+const ERR_WRONG_TOKEN = 110;
