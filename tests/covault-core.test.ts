@@ -17,3 +17,7 @@ const VAULT = `${deployer}.${CORE}`; // the clearinghouse's own principal (escro
 
 // genesis sbtc_balance assigned to each wallet by the simnet
 const INIT = 1_000_000_000;
+
+// `token` argument for the contract: (some sBTC) for sBTC series, none for native STX.
+const sbtcArg = Cl.some(Cl.principal(SBTC));
+const stxArg = Cl.none();
