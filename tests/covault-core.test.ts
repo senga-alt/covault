@@ -32,3 +32,14 @@ function expectSbtcAbs(who: string, amount: number) {
   const r = simnet.callReadOnlyFn(SBTC, "get-balance", [Cl.principal(who)], deployer);
   expect(r.result).toBeOk(Cl.uint(amount));
 }
+// Native STX balance of a principal (microSTX), via the simnet assets map.
+function stxBalance(who: string): bigint {
+  return simnet.getAssetsMap().get("STX")?.get(who) ?? 0n;
+}
+
+function getLong(id: number, who: string) {
+  return simnet.callReadOnlyFn(CORE, "get-long", [Cl.uint(id), Cl.principal(who)], deployer).result;
+}
+function getShort(id: number, who: string) {
+  return simnet.callReadOnlyFn(CORE, "get-short", [Cl.uint(id), Cl.principal(who)], deployer).result;
+}
