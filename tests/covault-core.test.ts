@@ -43,3 +43,33 @@ function getLong(id: number, who: string) {
 function getShort(id: number, who: string) {
   return simnet.callReadOnlyFn(CORE, "get-short", [Cl.uint(id), Cl.principal(who)], deployer).result;
 }
+
+// Create a series and return its numeric id.
+function createSeries(opts: {
+  isCall: boolean;
+  strike: number;
+  maxPayoff: number;
+  expiryIn?: number;
+  underlying?: string;
+  sender?: string;
+  asset?: "sbtc" | "stx";
+}): number {
+  const expiry = simnet.burnBlockHeight + (opts.expiryIn ?? 100);
+  const tokenCV = opts.asset === "stx" ? stxArg : sbtcArg;
+  const r = simnet.callPublicFn(
+    CORE,
+    "create-series",
+    [
+      tokenCV,
+      Cl.stringAscii(opts.underlying ?? "BTC-USD"),
+      Cl.bool(opts.isCall),
+      Cl.uint(opts.strike),
+      Cl.uint(opts.maxPayoff),
+      Cl.uint(expiry),
+    ],
+    opts.sender ?? deployer
+  );
+  expect(r.result).toBeOk(expect.anything());
+  // (ok uX) -> extract the uint
+  return Number((r.result as any).value.value);
+}
