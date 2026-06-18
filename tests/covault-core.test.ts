@@ -10,3 +10,10 @@ const deployer = accounts.get("deployer")!; // contract owner + default oracle
 const writer = accounts.get("wallet_1")!;
 const buyer = accounts.get("wallet_2")!;
 const other = accounts.get("wallet_3")!;
+
+const SBTC = "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token";
+const CORE = "covault-core";
+const VAULT = `${deployer}.${CORE}`; // the clearinghouse's own principal (escrow)
+
+// genesis sbtc_balance assigned to each wallet by the simnet
+const INIT = 1_000_000_000;
