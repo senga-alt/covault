@@ -26,3 +26,9 @@ const stxArg = Cl.none();
 function expectSbtcDelta(who: string, delta: number) {
   const r = simnet.callReadOnlyFn(SBTC, "get-balance", [Cl.principal(who)], deployer);
   expect(r.result).toBeOk(Cl.uint(INIT + delta));
+}
+// Assert an absolute sBTC balance (used for the contract, which starts at 0).
+function expectSbtcAbs(who: string, amount: number) {
+  const r = simnet.callReadOnlyFn(SBTC, "get-balance", [Cl.principal(who)], deployer);
+  expect(r.result).toBeOk(Cl.uint(amount));
+}
