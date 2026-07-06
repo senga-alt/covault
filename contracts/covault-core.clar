@@ -312,6 +312,7 @@
   )
   (let ((s (unwrap! (map-get? series id) ERR-SERIES-NOT-FOUND)))
     (asserts! (> qty u0) ERR-ZERO)
+    (asserts! (not (var-get paused)) ERR-PAUSED)
     (asserts! (not (get settled s)) ERR-ALREADY-SETTLED)
     (asserts! (< burn-block-height (get expiry s)) ERR-EXPIRED)
     (let ((collateral (* qty (get max-payoff s))))
