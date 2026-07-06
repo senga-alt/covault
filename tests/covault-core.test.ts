@@ -319,3 +319,93 @@ describe("guards", () => {
     expect(r.result).toBeErr(Cl.uint(ERR_INSUFFICIENT_LONG));
   });
 });
+
+describe("protocol fee", () => {
+  it("charges the taker fee on fills to the fee recipient", () => {
+    const id = createSeries({ isCall: false, strike: 1000, maxPayoff: 1000, expiryIn: 50 });
+    simnet.callPublicFn(CORE, "write-options", [Cl.uint(id), Cl.uint(3), sbtcArg], writer);
+    simnet.callPublicFn(CORE, "list-offer", [Cl.uint(id), Cl.uint(3), Cl.uint(100)], writer);
+
+    // 1% (100 bps) taker fee to `other`
+    expect(simnet.callPublicFn(CORE, "set-fee", [Cl.uint(100), Cl.principal(other)], deployer).result)
+      .toBeOk(Cl.bool(true));
+
+    const fill = simnet.callPublicFn(CORE, "fill-offer", [Cl.uint(0), Cl.uint(2), sbtcArg], buyer);
+    expect(fill.result).toBeOk(Cl.uint(200)); // premium to maker (fee is on top)
+    expectSbtcDelta(buyer, -202); // 200 premium + 2 fee
+    expectSbtcDelta(other, 2); // fee recipient
+    expectSbtcDelta(writer, -3_000 + 200); // collateral + premium
+    expect(getLong(id, buyer)).toBeUint(2);
+  });
+
+  it("caps the fee and gates fee changes to the owner", () => {
+    expect(simnet.callPublicFn(CORE, "set-fee", [Cl.uint(600), Cl.principal(other)], deployer).result)
+      .toBeErr(Cl.uint(ERR_FEE_TOO_HIGH)); // above 5% cap
+    expect(simnet.callPublicFn(CORE, "set-fee", [Cl.uint(100), Cl.principal(other)], writer).result)
+      .toBeErr(Cl.uint(ERR_NOT_OWNER));
+  });
+});
+
+describe("pause switch", () => {
+  it("blocks new writes and series creation but never blocks exits", () => {
+    const id = createSeries({ isCall: false, strike: 1000, maxPayoff: 1000, expiryIn: 5 });
+    simnet.callPublicFn(CORE, "write-options", [Cl.uint(id), Cl.uint(1), sbtcArg], writer);
+
+    expect(simnet.callPublicFn(CORE, "set-paused", [Cl.bool(true)], deployer).result).toBeOk(Cl.bool(true));
+
+    // new risk creation is blocked
+    expect(simnet.callPublicFn(CORE, "write-options", [Cl.uint(id), Cl.uint(1), sbtcArg], writer).result)
+      .toBeErr(Cl.uint(ERR_PAUSED));
+    expect(simnet.callPublicFn(CORE, "create-series",
+      [sbtcArg, Cl.stringAscii("BTC-USD"), Cl.bool(false), Cl.uint(1000), Cl.uint(1000),
+       Cl.uint(simnet.burnBlockHeight + 50)], deployer).result)
+      .toBeErr(Cl.uint(ERR_PAUSED));
+
+    // exits still work while paused: settle, exercise, reclaim
+    simnet.mineEmptyBurnBlocks(5);
+    expect(simnet.callPublicFn(CORE, "settle", [Cl.uint(id), Cl.uint(600)], deployer).result).toBeOk(Cl.bool(true));
+    expect(simnet.callPublicFn(CORE, "exercise", [Cl.uint(id), Cl.uint(1), sbtcArg], writer).result).toBeOk(Cl.uint(400));
+    expect(simnet.callPublicFn(CORE, "reclaim", [Cl.uint(id), Cl.uint(1), sbtcArg], writer).result).toBeOk(Cl.uint(600));
+
+    // unpause restores writing
+    expect(simnet.callPublicFn(CORE, "set-paused", [Cl.bool(false)], deployer).result).toBeOk(Cl.bool(true));
+    expect(simnet.callPublicFn(CORE, "set-paused", [Cl.bool(true)], writer).result).toBeErr(Cl.uint(ERR_NOT_OWNER));
+  });
+});
+
+describe("curated series creation", () => {
+  it("restricts creation to the owner until opened, then goes permissionless", () => {
+    // non-owner blocked by default (v1 curated)
+    expect(simnet.callPublicFn(CORE, "create-series",
+      [sbtcArg, Cl.stringAscii("BTC-USD"), Cl.bool(false), Cl.uint(1000), Cl.uint(1000),
+       Cl.uint(simnet.burnBlockHeight + 50)], writer).result)
+      .toBeErr(Cl.uint(ERR_CREATION_RESTRICTED));
+
+    expect(simnet.callPublicFn(CORE, "set-open-creation", [Cl.bool(true)], deployer).result).toBeOk(Cl.bool(true));
+
+    // now anyone can create
+    expect(simnet.callPublicFn(CORE, "create-series",
+      [sbtcArg, Cl.stringAscii("BTC-USD"), Cl.bool(false), Cl.uint(1000), Cl.uint(1000),
+       Cl.uint(simnet.burnBlockHeight + 50)], writer).result)
+      .toBeOk(expect.anything());
+    // gating is owner-only
+    expect(simnet.callPublicFn(CORE, "set-open-creation", [Cl.bool(false)], writer).result)
+      .toBeErr(Cl.uint(ERR_NOT_OWNER));
+  });
+});
+
+describe("config snapshot", () => {
+  it("exposes protocol config for UIs", () => {
+    const cfg = simnet.callReadOnlyFn(CORE, "get-config", [], deployer).result;
+    expect(cfg).toBeTuple({
+      owner: Cl.principal(deployer),
+      oracle: Cl.principal(deployer),
+      paused: Cl.bool(false),
+      "open-creation": Cl.bool(false),
+      "fee-bps": Cl.uint(0),
+      "fee-recipient": Cl.principal(deployer),
+      "series-count": Cl.uint(0),
+      "offer-count": Cl.uint(0),
+    });
+  });
+});
