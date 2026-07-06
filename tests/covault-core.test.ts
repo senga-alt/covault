@@ -74,6 +74,7 @@ function createSeries(opts: {
   return Number((r.result as any).value.value);
 }
 
+const ERR_NOT_OWNER = 100;
 const ERR_NOT_ORACLE = 101;
 const ERR_INVALID_PARAMS = 103;
 const ERR_EXPIRED = 104;
@@ -81,6 +82,9 @@ const ERR_NOT_EXPIRED = 105;
 const ERR_NOT_SETTLED = 107;
 const ERR_INSUFFICIENT_LONG = 108;
 const ERR_WRONG_TOKEN = 110;
+const ERR_PAUSED = 115;
+const ERR_CREATION_RESTRICTED = 116;
+const ERR_FEE_TOO_HIGH = 117;
 
 describe("series creation", () => {
   it("creates a put series and assigns sequential ids", () => {
