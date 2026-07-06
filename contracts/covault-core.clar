@@ -595,8 +595,14 @@
         (cost (* qty (get price o)))
         (sid (get series-id o))
         (maker (get maker o))
+        (fee (/ (* qty (get price o) (var-get fee-bps)) u10000))
       )
+      ;; buyer pays the maker the premium, plus the taker fee to the fee recipient
       (try! (pull-to (get quote-token o) token cost maker))
+      (and
+        (> fee u0)
+        (try! (pull-to (get quote-token o) token fee (var-get fee-recipient)))
+      )
       (map-set longs {
         series-id: sid,
         owner: escrow,
@@ -616,6 +622,7 @@
         buyer: buyer,
         qty: qty,
         cost: cost,
+        fee: fee,
       })
       (ok cost)
     )
