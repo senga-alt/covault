@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Covault design tokens - see ../design-system/MASTER.md */
+@theme {
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-card: #1e2536;
+  --color-card-foreground: #f8fafc;
+  --color-muted: #272f42;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #334155;
+  --color-primary: #f59e0b;
+  --color-on-primary: #0f172a;
+  --color-secondary: #fbbf24;
+  --color-accent: #8b5cf6;
+  --color-destructive: #ef4444;
+  --color-success: #22c55e;
+  --color-ring: #f59e0b;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+html {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* numerals in data contexts never shift width */
+.tnum {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* visible focus everywhere (design-system: a11y) */
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
