@@ -52,6 +52,13 @@ export function seriesStatus(s: Series, burnHeight: number): SeriesStatus {
   return "active";
 }
 
+/** Client-side mirror of the contract's calc-payoff, for showing claim amounts. */
+export function payoffPerContract(s: Series): bigint {
+  const p = s.settlementPrice;
+  const intrinsic = s.isCall ? (p > s.strike ? p - s.strike : 0n) : (s.strike > p ? s.strike - p : 0n);
+  return intrinsic > s.maxPayoff ? s.maxPayoff : intrinsic;
+}
+
 // --- read-only plumbing ---
 async function ro(fn: string, args: ClarityValue[]): Promise<any> {
   const cv = await fetchCallReadOnlyFunction({
