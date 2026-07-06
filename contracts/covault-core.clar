@@ -682,3 +682,40 @@
     (ok true)
   )
 )
+
+;; Pause halts new risk creation (create-series and write-options). Every exit path -
+;; settle, exercise, reclaim, close-pair, order-book trading, and cancels - stays open,
+;; so a pause can never trap user funds.
+(define-public (set-paused (new-paused bool))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set paused new-paused)
+    (ok true)
+  )
+)
+
+;; When open-creation is false (the v1 default), only the owner may create series, so
+;; only references with a vetted price feed get listed. Flip to true to go permissionless.
+(define-public (set-open-creation (new-open bool))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set open-creation new-open)
+    (ok true)
+  )
+)
+
+;; Set the taker fee (basis points, capped at MAX-FEE-BPS) and its recipient. Default 0.
+;; The fee is charged to the buyer on order-book fills, on top of the premium.
+;; #[allow(unchecked_data)]
+(define-public (set-fee
+    (new-fee-bps uint)
+    (new-recipient principal)
+  )
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (asserts! (<= new-fee-bps MAX-FEE-BPS) ERR-FEE-TOO-HIGH)
+    (var-set fee-bps new-fee-bps)
+    (var-set fee-recipient new-recipient)
+    (ok true)
+  )
+)
