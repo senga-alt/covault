@@ -265,6 +265,11 @@
     (expiry uint)
   )
   (let ((id (var-get next-series-id)))
+    (asserts! (not (var-get paused)) ERR-PAUSED)
+    (asserts!
+      (or (var-get open-creation) (is-eq tx-sender (var-get contract-owner)))
+      ERR-CREATION-RESTRICTED
+    )
     (asserts! (> strike u0) ERR-INVALID-PARAMS)
     (asserts! (> max-payoff u0) ERR-INVALID-PARAMS)
     (asserts! (> expiry burn-block-height) ERR-INVALID-PARAMS)
