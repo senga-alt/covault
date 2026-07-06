@@ -1,50 +1,91 @@
 @import "tailwindcss";
 
-/* Covault design tokens - see ../design-system/MASTER.md */
+/*
+ * Covault - engraved certificate system. Canonical spec: ../DESIGN.md
+ * Deep intaglio-ink field, engraved-paper text, gilt ornament, wax-seal accent.
+ */
 @theme {
-  --color-background: #0f172a;
-  --color-foreground: #f8fafc;
-  --color-card: #1e2536;
-  --color-card-foreground: #f8fafc;
-  --color-muted: #272f42;
-  --color-muted-foreground: #94a3b8;
-  --color-border: #334155;
-  --color-primary: #f59e0b;
-  --color-on-primary: #0f172a;
-  --color-secondary: #fbbf24;
-  --color-accent: #8b5cf6;
-  --color-destructive: #ef4444;
-  --color-success: #22c55e;
-  --color-ring: #f59e0b;
+  /* surfaces */
+  --color-ink: oklch(0.16 0.014 75);
+  --color-ink-2: oklch(0.19 0.016 75);
+  --color-ink-3: oklch(0.23 0.018 78);
+  /* text */
+  --color-paper: oklch(0.93 0.014 85);
+  --color-paper-dim: oklch(0.71 0.02 82);
+  /* structure + ornament */
+  --color-rule: oklch(0.34 0.02 80);
+  --color-gilt: oklch(0.78 0.08 85);
+  /* action + semantics */
+  --color-seal: oklch(0.6 0.19 38);
+  --color-seal-hi: oklch(0.66 0.19 40);
+  --color-on-seal: oklch(0.16 0.014 75);
+  --color-gain: oklch(0.74 0.13 150);
+  --color-loss: oklch(0.64 0.19 25);
 
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Besley", ui-serif, Georgia, serif;
+  --font-sans: "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 html {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--color-ink);
+  color: var(--color-paper);
   font-family: var(--font-sans);
 }
 
-/* numerals in data contexts never shift width */
+body {
+  line-height: 1.6; /* light-on-dark bonus */
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+  line-height: 1.15;
+}
+
+/* figures never reflow */
 .tnum {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* visible focus everywhere (design-system: a11y) */
+/* ledger double rule under major section heads */
+.double-rule {
+  border-top: 1px solid var(--color-rule);
+  position: relative;
+}
+.double-rule::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--color-rule);
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-ring);
+  outline: 2px solid var(--color-seal);
   outline-offset: 2px;
 }
 
+/* landing hero choreography - content visible by default, motion enhances */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes draw {
+  from { stroke-dashoffset: var(--dash, 1200); }
+  to { stroke-dashoffset: 0; }
+}
+.anim-rise {
+  animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-rise-2 { animation-delay: 0.12s; }
+.anim-rise-3 { animation-delay: 0.24s; }
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
   }
 }

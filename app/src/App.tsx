@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Layout } from "./components/Layout";
+import { Landing } from "./pages/Landing";
 import { Markets } from "./pages/Markets";
 import { SeriesDetail } from "./pages/SeriesDetail";
 import { Portfolio } from "./pages/Portfolio";
@@ -14,7 +15,8 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route element={<Layout />}>
+          <Route index element={<Landing />} />
+          <Route path="app" element={<Layout />}>
             <Route index element={<Markets />} />
             <Route path="series/:id" element={<SeriesDetail />} />
             <Route path="portfolio" element={<Portfolio />} />
