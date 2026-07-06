@@ -193,6 +193,23 @@
 (define-read-only (get-series-count)
   (var-get next-series-id)
 )
+(define-read-only (get-offer-count)
+  (var-get next-offer-id)
+)
+
+;; One-shot snapshot of protocol config for UIs.
+(define-read-only (get-config)
+  {
+    owner: (var-get contract-owner),
+    oracle: (var-get oracle),
+    paused: (var-get paused),
+    open-creation: (var-get open-creation),
+    fee-bps: (var-get fee-bps),
+    fee-recipient: (var-get fee-recipient),
+    series-count: (var-get next-series-id),
+    offer-count: (var-get next-offer-id),
+  }
+)
 
 ;; intrinsic value of one contract at a given price, capped at the locked collateral
 (define-private (calc-payoff
