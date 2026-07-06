@@ -16,6 +16,9 @@
 ;;  - Settlement prices come from an authorized reporter (the `oracle` principal). This is
 ;;    the one trusted component in the prototype; the production path is a Pyth feed or DEX
 ;;    TWAP (the contract only needs a single price at expiry).
+;;  - Governance is minimal: the owner can pause new writes, curate which series exist in
+;;    v1 (or open creation to everyone), and set a capped taker fee on order-book fills.
+;;    Pause and fees never block exits (settle / exercise / reclaim / close / cancel).
 ;;
 ;; Value flow per contract, given collateral C = max-payoff and settlement price S:
 ;;   write   -> writer locks C, receives 1 long + 1 short
