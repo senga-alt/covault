@@ -42,10 +42,20 @@
 (define-constant ERR-OFFER-NOT-FOUND (err u112))
 (define-constant ERR-INSUFFICIENT-OFFER (err u113))
 (define-constant ERR-NOT-OFFER-MAKER (err u114))
+(define-constant ERR-PAUSED (err u115))
+(define-constant ERR-CREATION-RESTRICTED (err u116))
+(define-constant ERR-FEE-TOO-HIGH (err u117))
+
+;; --- limits ---
+(define-constant MAX-FEE-BPS u500) ;; hard cap on the protocol fee: 5%
 
 ;; --- governance ---
 (define-data-var contract-owner principal tx-sender)
 (define-data-var oracle principal tx-sender)
+(define-data-var paused bool false)
+(define-data-var open-creation bool false) ;; v1 curated: only owner creates series until opened
+(define-data-var fee-bps uint u0) ;; taker fee on order-book fills, in basis points (0 = off)
+(define-data-var fee-recipient principal tx-sender)
 
 ;; --- counters ---
 (define-data-var next-series-id uint u0)
