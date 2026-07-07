@@ -6,6 +6,7 @@ import { formatAmount, estimateExpiry } from "../lib/format";
 import { StatusChip } from "../components/StatusChip";
 import { WritePanel } from "../components/WritePanel";
 import { ClaimPanel, ClosePanel } from "../components/ClaimPanel";
+import { OrderBook } from "../components/OrderBook";
 import { useWallet } from "../lib/wallet";
 
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
@@ -101,6 +102,7 @@ export function SeriesDetail() {
               </p>
             </section>
           )}
+          <OrderBook series={s} long={posQ.data?.long ?? 0n} />
         </div>
 
         <section aria-labelledby="your-position" className="h-fit border border-rule bg-ink-2 p-5">

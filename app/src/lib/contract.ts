@@ -118,6 +118,38 @@ export async function getAllSeries(): Promise<Series[]> {
   return all.filter((s): s is Series => s !== null);
 }
 
+export interface Offer {
+  id: number;
+  seriesId: number;
+  maker: string;
+  qty: bigint;
+  price: bigint; // collateral units per contract
+  quoteToken: string | null;
+}
+
+export async function getOffer(id: number): Promise<Offer | null> {
+  const j = await ro("get-offer", [Cl.uint(id)]);
+  if (j.value === null) return null;
+  const t = j.value.value;
+  const quote = field(t, "quote-token");
+  return {
+    id,
+    seriesId: Number(field(t, "series-id")),
+    maker: field(t, "maker"),
+    qty: BigInt(field(t, "qty")),
+    price: BigInt(field(t, "price")),
+    quoteToken: quote ? (quote.value as string) : null,
+  };
+}
+
+/** All open offers for one series (cancelled offers vanish; filled-out ones have qty 0). */
+export async function getOpenOffers(seriesId: number): Promise<Offer[]> {
+  const { offerCount } = await getConfig();
+  const ids = Array.from({ length: offerCount }, (_, i) => i);
+  const all = await Promise.all(ids.map(getOffer));
+  return all.filter((o): o is Offer => o !== null && o.seriesId === seriesId && o.qty > 0n);
+}
+
 export async function getPosition(id: number, who: string): Promise<{ long: bigint; short: bigint }> {
   const [l, s] = await Promise.all([
     ro("get-long", [Cl.uint(id), Cl.principal(who)]),
