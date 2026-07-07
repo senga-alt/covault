@@ -5,6 +5,7 @@ import { Landing } from "./pages/Landing";
 import { Markets } from "./pages/Markets";
 import { SeriesDetail } from "./pages/SeriesDetail";
 import { Portfolio } from "./pages/Portfolio";
+import { Admin } from "./pages/Admin";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 15_000, retry: 2 } },
@@ -20,6 +21,7 @@ export default function App() {
             <Route index element={<Markets />} />
             <Route path="series/:id" element={<SeriesDetail />} />
             <Route path="portfolio" element={<Portfolio />} />
+            <Route path="admin" element={<Admin />} />
           </Route>
         </Routes>
       </BrowserRouter>

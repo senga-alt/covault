@@ -1,6 +1,8 @@
 import { NavLink, Link, Outlet } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { WalletButton } from "./WalletButton";
-import { NETWORK } from "../lib/contract";
+import { NETWORK, getConfig } from "../lib/contract";
+import { useWallet } from "../lib/wallet";
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
   `rounded-[2px] px-3 py-2 text-[15px] font-medium transition-colors duration-200 ${
@@ -8,6 +10,9 @@ const navCls = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function Layout() {
+  const { address } = useWallet();
+  const configQ = useQuery({ queryKey: ["config"], queryFn: getConfig });
+  const isOwner = !!address && address === configQ.data?.owner;
   return (
     <div className="min-h-dvh">
       <a
@@ -29,6 +34,11 @@ export function Layout() {
               <NavLink to="/app/portfolio" className={navCls}>
                 Portfolio
               </NavLink>
+              {isOwner && (
+                <NavLink to="/app/admin" className={navCls}>
+                  Operator
+                </NavLink>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-4">
