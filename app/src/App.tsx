@@ -6,6 +6,7 @@ import { Markets } from "./pages/Markets";
 import { SeriesDetail } from "./pages/SeriesDetail";
 import { Portfolio } from "./pages/Portfolio";
 import { Admin } from "./pages/Admin";
+import { NotFound } from "./pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 15_000, retry: 2 } },
@@ -22,7 +23,9 @@ export default function App() {
             <Route path="series/:id" element={<SeriesDetail />} />
             <Route path="portfolio" element={<Portfolio />} />
             <Route path="admin" element={<Admin />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

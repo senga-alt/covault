@@ -224,6 +224,15 @@ export function OrderBook({ series, long }: { series: Series; long: bigint }) {
         </div>
       )}
 
+      {offersQ.isError && (
+        <p role="alert" className="border-t border-rule px-4 py-4 text-sm text-loss">
+          Could not load offers.{" "}
+          <button onClick={() => offersQ.refetch()} className="cursor-pointer font-medium underline">
+            Retry
+          </button>
+        </p>
+      )}
+
       {offersQ.data && offersQ.data.length === 0 && (
         <p className="border-t border-rule px-4 py-5 text-sm text-paper-dim">
           No open offers. {long > 0n ? "List yours below." : "Write options to have something to sell."}

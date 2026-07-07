@@ -22,21 +22,41 @@ function Stat({ label, children }: { label: string; children: React.ReactNode })
 export function SeriesDetail() {
   const { id: idParam } = useParams();
   const id = Number(idParam);
+  const validId = Number.isInteger(id) && id >= 0;
   const { address } = useWallet();
 
-  const seriesQ = useQuery({ queryKey: ["series", id], queryFn: () => getSeries(id), enabled: Number.isFinite(id) });
+  const seriesQ = useQuery({ queryKey: ["series", id], queryFn: () => getSeries(id), enabled: validId });
   const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
   const posQ = useQuery({
     queryKey: ["position", id, address],
     queryFn: () => getPosition(id, address!),
-    enabled: Number.isFinite(id) && !!address,
+    enabled: validId && !!address,
   });
 
+  // A bad URL (/app/series/abc) or an out-of-range id should read as not-found,
+  // never a blank page.
+  if (!validId || seriesQ.data === null) {
+    return (
+      <div className="space-y-4">
+        <Link to="/app" className="inline-flex items-center gap-1 text-sm text-paper-dim hover:text-paper">
+          <ArrowLeft size={14} aria-hidden /> Markets
+        </Link>
+        <div role="alert" className="rounded-[2px] border border-loss/40 bg-loss/10 px-4 py-3 text-sm">
+          {validId
+            ? `Series #${idParam} does not exist on this network.`
+            : `"${idParam}" is not a valid series id.`}
+        </div>
+      </div>
+    );
+  }
   if (seriesQ.isLoading) return <div className="h-48 animate-pulse rounded-[2px] bg-ink-3" aria-label="Loading series" />;
-  if (seriesQ.isError || seriesQ.data === null) {
+  if (seriesQ.isError) {
     return (
       <div role="alert" className="rounded-[2px] border border-loss/40 bg-loss/10 px-4 py-3 text-sm">
-        Series #{idParam} was not found on this network.
+        Could not load series #{idParam} from the chain.{" "}
+        <button onClick={() => seriesQ.refetch()} className="cursor-pointer font-medium underline">
+          Retry
+        </button>
       </div>
     );
   }

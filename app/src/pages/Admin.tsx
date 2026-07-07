@@ -443,6 +443,18 @@ export function Admin() {
 
   if (configQ.isLoading) return <div className="h-40 animate-pulse rounded-[2px] bg-ink-3" aria-label="Loading" />;
 
+  // A network failure must not masquerade as an authorization failure.
+  if (configQ.isError) {
+    return (
+      <div role="alert" className="rounded-[2px] border border-loss/40 bg-loss/10 px-4 py-3 text-sm">
+        Could not load the protocol configuration from the chain.{" "}
+        <button onClick={() => configQ.refetch()} className="cursor-pointer font-medium underline">
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (!isOwner) {
     return (
       <div className="mx-auto max-w-xl border border-rule bg-ink-2 px-6 py-14 text-center">
