@@ -7,6 +7,7 @@ import { StatusChip } from "../components/StatusChip";
 import { WritePanel } from "../components/WritePanel";
 import { ClaimPanel, ClosePanel } from "../components/ClaimPanel";
 import { OrderBook } from "../components/OrderBook";
+import { PayoffChart } from "../components/PayoffChart";
 import { useWallet } from "../lib/wallet";
 
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
@@ -105,6 +106,8 @@ export function SeriesDetail() {
           <OrderBook series={s} long={posQ.data?.long ?? 0n} />
         </div>
 
+        <div className="space-y-6">
+        <PayoffChart series={s} />
         <section aria-labelledby="your-position" className="h-fit border border-rule bg-ink-2 p-5">
           <h2 id="your-position" className="font-display text-lg font-bold">Your position</h2>
           {!address && <p className="mt-2 text-sm text-paper-dim">Connect your wallet to see your position in this series.</p>}
@@ -122,6 +125,7 @@ export function SeriesDetail() {
             </div>
           )}
         </section>
+        </div>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cl, Pc } from "@stacks/transactions";
-import { SBTC_CONTRACT, type Series } from "../lib/contract";
+import { SBTC_CONTRACT, getBalances, type Series } from "../lib/contract";
 import { formatAmount } from "../lib/format";
 import { useWallet } from "../lib/wallet";
 import { useTx } from "../lib/tx";
@@ -52,6 +52,16 @@ export function WritePanel({ series }: { series: Series }) {
 
   const collateral = qty !== null ? qty * series.maxPayoff : null;
   const busy = state.phase === "signing" || state.phase === "pending";
+
+  // pre-flight: warn before the chain would reject with insufficient balance
+  const balancesQ = useQuery({
+    queryKey: ["balances", address],
+    queryFn: () => getBalances(address!),
+    enabled: !!address,
+    staleTime: 30_000,
+  });
+  const available = balancesQ.data ? (series.asset === "stx" ? balancesQ.data.stx : balancesQ.data.sbtc) : null;
+  const insufficient = collateral !== null && available !== null && collateral > available;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +115,13 @@ export function WritePanel({ series }: { series: Series }) {
             Enter a whole number greater than zero.
           </p>
         )}
+        {insufficient && available !== null && (
+          <p role="alert" className="mt-1.5 text-xs text-loss">
+            Not enough {series.asset === "stx" ? "STX" : "sBTC"}: this write locks{" "}
+            {formatAmount(collateral!, series.asset)} but the wallet holds{" "}
+            {formatAmount(available, series.asset)}.
+          </p>
+        )}
 
         <dl className="mt-6">
           <Row k="You lock now (collateral)" strong v={collateral !== null ? formatAmount(collateral, series.asset) : "-"} />
@@ -116,7 +133,7 @@ export function WritePanel({ series }: { series: Series }) {
 
         <button
           type="submit"
-          disabled={busy || qty === null}
+          disabled={busy || qty === null || insufficient}
           className="mt-6 w-full cursor-pointer rounded-[2px] bg-seal px-5 py-3 font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "Waiting..." : collateral !== null ? `Lock ${formatAmount(collateral, series.asset)} and write` : "Write"}

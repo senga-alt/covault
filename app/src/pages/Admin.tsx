@@ -5,6 +5,7 @@ import {
   getAllSeries,
   getBurnHeight,
   getConfig,
+  isValidPrincipal,
   seriesStatus,
   type Asset,
   type Series,
@@ -173,6 +174,11 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
               className={inputCls}
               placeholder="STX-SBTC"
             />
+            {underlying !== "" && !/^[\x20-\x7E]+$/.test(underlying.trim()) && (
+              <p role="alert" className="mt-1 text-xs text-loss">
+                Plain characters only (letters, digits, dashes) - this is stored on-chain as ASCII.
+              </p>
+            )}
           </div>
           <div>
             <label htmlFor="cs-strike" className={labelCls}>
@@ -341,6 +347,7 @@ function Controls({ paused, openCreation, feeBps, feeRecipient }: { paused: bool
     const n = Number(bpsStr);
     return Number.isInteger(n) && n >= 0 && n <= 500 ? n : null;
   }, [bpsStr]);
+  const recipientValid = isValidPrincipal(recipient);
 
   const anyBusy = (s: { phase: string }) => s.phase === "signing" || s.phase === "pending";
 
@@ -380,8 +387,8 @@ function Controls({ paused, openCreation, feeBps, feeRecipient }: { paused: bool
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (bps === null || !recipient) return;
-            feeTx.run("set-fee", [Cl.uint(bps), Cl.principal(recipient)], []);
+            if (bps === null || !recipientValid) return;
+            feeTx.run("set-fee", [Cl.uint(bps), Cl.principal(recipient.trim())], []);
           }}
           className="border-t border-rule pt-4"
         >
@@ -400,10 +407,20 @@ function Controls({ paused, openCreation, feeBps, feeRecipient }: { paused: bool
               </label>
               <input id="fee-rcpt" value={recipient} onChange={(e) => setRecipient(e.target.value)} className={inputCls} />
             </div>
-            <button type="submit" disabled={anyBusy(feeTx.state) || bps === null || !recipient} className={ruleBtn}>
+            <button type="submit" disabled={anyBusy(feeTx.state) || bps === null || !recipientValid} className={ruleBtn}>
               {anyBusy(feeTx.state) ? "Waiting..." : "Update fee"}
             </button>
           </div>
+          {bpsStr !== "" && bps === null && (
+            <p role="alert" className="mt-1.5 text-xs text-loss">
+              Fee must be a whole number of basis points between 0 and 500 (5%).
+            </p>
+          )}
+          {recipient !== "" && !recipientValid && (
+            <p role="alert" className="mt-1.5 text-xs text-loss">
+              Not a valid Stacks address (expected ST... or SP..., optionally .contract-name).
+            </p>
+          )}
           <TxStatus state={feeTx.state} onDismiss={feeTx.reset} />
         </form>
       </div>

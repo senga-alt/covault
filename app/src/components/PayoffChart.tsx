@@ -1,5 +1,5 @@
 import { payoffPerContract, type Series } from "../lib/contract";
-import { formatAmount, assetUnit } from "../lib/format";
+import { formatAmount, assetSymbol } from "../lib/format";
 
 /**
  * Payoff-at-settlement curve: the instrument's signature visual.
@@ -55,7 +55,7 @@ export function PayoffChart({ series: s }: { series: Series }) {
     <figure className="border border-rule bg-ink-2 p-5">
       <figcaption className="flex items-baseline justify-between gap-4">
         <span className="font-display text-lg font-bold">Payoff at settlement</span>
-        <span className="text-xs text-paper-dim">{assetUnit(s.asset)} per contract</span>
+        <span className="text-xs text-paper-dim">{assetSymbol(s.asset)} per contract</span>
       </figcaption>
 
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary} className="mt-3 w-full">
