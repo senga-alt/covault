@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { GuillocheBand, GuillocheRosette, CornerOrnaments } from "../components/Guilloche";
+import { HeroPayoffArt } from "../components/HeroPayoffArt";
+import { ProductShowcase } from "../components/ProductShowcase";
 import { CONTRACT_ID, NETWORK, getAllSeries, getConfig } from "../lib/contract";
 import { formatAmount } from "../lib/format";
 
@@ -70,9 +72,10 @@ function Hero() {
         </div>
       </nav>
 
-      <div className="relative mx-auto max-w-6xl px-6 pb-24 pt-14 md:pb-28 md:pt-20">
+      <div className="relative mx-auto max-w-6xl overflow-hidden px-6 pb-24 pt-14 md:pb-28 md:pt-20">
         <CornerOrnaments />
-        <div className="grid items-center gap-14 lg:grid-cols-[7fr_5fr] lg:gap-16">
+        <HeroPayoffArt className="pointer-events-none absolute right-0 top-8 hidden h-[440px] w-[62%] max-w-none lg:block" />
+        <div className="relative z-10 grid items-center gap-14 lg:grid-cols-[7fr_5fr] lg:gap-16">
           <div>
             <p className="anim-rise flex flex-wrap items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-gain/40 px-2 py-1 font-mono text-gain">
@@ -483,6 +486,7 @@ export function Landing() {
       <Hero />
       <Invariant />
       <HowItWorks />
+      <ProductShowcase />
       <LiveProof />
       <Foundation />
       <SecurityPosture />

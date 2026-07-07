@@ -26,7 +26,7 @@ export function WalletButton() {
     <button
       onClick={connect}
       disabled={connecting}
-      className="flex cursor-pointer items-center gap-2 rounded-[2px] bg-seal px-4 py-2 text-sm font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:opacity-50"
+      className="flex shrink-0 cursor-pointer items-center gap-2 whitespace-nowrap rounded-[2px] bg-seal px-4 py-2 text-sm font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:opacity-50"
     >
       <Wallet size={16} aria-hidden />
       {connecting ? "Connecting..." : "Connect wallet"}

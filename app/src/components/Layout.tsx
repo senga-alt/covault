@@ -30,27 +30,29 @@ export function Layout() {
         Skip to content
       </a>
       <header className="sticky top-0 z-30 border-b border-rule bg-ink/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="font-display text-xl font-bold tracking-tight">
-              Co<span className="text-seal">vault</span>
-            </Link>
-            <nav aria-label="Primary" className="flex items-center gap-1">
-              <NavLink to="/app" end className={navCls}>
-                Markets
+        {/* two rows on mobile (logo+wallet, then nav); one row from sm up */}
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 sm:h-16 sm:flex-nowrap sm:gap-8 sm:px-6 sm:py-0">
+          <Link to="/" className="order-1 font-display text-xl font-bold tracking-tight">
+            Co<span className="text-seal">vault</span>
+          </Link>
+          <nav
+            aria-label="Primary"
+            className="order-3 -mx-1 flex w-full items-center gap-1 overflow-x-auto sm:order-2 sm:mx-0 sm:w-auto"
+          >
+            <NavLink to="/app" end className={navCls}>
+              Markets
+            </NavLink>
+            <NavLink to="/app/portfolio" className={navCls}>
+              Portfolio
+            </NavLink>
+            {isOwner && (
+              <NavLink to="/app/admin" className={navCls}>
+                Operator
               </NavLink>
-              <NavLink to="/app/portfolio" className={navCls}>
-                Portfolio
-              </NavLink>
-              {isOwner && (
-                <NavLink to="/app/admin" className={navCls}>
-                  Operator
-                </NavLink>
-              )}
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim">
+            )}
+          </nav>
+          <div className="order-2 ml-auto flex items-center gap-3 sm:order-3">
+            <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[420px]:inline-block">
               {NETWORK}
             </span>
             <WalletButton />
@@ -59,17 +61,17 @@ export function Layout() {
       </header>
       {mismatch && (
         <div role="alert" className="border-b border-loss/40 bg-loss/10">
-          <p className="mx-auto max-w-7xl px-6 py-2.5 text-sm">
+          <p className="mx-auto max-w-7xl px-4 py-2.5 text-sm sm:px-6">
             Your wallet is connected with a {NETWORK === "testnet" ? "mainnet" : "testnet"} address, but this app
             runs on {NETWORK}. Switch the network inside your wallet, then reconnect - transactions will fail
             until then.
           </p>
         </div>
       )}
-      <main id="main" className="mx-auto max-w-7xl px-6 py-10">
+      <main id="main" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <Outlet />
       </main>
-      <footer className="mx-auto max-w-7xl border-t border-rule px-6 py-6 text-xs text-paper-dim">
+      <footer className="mx-auto max-w-7xl border-t border-rule px-4 py-6 text-xs text-paper-dim sm:px-6">
         Solvent by construction: every payoff is capped at its locked collateral.
       </footer>
     </div>
