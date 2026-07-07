@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { request } from "@stacks/connect";
 import type { ClarityValue, PostCondition } from "@stacks/transactions";
 import { API_BASE, CONTRACT_ID, NETWORK } from "./contract";
@@ -9,6 +9,7 @@ import { API_BASE, CONTRACT_ID, NETWORK } from "./contract";
  */
 const CONTRACT_ERRORS: Record<number, string> = {
   1: "Insufficient balance in the collateral asset.",
+  2: "Sender and recipient are the same account - you cannot fill your own offer.",
   100: "Only the contract owner can do this.",
   101: "Only the settlement oracle can do this.",
   102: "That series does not exist.",
@@ -49,14 +50,24 @@ export type TxState =
   | { phase: "success"; txid: string; resultRepr?: string }
   | { phase: "error"; message: string; txid?: string };
 
+/**
+ * Poll until confirmed or failed. Tolerates transient network errors (keeps
+ * retrying) instead of misreporting a broadcast transaction as failed.
+ */
 async function pollTx(txid: string, signal: AbortSignal): Promise<{ ok: boolean; status: string; repr?: string }> {
+  let consecutiveFailures = 0;
   for (let i = 0; i < 90; i++) {
     if (signal.aborted) throw new Error("aborted");
-    const r = await fetch(`${API_BASE}/extended/v1/tx/0x${txid.replace(/^0x/, "")}`);
-    if (r.ok) {
-      const j = await r.json();
-      if (j.tx_status === "success") return { ok: true, status: j.tx_status, repr: j.tx_result?.repr };
-      if (j.tx_status !== "pending") return { ok: false, status: j.tx_status, repr: j.tx_result?.repr };
+    try {
+      const r = await fetch(`${API_BASE}/extended/v1/tx/0x${txid.replace(/^0x/, "")}`);
+      if (r.ok) {
+        consecutiveFailures = 0;
+        const j = await r.json();
+        if (j.tx_status === "success") return { ok: true, status: j.tx_status, repr: j.tx_result?.repr };
+        if (j.tx_status !== "pending") return { ok: false, status: j.tx_status, repr: j.tx_result?.repr };
+      }
+    } catch {
+      if (++consecutiveFailures >= 8) return { ok: false, status: "network" };
     }
     await new Promise((res) => setTimeout(res, 4000));
   }
@@ -65,11 +76,15 @@ async function pollTx(txid: string, signal: AbortSignal): Promise<{ ok: boolean;
 
 /**
  * One in-flight contract call per hook instance: sign -> broadcast -> poll.
- * `onSuccess` is where callers refresh their chain reads.
+ * Polling is cancelled on unmount; broadcast and poll failures are reported
+ * distinctly, so a confirmed-later transaction is never called "not sent".
  */
 export function useTx(onSuccess?: () => void) {
   const [state, setState] = useState<TxState>({ phase: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+
+  // never poll or set state after unmount
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const run = useCallback(
     async (functionName: string, functionArgs: ClarityValue[], postConditions: PostCondition[]) => {
@@ -77,6 +92,8 @@ export function useTx(onSuccess?: () => void) {
       const ac = new AbortController();
       abortRef.current = ac;
       setState({ phase: "signing" });
+
+      let txid: string | undefined;
       try {
         const res = await request("stx_callContract", {
           contract: CONTRACT_ID as `${string}.${string}`,
@@ -86,26 +103,47 @@ export function useTx(onSuccess?: () => void) {
           postConditionMode: "deny",
           network: NETWORK,
         });
-        const txid = res.txid;
+        txid = res.txid;
         if (!txid) throw new Error("Wallet did not return a transaction id.");
-        setState({ phase: "pending", txid });
-        const out = await pollTx(txid, ac.signal);
-        if (out.ok) {
-          setState({ phase: "success", txid, resultRepr: out.repr });
-          onSuccess?.();
-        } else if (out.status === "timeout") {
-          setState({ phase: "error", txid, message: "Still unconfirmed after several minutes. Check the explorer link." });
-        } else {
-          setState({ phase: "error", txid, message: explainTxFailure(out.status, out.repr) });
-        }
       } catch (e) {
-        if ((e as Error).message === "aborted") return;
+        if (ac.signal.aborted) return;
         const msg = (e as Error)?.message ?? "";
         setState({
           phase: "error",
           message: /reject|cancel|denied|closed/i.test(msg)
             ? "Signature request cancelled in the wallet. Nothing was sent."
             : msg || "Could not send the transaction.",
+        });
+        return;
+      }
+
+      if (ac.signal.aborted) return;
+      setState({ phase: "pending", txid });
+
+      try {
+        const out = await pollTx(txid, ac.signal);
+        if (ac.signal.aborted) return;
+        if (out.ok) {
+          setState({ phase: "success", txid, resultRepr: out.repr });
+          onSuccess?.();
+        } else if (out.status === "timeout" || out.status === "network") {
+          setState({
+            phase: "error",
+            txid,
+            message:
+              out.status === "network"
+                ? "Lost connection while waiting. The transaction was broadcast - check its status on the explorer."
+                : "Still unconfirmed after several minutes. The transaction was broadcast - check the explorer link.",
+          });
+        } else {
+          setState({ phase: "error", txid, message: explainTxFailure(out.status, out.repr) });
+        }
+      } catch (e) {
+        if ((e as Error).message === "aborted" || ac.signal.aborted) return;
+        setState({
+          phase: "error",
+          txid,
+          message: "Could not track the transaction, but it was broadcast - check the explorer link.",
         });
       }
     },

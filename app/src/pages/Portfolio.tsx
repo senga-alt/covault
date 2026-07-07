@@ -42,6 +42,15 @@ export function Portfolio() {
         </div>
       )}
 
+      {address && q.isError && (
+        <div role="alert" className="rounded-[2px] border border-loss/40 bg-loss/10 px-4 py-3 text-sm">
+          Could not load your positions from the chain.{" "}
+          <button onClick={() => q.refetch()} className="cursor-pointer font-medium underline">
+            Retry
+          </button>
+        </div>
+      )}
+
       {address && q.data && q.data.length === 0 && (
         <div className="border border-rule bg-ink-2 px-6 py-14 text-center">
           <p className="font-display text-lg font-bold">No positions yet</p>

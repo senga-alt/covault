@@ -9,10 +9,18 @@ const navCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-ink-3 text-paper" : "text-paper-dim hover:text-paper"
   }`;
 
+/** Testnet principals start ST/SN, mainnet SP/SM - detect a wallet on the wrong network. */
+function networkMismatch(address: string | null): boolean {
+  if (!address) return false;
+  const onTestnetAddr = address.startsWith("ST") || address.startsWith("SN");
+  return NETWORK === "testnet" ? !onTestnetAddr : onTestnetAddr;
+}
+
 export function Layout() {
   const { address } = useWallet();
   const configQ = useQuery({ queryKey: ["config"], queryFn: getConfig });
   const isOwner = !!address && address === configQ.data?.owner;
+  const mismatch = networkMismatch(address);
   return (
     <div className="min-h-dvh">
       <a
@@ -49,6 +57,15 @@ export function Layout() {
           </div>
         </div>
       </header>
+      {mismatch && (
+        <div role="alert" className="border-b border-loss/40 bg-loss/10">
+          <p className="mx-auto max-w-7xl px-6 py-2.5 text-sm">
+            Your wallet is connected with a {NETWORK === "testnet" ? "mainnet" : "testnet"} address, but this app
+            runs on {NETWORK}. Switch the network inside your wallet, then reconnect - transactions will fail
+            until then.
+          </p>
+        </div>
+      )}
       <main id="main" className="mx-auto max-w-7xl px-6 py-10">
         <Outlet />
       </main>
