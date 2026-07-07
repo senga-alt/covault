@@ -74,7 +74,14 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
     return Number.isInteger(n) && n > 0 ? n : null;
   }, [aheadStr]);
   const expiry = ahead !== null ? burnHeight + ahead : null;
-  const days = ahead !== null ? Math.round((ahead * 10) / 60 / 24) : null;
+  const eta =
+    ahead === null
+      ? null
+      : ahead * 10 < 60
+        ? `~${ahead * 10} min`
+        : ahead * 10 < 60 * 24
+          ? `~${Math.round((ahead * 10) / 60)} h`
+          : `~${Math.round((ahead * 10) / 60 / 24)} days`;
 
   const valid =
     underlying.trim().length > 0 &&
@@ -228,7 +235,7 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
             />
             {expiry !== null && (
               <p className="mt-1 text-xs text-paper-dim">
-                block #{expiry.toLocaleString()} (~{days} days)
+                block #{expiry.toLocaleString()} ({eta})
               </p>
             )}
           </div>

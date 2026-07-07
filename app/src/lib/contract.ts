@@ -168,3 +168,20 @@ export async function getBurnHeight(): Promise<number> {
   const j = await r.json();
   return j.burn_block_height as number;
 }
+
+/** STX + sBTC balances for an address, for pre-flight sufficiency checks. */
+export async function getBalances(address: string): Promise<{ stx: bigint; sbtc: bigint }> {
+  const r = await fetch(`${API_BASE}/extended/v1/address/${address}/balances`);
+  if (!r.ok) throw new Error("Could not load wallet balances.");
+  const j = await r.json();
+  const key = Object.keys(j.fungible_tokens ?? {}).find((k) => k.startsWith(SBTC_CONTRACT));
+  return {
+    stx: BigInt(j.stx?.balance ?? 0),
+    sbtc: BigInt(key ? j.fungible_tokens[key].balance : 0),
+  };
+}
+
+/** Loose Stacks principal check (standard or contract), for form validation. */
+export function isValidPrincipal(v: string): boolean {
+  return /^S[TPMN][0-9A-HJKMNP-Z]{37,40}(\.[a-z]([a-z0-9-]{0,39}))?$/.test(v.trim());
+}
