@@ -74,7 +74,7 @@ function Hero() {
 
       <div className="relative mx-auto max-w-6xl overflow-hidden px-6 pb-24 pt-14 md:pb-28 md:pt-20">
         <CornerOrnaments />
-        <HeroPayoffArt className="pointer-events-none absolute right-0 top-8 hidden h-[440px] w-[62%] max-w-none lg:block" />
+        <HeroPayoffArt className="pointer-events-none absolute -right-[3%] top-6 hidden h-[420px] w-[56%] max-w-none opacity-90 [mask-image:radial-gradient(115%_125%_at_72%_36%,black_36%,transparent_80%)] lg:block" />
         <div className="relative z-10 grid items-center gap-14 lg:grid-cols-[7fr_5fr] lg:gap-16">
           <div>
             <p className="anim-rise flex flex-wrap items-center gap-2 text-xs">
@@ -121,7 +121,7 @@ function HeroPanel() {
   const q = useQuery({ queryKey: ["series"], queryFn: getAllSeries });
   return (
     <div className="anim-rise anim-rise-3 relative hidden lg:block" aria-label="Live markets excerpt">
-      <div className="border border-rule bg-ink-2">
+      <div className="border border-rule bg-ink-2 shadow-[0_18px_54px_-24px_rgba(0,0,0,0.85)]">
         <div className="flex items-center justify-between border-b border-rule px-4 py-2.5">
           <span className="font-display text-sm font-bold">Markets</span>
           <span className="font-mono text-[10px] uppercase tracking-widest text-paper-dim">
@@ -162,12 +162,11 @@ function HeroPanel() {
           </tbody>
         </table>
         <div className="border-t border-rule px-4 py-2.5">
-          <Link to="/app" className="text-xs font-medium text-seal-hi hover:underline">
+          <Link to="/app" className="text-xs font-medium text-seal-hi transition-colors duration-200 hover:text-seal">
             Open the full order book -&gt;
           </Link>
         </div>
       </div>
-      <GuillocheRosette className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 opacity-60" />
     </div>
   );
 }

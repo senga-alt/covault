@@ -11,6 +11,18 @@ export const SBTC_CONTRACT =
     ? "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"
     : "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token";
 
+// DIA on-chain oracle (price source for permissionless settlement).
+export const DIA_CONTRACT =
+  NETWORK === "mainnet"
+    ? "SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle"
+    : "ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle";
+
+// Optional settler deployment. When set, settlement is permissionless via DIA
+// (settle-from-dia); when unset, the app falls back to the operator's manual
+// settle on core. Set VITE_SETTLER_CONTRACT once the settler is deployed.
+export const SETTLER_ID = (import.meta.env.VITE_SETTLER_CONTRACT ?? "") as string;
+export const hasSettler = SETTLER_ID.includes(".");
+
 export const API_BASE = NETWORK === "mainnet" ? "https://api.hiro.so" : "https://api.testnet.hiro.so";
 
 export const explorerTxUrl = (txid: string) =>

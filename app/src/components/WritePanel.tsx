@@ -86,7 +86,10 @@ export function WritePanel({ series }: { series: Series }) {
 
   return (
     <section aria-labelledby="write" className="border border-rule bg-ink-2 p-5">
-      <h2 id="write" className="font-display text-lg font-bold">Write options</h2>
+      <h2 id="write" className="flex items-center gap-2.5 font-display text-lg font-bold">
+        <span className="inline-block h-2.5 w-2.5 shrink-0 bg-seal" aria-hidden />
+        Write options
+      </h2>
       <p className="mt-1.5 text-sm text-paper-dim">
         Lock collateral, receive {qty !== null ? qty.toString() : "N"} option{qty === 1n ? "" : "s"} (long) and the
         matching obligation{qty === 1n ? "" : "s"} (short). Sell the longs for premium; your risk never exceeds the
