@@ -87,7 +87,12 @@ export function useTx(onSuccess?: () => void) {
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const run = useCallback(
-    async (functionName: string, functionArgs: ClarityValue[], postConditions: PostCondition[]) => {
+    async (
+      functionName: string,
+      functionArgs: ClarityValue[],
+      postConditions: PostCondition[],
+      contractId: string = CONTRACT_ID
+    ) => {
       abortRef.current?.abort();
       const ac = new AbortController();
       abortRef.current = ac;
@@ -96,7 +101,7 @@ export function useTx(onSuccess?: () => void) {
       let txid: string | undefined;
       try {
         const res = await request("stx_callContract", {
-          contract: CONTRACT_ID as `${string}.${string}`,
+          contract: contractId as `${string}.${string}`,
           functionName,
           functionArgs,
           postConditions,

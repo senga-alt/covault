@@ -8,12 +8,14 @@ import { WritePanel } from "../components/WritePanel";
 import { ClaimPanel, ClosePanel } from "../components/ClaimPanel";
 import { OrderBook } from "../components/OrderBook";
 import { PayoffChart } from "../components/PayoffChart";
+import { SettleFromDia } from "../components/SettleFromDia";
 import { useWallet } from "../lib/wallet";
 
+// One cell of the facts strip - borderless; the strip provides the hairlines.
 function Stat({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="border border-rule bg-ink-2 px-4 py-3">
-      <dt className="text-xs uppercase tracking-widest text-paper-dim">{label}</dt>
+    <div className="flex-1 px-4 py-3.5">
+      <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
       <dd className="tnum mt-1.5 text-lg font-medium">{children}</dd>
     </div>
   );
@@ -85,7 +87,7 @@ export function SeriesDetail() {
         </p>
       </div>
 
-      <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
         <Stat label="Strike">{formatAmount(s.strike, s.asset)}</Stat>
         <Stat label="Collateral / contract">{formatAmount(s.maxPayoff, s.asset)}</Stat>
         <Stat label="Expiry">
@@ -110,6 +112,7 @@ export function SeriesDetail() {
                 This series passed its expiry block. Once the settlement price is recorded,
                 exercise and reclaim open here - with no deadline.
               </p>
+              <SettleFromDia id={s.id} />
             </section>
           )}
           {status === "settled" && posQ.data && (
@@ -128,8 +131,8 @@ export function SeriesDetail() {
 
         <div className="space-y-6">
         <PayoffChart series={s} />
-        <section aria-labelledby="your-position" className="h-fit border border-rule bg-ink-2 p-5">
-          <h2 id="your-position" className="font-display text-lg font-bold">Your position</h2>
+        <section aria-labelledby="your-position" className="h-fit rounded-[2px] bg-ink-2/60 p-5">
+          <h2 id="your-position" className="text-sm font-semibold text-paper">Your position</h2>
           {!address && <p className="mt-2 text-sm text-paper-dim">Connect your wallet to see your position in this series.</p>}
           {address && posQ.isLoading && <div className="mt-3 h-8 animate-pulse rounded-[2px] bg-ink-3" />}
           {address && posQ.data && (

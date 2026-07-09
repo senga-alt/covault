@@ -2,9 +2,12 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cl } from "@stacks/transactions";
 import {
+  DIA_CONTRACT,
+  SETTLER_ID,
   getAllSeries,
   getBurnHeight,
   getConfig,
+  hasSettler,
   isValidPrincipal,
   seriesStatus,
   type Asset,
@@ -270,45 +273,65 @@ function Settle({ series, burnHeight, isOracle }: { series: Series[]; burnHeight
   const price = bigintOrNull(priceStr);
   const busy = state.phase === "signing" || state.phase === "pending";
 
-  const submit = (e: React.FormEvent) => {
+  const submitDia = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chosen) return;
+    // permissionless: settler reads DIA and records the derived price on core
+    run("settle-from-dia", [Cl.uint(chosen.id), Cl.principal(DIA_CONTRACT)], [], SETTLER_ID);
+  };
+  const submitManual = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chosen || price === null) return;
     run("settle", [Cl.uint(chosen.id), Cl.uint(price)], []);
   };
 
+  const seriesSelect = (
+    <div>
+      <label htmlFor="settle-id" className={labelCls}>Series</label>
+      <select
+        id="settle-id"
+        value={(id ?? eligible[0]?.id)?.toString()}
+        onChange={(e) => setId(Number(e.target.value))}
+        disabled={busy}
+        className={inputCls + " w-52"}
+      >
+        {eligible.map((s) => (
+          <option key={s.id} value={s.id}>
+            #{s.id} {s.underlying}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <Panel
       title="Settle a series"
       sub={
-        isOracle
-          ? "Records the settlement price for an expired series. One price, once."
-          : "The connected wallet is not the oracle - settlement calls will be rejected."
+        hasSettler
+          ? "Permissionless: the settler reads DIA on-chain and records the derived price. No manual entry."
+          : isOracle
+            ? "Records the settlement price for an expired series. One price, once."
+            : "The connected wallet is not the oracle - settlement calls will be rejected."
       }
     >
       {eligible.length === 0 ? (
-        <p className="mt-3 border-t border-rule pt-3 text-sm text-paper-dim">
-          No series awaiting settlement.
-        </p>
-      ) : (
-        <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
-          <div>
-            <label htmlFor="settle-id" className={labelCls}>
-              Series
-            </label>
-            <select
-              id="settle-id"
-              value={(id ?? eligible[0]?.id)?.toString()}
-              onChange={(e) => setId(Number(e.target.value))}
-              disabled={busy}
-              className={inputCls + " w-52"}
-            >
-              {eligible.map((s) => (
-                <option key={s.id} value={s.id}>
-                  #{s.id} {s.underlying}
-                </option>
-              ))}
-            </select>
+        <p className="mt-3 border-t border-rule pt-3 text-sm text-paper-dim">No series awaiting settlement.</p>
+      ) : hasSettler ? (
+        <form onSubmit={submitDia} className="mt-4">
+          <div className="flex flex-wrap items-end gap-3">
+            {seriesSelect}
+            <button type="submit" disabled={busy || !chosen} className={sealBtn}>
+              {busy ? "Waiting..." : "Settle from DIA"}
+            </button>
           </div>
+          <p className="mt-2 text-xs text-paper-dim">
+            Reads STX/USD and sBTC/USD from DIA and records the derived collateral-unit price on-chain.
+          </p>
+        </form>
+      ) : (
+        <form onSubmit={submitManual} className="mt-4 flex flex-wrap items-end gap-3">
+          {seriesSelect}
           <div>
             <label htmlFor="settle-price" className={labelCls}>
               Settlement price ({chosen?.asset === "sbtc" ? "sats" : "uSTX"})
@@ -336,24 +359,73 @@ function Settle({ series, burnHeight, isOracle }: { series: Series[]; burnHeight
 /* protocol controls                                                   */
 /* ------------------------------------------------------------------ */
 
-function Controls({ paused, openCreation, feeBps, feeRecipient }: { paused: boolean; openCreation: boolean; feeBps: number; feeRecipient: string }) {
+function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paused: boolean; openCreation: boolean; feeBps: number; feeRecipient: string; oracle: string }) {
   const pauseTx = useTx(useInvalidateAdmin());
   const openTx = useTx(useInvalidateAdmin());
   const feeTx = useTx(useInvalidateAdmin());
+  const oracleTx = useTx(useInvalidateAdmin());
   const [bpsStr, setBpsStr] = useState(feeBps.toString());
   const [recipient, setRecipient] = useState(feeRecipient);
+  // prefill with the configured settler when known - the go-live wiring target
+  const [oracleStr, setOracleStr] = useState(hasSettler ? SETTLER_ID : oracle);
 
   const bps = useMemo(() => {
     const n = Number(bpsStr);
     return Number.isInteger(n) && n >= 0 && n <= 500 ? n : null;
   }, [bpsStr]);
   const recipientValid = isValidPrincipal(recipient);
+  const oracleValid = isValidPrincipal(oracleStr);
+  const oracleIsSettler = hasSettler && oracle === SETTLER_ID;
 
   const anyBusy = (s: { phase: string }) => s.phase === "signing" || s.phase === "pending";
 
   return (
     <Panel title="Protocol controls" sub="Owner-only switches. A pause never blocks exits.">
       <div className="mt-4 space-y-5">
+        {/* settlement oracle: point core at the settler to enable permissionless DIA settlement */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!oracleValid) return;
+            oracleTx.run("set-oracle", [Cl.principal(oracleStr.trim())], []);
+          }}
+          className="border-t border-rule pt-4"
+        >
+          <p className="text-sm font-medium">
+            Settlement oracle {oracleIsSettler && <span className="text-gain">(settler wired)</span>}
+          </p>
+          <p className="text-xs text-paper-dim">
+            Current: <span className="tnum">{shortAddress(oracle)}</span>. Point this at the settler to make
+            settlement permissionless via DIA. Afterwards the operator can no longer settle manually - by design.
+          </p>
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <div className="grow">
+              <label htmlFor="oracle-principal" className={labelCls}>
+                Oracle contract
+              </label>
+              <input id="oracle-principal" value={oracleStr} onChange={(e) => setOracleStr(e.target.value)} className={inputCls} placeholder="ST3XC6....covault-settler" />
+            </div>
+            <button type="submit" disabled={anyBusy(oracleTx.state) || !oracleValid || oracleStr.trim() === oracle} className={ruleBtn}>
+              {anyBusy(oracleTx.state) ? "Waiting..." : "Set oracle"}
+            </button>
+          </div>
+          {oracleStr !== "" && !oracleValid && (
+            <p role="alert" className="mt-1.5 text-xs text-loss">
+              Not a valid Stacks contract principal (expected ST/SP....contract-name).
+            </p>
+          )}
+          {hasSettler && !oracleIsSettler && oracleStr.trim() !== SETTLER_ID && (
+            <button
+              type="button"
+              onClick={() => setOracleStr(SETTLER_ID)}
+              className="mt-2 cursor-pointer text-xs text-seal-hi underline"
+            >
+              use the configured settler ({shortAddress(SETTLER_ID)})
+            </button>
+          )}
+          <TxStatus state={oracleTx.state} onDismiss={oracleTx.reset} />
+        </form>
+
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
           <div>
             <p className="text-sm font-medium">New writes: {paused ? "paused" : "open"}</p>
@@ -479,7 +551,7 @@ export function Admin() {
       </div>
       <CreateSeries burnHeight={burnQ.data ?? 0} />
       <Settle series={seriesQ.data ?? []} burnHeight={burnQ.data ?? 0} isOracle={address === cfg.oracle} />
-      <Controls paused={cfg.paused} openCreation={cfg.openCreation} feeBps={cfg.feeBps} feeRecipient={cfg.feeRecipient} />
+      <Controls paused={cfg.paused} openCreation={cfg.openCreation} feeBps={cfg.feeBps} feeRecipient={cfg.feeRecipient} oracle={cfg.oracle} />
     </div>
   );
 }
