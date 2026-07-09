@@ -18,10 +18,14 @@ function SealButton({ to, children }: { to: string; children: React.ReactNode })
   return (
     <Link
       to={to}
-      className="inline-flex items-center gap-2 rounded-[2px] bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi"
+      className="group inline-flex items-center gap-2 rounded-[2px] bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98]"
     >
       {children}
-      <ArrowRight size={16} aria-hidden />
+      <ArrowRight
+        size={16}
+        aria-hidden
+        className="transition-transform duration-200 group-hover:translate-x-0.5"
+      />
     </Link>
   );
 }

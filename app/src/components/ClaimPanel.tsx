@@ -108,7 +108,10 @@ export function ClaimPanel({ series, long, short }: { series: Series; long: bigi
   return (
     <section aria-labelledby="claims" className="space-y-4 border border-rule bg-ink-2 p-5">
       <div>
-        <h2 id="claims" className="font-display text-lg font-bold">Settlement claims</h2>
+        <h2 id="claims" className="flex items-center gap-2.5 font-display text-lg font-bold">
+          <span className="inline-block h-2.5 w-2.5 shrink-0 bg-seal" aria-hidden />
+          Settlement claims
+        </h2>
         <p className="mt-1 text-sm text-paper-dim">
           Settled at <span className="tnum">{formatAmount(series.settlementPrice, series.asset)}</span>. Claims stay
           open forever - there is no deadline.

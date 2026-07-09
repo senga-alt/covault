@@ -5,20 +5,20 @@
  * Deep intaglio-ink field, engraved-paper text, gilt ornament, wax-seal accent.
  */
 @theme {
-  /* surfaces */
-  --color-ink: oklch(0.16 0.014 75);
-  --color-ink-2: oklch(0.19 0.016 75);
-  --color-ink-3: oklch(0.23 0.018 78);
+  /* surfaces - crisp deep near-black; warmth lives in gilt/seal/paper, not the field */
+  --color-ink: oklch(0.145 0.005 75);
+  --color-ink-2: oklch(0.178 0.006 75);
+  --color-ink-3: oklch(0.215 0.007 78);
   /* text */
-  --color-paper: oklch(0.93 0.014 85);
-  --color-paper-dim: oklch(0.71 0.02 82);
+  --color-paper: oklch(0.94 0.013 85);
+  --color-paper-dim: oklch(0.72 0.018 82);
   /* structure + ornament */
-  --color-rule: oklch(0.34 0.02 80);
+  --color-rule: oklch(0.315 0.01 78);
   --color-gilt: oklch(0.78 0.08 85);
   /* action + semantics */
   --color-seal: oklch(0.6 0.19 38);
   --color-seal-hi: oklch(0.66 0.19 40);
-  --color-on-seal: oklch(0.16 0.014 75);
+  --color-on-seal: oklch(0.145 0.005 75);
   --color-gain: oklch(0.74 0.13 150);
   --color-loss: oklch(0.64 0.19 25);
 

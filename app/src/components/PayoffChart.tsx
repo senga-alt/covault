@@ -78,9 +78,19 @@ export function PayoffChart({ series: s }: { series: Series }) {
           strike {tickLabel(s.strike)}
         </text>
 
-        {/* payoff region + line */}
+        {/* payoff region + line (the line draws itself in on mount) */}
         <path d={area} fill="var(--color-gain)" opacity="0.08" />
-        <path d={line} fill="none" stroke="var(--color-gain)" strokeWidth="1.75" />
+        <path
+          d={line}
+          fill="none"
+          stroke="var(--color-gain)"
+          strokeWidth="1.75"
+          style={{
+            strokeDasharray: 1000,
+            ["--dash" as string]: 1000,
+            animation: "draw 0.9s 0.12s cubic-bezier(0.16,1,0.3,1) both",
+          }}
+        />
 
         {/* settlement price marker */}
         {spClamped !== null && payoffAtSp !== null && (

@@ -137,7 +137,7 @@ export function WritePanel({ series }: { series: Series }) {
         <button
           type="submit"
           disabled={busy || qty === null || insufficient}
-          className="mt-6 w-full cursor-pointer rounded-[2px] bg-seal px-5 py-3 font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-6 w-full cursor-pointer rounded-[2px] bg-seal px-5 py-3 font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"
         >
           {busy ? "Waiting..." : collateral !== null ? `Lock ${formatAmount(collateral, series.asset)} and write` : "Write"}
         </button>
