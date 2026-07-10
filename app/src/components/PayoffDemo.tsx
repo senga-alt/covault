@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { CornerOrnaments } from "./Guilloche";
 
 /**
  * The invariant, animated and interactive: pick the asset (STX / sBTC) and the
@@ -120,18 +119,18 @@ export function PayoffDemo() {
   return (
     <figure ref={rootRef} className="relative m-0" aria-label="Animated example: how settlement pays">
       <div className="relative border border-rule bg-ink-2 p-4 shadow-[0_18px_54px_-24px_rgba(0,0,0,0.85)]">
-        <CornerOrnaments />
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="font-display text-sm font-bold">How settlement pays</span>
-          <div className="flex gap-1.5" role="group" aria-label="Example configuration">
+        <span className="font-display text-base font-bold">How settlement pays</span>
+        <div className="mt-2.5 flex flex-wrap items-center gap-3" role="group" aria-label="Example configuration">
+          <div className="flex gap-1.5">
             <button type="button" aria-pressed={asset === "sbtc"} onClick={() => setAsset("sbtc")} className={toggleCls(asset === "sbtc")}>
               sBTC
             </button>
             <button type="button" aria-pressed={asset === "stx"} onClick={() => setAsset("stx")} className={toggleCls(asset === "stx")}>
               STX
             </button>
-            <span className="w-1" aria-hidden />
+          </div>
+          <span className="h-4 w-px bg-rule" aria-hidden />
+          <div className="flex gap-1.5">
             <button type="button" aria-pressed={kind === "put"} onClick={() => setKind("put")} className={toggleCls(kind === "put")}>
               Put
             </button>
@@ -140,7 +139,7 @@ export function PayoffDemo() {
             </button>
           </div>
         </div>
-        <p className="tnum mt-1 text-xs text-paper-dim">
+        <p className="tnum mt-2.5 text-xs text-paper-dim">
           {kind === "put"
             ? `Cash-secured put - strike ${c.f(g.K)} ${c.label}, ${c.f(g.cap)} ${c.label} locked`
             : `Capped call - strike ${c.f(g.K)} ${c.label}, cap +${c.f(g.cap)} ${c.label} locked`}
@@ -198,9 +197,7 @@ export function PayoffDemo() {
           payoff + leftover <span className="text-seal">=</span> {c.f(g.cap)} {c.label} collateral, always
         </p>
       </div>
-      <figcaption className="mt-3 text-center font-mono text-[11px] uppercase tracking-widest text-paper-dim">
-        The same math the contract runs at settlement
-      </figcaption>
+      <figcaption className="sr-only">The same math the contract runs at settlement</figcaption>
     </figure>
   );
 }

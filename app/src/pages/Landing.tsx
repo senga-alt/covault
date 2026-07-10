@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { GuillocheBand, CornerOrnaments, SectionMark } from "../components/Guilloche";
+import { GuillocheBand, SectionMark } from "../components/Guilloche";
 import { HeroPayoffArt } from "../components/HeroPayoffArt";
 import { ProductShowcase } from "../components/ProductShowcase";
 import { Reveal } from "../components/Reveal";
@@ -91,43 +91,46 @@ function LandingNav() {
 function Hero() {
   return (
     <header className="relative">
-      <div className="relative mx-auto max-w-6xl overflow-hidden px-6 pb-24 pt-16 md:pb-28 md:pt-24">
-        <CornerOrnaments />
+      <div className="relative mx-auto max-w-6xl overflow-hidden px-6 pb-24 pt-20 md:pb-28 md:pt-28">
         <div className="anim-float pointer-events-none absolute -right-[3%] top-6 hidden h-[420px] w-[56%] lg:block">
           <HeroPayoffArt className="h-full w-full max-w-none opacity-90 [mask-image:radial-gradient(115%_125%_at_72%_36%,black_36%,transparent_80%)]" />
         </div>
-        <div className="relative z-10 grid items-center gap-10 lg:grid-cols-[7fr_5fr] lg:gap-16">
-          <div>
-            <p className="anim-rise flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-gain/40 px-2 py-1 font-mono text-gain">
-                <span className="h-1.5 w-1.5 rounded-full bg-gain" aria-hidden /> Live on {NETWORK}
-              </span>
-              <span className="inline-flex items-center rounded-[2px] border border-rule px-2 py-1 font-mono text-paper-dim">
-                full lifecycles settled in sBTC and STX
-              </span>
-            </p>
-            <h1 className="anim-rise mt-7 font-display text-[clamp(2.6rem,6vw,4.6rem)] font-extrabold leading-[1.05] tracking-[-0.02em]">
-              Options, fully collateralized. Settled in Bitcoin.
-            </h1>
-            <p className="anim-rise anim-rise-2 mt-7 max-w-[62ch] text-lg text-paper-dim">
-              Covault is an options clearinghouse on Stacks where every contract is backed, in
-              full, by collateral locked on-chain - in sBTC or native STX. No margin calls. No
-              liquidation engine. Nothing to go insolvent.
-            </p>
-            <div className="anim-rise anim-rise-3 mt-9 flex flex-col items-stretch gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
-              <SealButton to="/app" className="justify-center sm:justify-start">Enter the vault</SealButton>
-              <a
-                href={`https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-center text-[15px] font-medium text-paper-dim underline decoration-rule underline-offset-4 transition-colors duration-200 hover:text-paper sm:text-left"
-              >
-                Verify the contract on-chain
-              </a>
+        <div className="relative z-10">
+          <h1 className="anim-rise font-display text-[clamp(2.6rem,4.5vw,4.1rem)] font-extrabold leading-[1.06] tracking-[-0.02em]">
+            <span className="block">Options, fully collateralized.</span>
+            <span className="block text-seal">Settled in Bitcoin.</span>
+          </h1>
+          <div className="mt-10 grid items-start gap-12 md:mt-12 lg:grid-cols-[7fr_5fr] lg:gap-16">
+            <div>
+              <p className="anim-rise anim-rise-2 max-w-[52ch] text-xl leading-relaxed text-paper-dim">
+                An options clearinghouse on Stacks. Every contract is backed in full by
+                collateral locked on-chain - sBTC or native STX. No margin calls, no
+                liquidations, nothing to go insolvent.
+              </p>
+              <div className="anim-rise anim-rise-3 mt-9 flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
+                <SealButton to="/app" className="justify-center sm:justify-start">Enter the vault</SealButton>
+                <a
+                  href={`https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-[2px] border border-rule px-6 py-3 text-[15px] font-medium text-paper transition duration-200 hover:bg-ink-3 active:scale-[0.98]"
+                >
+                  Verify the contract on-chain
+                </a>
+              </div>
+              <p className="anim-rise anim-rise-3 mt-6 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-paper-dim">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-gain" aria-hidden /> Live on Stacks {NETWORK}
+                </span>
+                <span aria-hidden>·</span>
+                <span>Settles in sBTC or native STX</span>
+                <span aria-hidden>·</span>
+                <span>Non-custodial</span>
+              </p>
             </div>
-          </div>
-          <div className="anim-rise anim-rise-3 relative">
-            <PayoffDemo />
+            <div className="anim-rise anim-rise-3 relative lg:-mt-16">
+              <PayoffDemo />
+            </div>
           </div>
         </div>
       </div>
