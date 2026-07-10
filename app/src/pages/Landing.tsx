@@ -1,11 +1,13 @@
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { GuillocheBand, GuillocheRosette, CornerOrnaments } from "../components/Guilloche";
+import { GuillocheBand, CornerOrnaments, SectionMark } from "../components/Guilloche";
 import { HeroPayoffArt } from "../components/HeroPayoffArt";
 import { ProductShowcase } from "../components/ProductShowcase";
+import { CountUp, Reveal } from "../components/Reveal";
+import { PayoffDemo } from "../components/PayoffDemo";
 import { CONTRACT_ID, NETWORK, getAllSeries, getConfig } from "../lib/contract";
-import { formatAmount } from "../lib/format";
 
 const GITHUB_URL = "https://github.com/senga-alt/covault";
 const EXPLORER_URL = `https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`;
@@ -14,11 +16,11 @@ const EXPLORER_URL = `https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWO
 /* small pieces                                                        */
 /* ------------------------------------------------------------------ */
 
-function SealButton({ to, children }: { to: string; children: React.ReactNode }) {
+function SealButton({ to, children, className = "" }: { to: string; children: React.ReactNode; className?: string }) {
   return (
     <Link
       to={to}
-      className="group inline-flex items-center gap-2 rounded-[2px] bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98]"
+      className={`group inline-flex items-center gap-2 rounded-[2px] bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] ${className}`}
     >
       {children}
       <ArrowRight
@@ -34,52 +36,65 @@ function Rule({ double = false }: { double?: boolean }) {
   return <div className={double ? "double-rule h-[5px]" : "border-t border-rule"} role="presentation" />;
 }
 
-/* Conserved-sum bar: the invariant as a picture. Widths are the real
-   proportions of the settled STX demo series (payoff 0.4 / leftover 0.6). */
-function ConservedBar() {
-  return (
-    <figure className="space-y-3">
-      <div className="flex h-14 w-full overflow-hidden rounded-[2px] border border-rule">
-        <div className="flex w-[40%] items-center justify-center bg-gain/20 text-sm">
-          <span className="tnum text-gain">payoff 400,000</span>
-        </div>
-        <div className="flex w-[60%] items-center justify-center border-l border-rule bg-ink-3 text-sm">
-          <span className="tnum text-paper-dim">leftover 600,000</span>
-        </div>
-      </div>
-      <figcaption className="tnum flex justify-between text-xs text-paper-dim">
-        <span>collateral locked: 1,000,000</span>
-        <span>conserved exactly - no rounding</span>
-      </figcaption>
-    </figure>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* sections                                                            */
 /* ------------------------------------------------------------------ */
 
-function Hero() {
+const NAV_LINKS: [string, string][] = [
+  ["Why Covault", "#why"],
+  ["How it works", "#how-it-works"],
+  ["Product", "#product"],
+  ["Live", "#live"],
+  ["FAQ", "#faq"],
+];
+
+/* Standard sticky product nav - section anchors plus the app entry. */
+function LandingNav() {
   return (
-    <header className="relative">
-      <nav className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6" aria-label="Primary">
-        <span className="font-display text-2xl font-bold tracking-tight">
+    <header className="sticky top-0 z-40 border-b border-rule/70 bg-ink/90 backdrop-blur-sm">
+      <nav
+        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-0 px-4 py-3 md:h-16 md:flex-nowrap md:px-6 md:py-0"
+        aria-label="Primary"
+      >
+        <a href="#top" className="order-1 font-display text-xl font-bold tracking-tight">
           Co<span className="text-seal">vault</span>
-        </span>
-        <div className="flex items-center gap-6">
-          <span className="rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim">
+        </a>
+        <div className="order-3 -mx-1 mt-2 flex w-full items-center gap-5 overflow-x-auto pb-0.5 md:order-2 md:mx-0 md:mt-0 md:w-auto md:gap-7 md:overflow-visible md:pb-0">
+          {NAV_LINKS.map(([label, href]) => (
+            <a
+              key={href}
+              href={href}
+              className="whitespace-nowrap px-1 text-sm font-medium text-paper-dim transition-colors duration-200 hover:text-paper md:text-[15px]"
+            >
+              {label}
+            </a>
+          ))}
+        </div>
+        <div className="order-2 ml-auto flex items-center gap-3 md:order-3 md:ml-0">
+          <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[480px]:inline-block">
             {NETWORK}
           </span>
-          <Link to="/app" className="text-[15px] font-medium text-paper-dim transition-colors duration-200 hover:text-paper">
-            Enter the app
+          <Link
+            to="/app"
+            className="shrink-0 whitespace-nowrap rounded-[2px] bg-seal px-4 py-2 text-sm font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98]"
+          >
+            Launch app
           </Link>
         </div>
       </nav>
+    </header>
+  );
+}
 
-      <div className="relative mx-auto max-w-6xl overflow-hidden px-6 pb-24 pt-14 md:pb-28 md:pt-20">
+function Hero() {
+  return (
+    <header className="relative">
+      <div className="relative mx-auto max-w-6xl overflow-hidden px-6 pb-24 pt-16 md:pb-28 md:pt-24">
         <CornerOrnaments />
-        <HeroPayoffArt className="pointer-events-none absolute -right-[3%] top-6 hidden h-[420px] w-[56%] max-w-none opacity-90 [mask-image:radial-gradient(115%_125%_at_72%_36%,black_36%,transparent_80%)] lg:block" />
-        <div className="relative z-10 grid items-center gap-14 lg:grid-cols-[7fr_5fr] lg:gap-16">
+        <div className="anim-float pointer-events-none absolute -right-[3%] top-6 hidden h-[420px] w-[56%] lg:block">
+          <HeroPayoffArt className="h-full w-full max-w-none opacity-90 [mask-image:radial-gradient(115%_125%_at_72%_36%,black_36%,transparent_80%)]" />
+        </div>
+        <div className="relative z-10 grid items-center gap-10 lg:grid-cols-[7fr_5fr] lg:gap-16">
           <div>
             <p className="anim-rise flex flex-wrap items-center gap-2 text-xs">
               <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-gain/40 px-2 py-1 font-mono text-gain">
@@ -97,19 +112,21 @@ function Hero() {
               full, by collateral locked on-chain - in sBTC or native STX. No margin calls. No
               liquidation engine. Nothing to go insolvent.
             </p>
-            <div className="anim-rise anim-rise-3 mt-9 flex flex-wrap items-center gap-6">
-              <SealButton to="/app">Enter the vault</SealButton>
+            <div className="anim-rise anim-rise-3 mt-9 flex flex-col items-stretch gap-5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+              <SealButton to="/app" className="justify-center sm:justify-start">Enter the vault</SealButton>
               <a
                 href={`https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[15px] font-medium text-paper-dim underline decoration-rule underline-offset-4 transition-colors duration-200 hover:text-paper"
+                className="text-center text-[15px] font-medium text-paper-dim underline decoration-rule underline-offset-4 transition-colors duration-200 hover:text-paper sm:text-left"
               >
                 Verify the contract on-chain
               </a>
             </div>
           </div>
-          <HeroPanel />
+          <div className="anim-rise anim-rise-3 relative">
+            <PayoffDemo />
+          </div>
         </div>
       </div>
 
@@ -119,88 +136,78 @@ function Hero() {
   );
 }
 
-/* The product itself, live in the hero: real series read from the contract,
-   framed like a certificate excerpt. Trust by showing, not telling. */
-function HeroPanel() {
-  const q = useQuery({ queryKey: ["series"], queryFn: getAllSeries });
+const CLAIMS: { t: string; d: string }[] = [
+  { t: "No margin calls", d: "Collateral is locked once, in full, the moment an option is written. Nothing can demand more later." },
+  { t: "No liquidation engine", d: "There is no position to liquidate, no keeper race, no cascade. The machinery that makes derivatives dangerous simply is not here." },
+  { t: "One price, once", d: "A single settlement price per series, at expiry, on Bitcoin block time. That is the entire trusted surface." },
+  { t: "Nothing to go insolvent", d: "The holder's payoff and the writer's leftover are two cuts of one escrow. They sum to the collateral - exactly, every time." },
+];
+
+/* Scroll-driven emphasis: each claim brightens as it crosses the viewport's
+   middle band (Opyn-style pedagogy, engraved execution). Reduced motion or no
+   IntersectionObserver: everything stays lit. */
+function ClaimItem({ t, d }: { t: string; d: string }) {
+  const ref = useRef<HTMLLIElement>(null);
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (
+      !("IntersectionObserver" in window) ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setOn(true);
+      return;
+    }
+    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting), {
+      rootMargin: "-36% 0px -36% 0px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <div className="anim-rise anim-rise-3 relative hidden lg:block" aria-label="Live markets excerpt">
-      <div className="border border-rule bg-ink-2 shadow-[0_18px_54px_-24px_rgba(0,0,0,0.85)]">
-        <div className="flex items-center justify-between border-b border-rule px-4 py-2.5">
-          <span className="font-display text-sm font-bold">Markets</span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-paper-dim">
-            read live from {CONTRACT_ID.split(".")[1]}
-          </span>
-        </div>
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="text-[10px] uppercase tracking-widest text-paper-dim">
-              <th scope="col" className="px-4 pb-1 pt-3 font-medium">Series</th>
-              <th scope="col" className="px-4 pb-1 pt-3 text-right font-medium">Strike</th>
-              <th scope="col" className="px-4 pb-1 pt-3 text-right font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(q.data ?? []).slice(0, 4).map((s) => (
-              <tr key={s.id} className="border-t border-rule">
-                <td className="px-4 py-2.5 font-medium">
-                  #{s.id} {s.underlying}
-                  <span className="ml-2 text-xs text-paper-dim">{s.isCall ? "call" : "put"}</span>
-                </td>
-                <td className="tnum px-4 py-2.5 text-right">{formatAmount(s.strike, s.asset)}</td>
-                <td className="px-4 py-2.5 text-right">
-                  <span className={s.settled ? "text-paper-dim" : "text-gain"}>
-                    {s.settled ? "settled" : "active"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {q.isLoading &&
-              [0, 1].map((i) => (
-                <tr key={i} className="border-t border-rule">
-                  <td colSpan={3} className="px-4 py-3">
-                    <div className="h-4 animate-pulse rounded-[2px] bg-ink-3" />
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-        <div className="border-t border-rule px-4 py-2.5">
-          <Link to="/app" className="text-xs font-medium text-seal-hi transition-colors duration-200 hover:text-seal">
-            Open the full order book -&gt;
-          </Link>
-        </div>
-      </div>
-    </div>
+    <li
+      ref={ref}
+      className="border-t border-rule py-9 transition-opacity duration-300"
+      style={{ opacity: on ? 1 : 0.3 }}
+    >
+      <h3 className="flex items-center gap-3 font-display text-2xl font-bold md:text-3xl">
+        <span
+          className={`inline-block h-2.5 w-2.5 shrink-0 transition-colors duration-300 ${on ? "bg-seal" : "bg-rule"}`}
+          aria-hidden
+        />
+        {t}
+      </h3>
+      <p className="mt-3 max-w-[52ch] text-paper-dim">{d}</p>
+    </li>
   );
 }
 
 function Invariant() {
   return (
-    <section aria-labelledby="invariant" className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-      <div className="grid gap-14 md:grid-cols-[5fr_4fr] md:gap-20">
-        <div>
+    <section id="why" aria-labelledby="invariant" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24 md:py-32">
+      <div className="grid gap-14 md:grid-cols-[5fr_6fr] md:gap-20">
+        <div className="self-start md:sticky md:top-28">
+          <SectionMark />
           <h2 id="invariant" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
             Solvent by construction
           </h2>
-          <p className="mt-6 max-w-[62ch] text-paper-dim">
+          <p className="mt-6 max-w-[52ch] text-paper-dim">
             Every option locks its maximum possible payout as collateral the moment it is
-            written. At settlement, the holder's payoff and the writer's leftover are two
-            cuts of the same escrow - they always sum to exactly what was locked.
-          </p>
-          <p className="mt-4 max-w-[62ch] text-paper-dim">
-            That single constraint deletes the machinery that makes derivatives dangerous:
-            there is no margin to call, no position to liquidate, no keeper to race. The
-            only trusted input is one settlement price per series, at expiry.
+            written. From that one constraint, everything dangerous falls away.
           </p>
           <p className="tnum mt-8 border-t border-rule pt-6 text-lg">
             payoff + leftover <span className="text-seal">=</span> collateral
           </p>
         </div>
-        <div className="flex flex-col justify-center gap-8">
-          <GuillocheRosette className="mx-auto h-40 w-40 md:h-48 md:w-48" />
-          <ConservedBar />
-        </div>
+        <ul className="md:pt-1">
+          {CLAIMS.map((c) => (
+            <ClaimItem key={c.t} t={c.t} d={c.d} />
+          ))}
+          <div className="border-t border-rule" role="presentation" />
+        </ul>
       </div>
     </section>
   );
@@ -216,19 +223,30 @@ const STEPS: { n: string; t: string; d: string }[] = [
 
 function HowItWorks() {
   return (
-    <section aria-labelledby="how" className="border-t border-rule bg-ink-2">
+    <section id="how-it-works" aria-labelledby="how" className="scroll-mt-20 border-t border-rule bg-ink-2">
       <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <h2 id="how" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
-          The life of a contract
-        </h2>
+        <Reveal>
+          <SectionMark />
+          <h2 id="how" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
+            The life of a contract
+          </h2>
+        </Reveal>
         <ol className="mt-14 grid gap-px overflow-hidden rounded-[2px] border border-rule bg-rule md:grid-cols-4">
-          {STEPS.map((s) => (
-            <li key={s.n} className="bg-ink-2 p-7">
-              <span className="font-display text-sm font-bold text-seal" aria-hidden>
+          {STEPS.map((s, i) => (
+            <li key={s.n} className="relative overflow-hidden bg-ink-2">
+              <span
+                className="pointer-events-none absolute -right-1 -top-4 select-none font-display text-[92px] font-bold leading-none text-gilt opacity-[0.07]"
+                aria-hidden
+              >
                 {s.n}
               </span>
-              <h3 className="mt-3 font-display text-xl font-bold">{s.t}</h3>
-              <p className="mt-3 text-[15px] leading-relaxed text-paper-dim">{s.d}</p>
+              <Reveal delay={i * 80} className="h-full p-6 sm:p-7">
+                <span className="font-display text-sm font-bold text-seal" aria-hidden>
+                  {s.n}
+                </span>
+                <h3 className="mt-3 font-display text-xl font-bold">{s.t}</h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-paper-dim">{s.d}</p>
+              </Reveal>
             </li>
           ))}
         </ol>
@@ -250,8 +268,9 @@ function LiveProof() {
   );
 
   return (
-    <section aria-labelledby="proof" className="border-t border-rule">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+    <section id="live" aria-labelledby="proof" className="scroll-mt-20 border-t border-rule">
+      <Reveal className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+        <SectionMark />
         <div className="flex flex-wrap items-end justify-between gap-6">
           <h2 id="proof" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
             Live on {NETWORK}
@@ -266,8 +285,8 @@ function LiveProof() {
           </a>
         </div>
         <dl className="mt-10 grid grid-cols-2 gap-x-10 border-t border-rule md:grid-cols-4">
-          <Stat label="Option series" value={cfg.data ? cfg.data.seriesCount : "-"} />
-          <Stat label="Series settled" value={settled ?? "-"} />
+          <Stat label="Option series" value={cfg.data ? <CountUp value={cfg.data.seriesCount} /> : "-"} />
+          <Stat label="Series settled" value={settled !== undefined ? <CountUp value={settled} /> : "-"} />
           <Stat label="Collateral assets" value="sBTC + STX" />
           <Stat label="Escrow conserved" value={<span className="text-gain">exact</span>} />
         </dl>
@@ -276,99 +295,7 @@ function LiveProof() {
           on-chain in both collateral assets. Each figure above is read live from the contract;
           nothing on this page is a mock.
         </p>
-      </div>
-    </section>
-  );
-}
-
-function Foundation() {
-  const rows = [
-    ["Settlement assets", "sBTC (Bitcoin on Stacks) and native STX, chosen per series"],
-    ["Language", "Clarity 4 - decidable, no reentrancy, asset-safety primitives"],
-    ["Expiry clock", "Bitcoin burn-block height, not server time"],
-    ["Calls", "Written as capped spreads, so every call is fully cash-collateralizable"],
-    ["Puts", "Cash-secured at the strike - the classic covered instrument"],
-    ["Order book", "On-chain, peer-to-peer, partial fills, maker-cancelable"],
-  ];
-  return (
-    <section aria-labelledby="foundation" className="border-t border-rule bg-ink-2">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <h2 id="foundation" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
-          Specification
-        </h2>
-        <dl className="mt-12">
-          {rows.map(([k, v]) => (
-            <div key={k} className="grid gap-2 border-t border-rule py-5 md:grid-cols-[220px_1fr] md:gap-10">
-              <dt className="font-display font-bold">{k}</dt>
-              <dd className="text-paper-dim">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    </section>
-  );
-}
-
-/* Honest security ledger - the DeFi question everyone asks, answered without
-   overclaiming. Modeled on what Zest/Bitflow signal, grounded in what is true here. */
-function SecurityPosture() {
-  const rows: { k: string; v: React.ReactNode }[] = [
-    {
-      k: "Solvency",
-      v: "Enforced by construction: a contract cannot pay out more than it holds. payoff + leftover always equals the locked collateral, exactly.",
-    },
-    {
-      k: "Testing",
-      v: "24 automated tests run against the real sBTC contract and native STX in simnet - writing, trading, settlement, exercise, reclaim, and the conservation invariant.",
-    },
-    {
-      k: "Source",
-      v: (
-        <>
-          Open source, end to end.{" "}
-          <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="text-paper underline decoration-rule underline-offset-4 hover:text-seal-hi">
-            Read the contract
-          </a>{" "}
-          or{" "}
-          <a href={EXPLORER_URL} target="_blank" rel="noreferrer" className="text-paper underline decoration-rule underline-offset-4 hover:text-seal-hi">
-            verify the deployed code on-chain
-          </a>
-          .
-        </>
-      ),
-    },
-    {
-      k: "Immutability",
-      v: "The deployed contract cannot be upgraded in place. Improvements ship as new, versioned deployments you opt into.",
-    },
-    {
-      k: "Failsafe",
-      v: "The operator can pause new risk (writing, listing new series) in an emergency - but every exit stays open. A pause can never trap funds.",
-    },
-    {
-      k: "Audit status",
-      v: "No third-party audit yet; a formal audit is planned post-launch. Until then: small surface area, full test suite, open code, testnet-first rollout.",
-    },
-  ];
-  return (
-    <section aria-labelledby="security" className="border-t border-rule">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <h2 id="security" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
-          Security posture
-        </h2>
-        <p className="mt-5 max-w-[65ch] text-paper-dim">
-          Stated plainly, including what is not done yet. The strongest guarantee is
-          structural: there is no state in which the vault owes more than it holds.
-        </p>
-        <dl className="mt-12">
-          {rows.map(({ k, v }) => (
-            <div key={k} className="grid gap-2 border-t border-rule py-5 md:grid-cols-[220px_1fr] md:gap-10">
-              <dt className="font-display font-bold">{k}</dt>
-              <dd className="text-paper-dim">{v}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+      </Reveal>
     </section>
   );
 }
@@ -398,9 +325,10 @@ const FAQS: { q: string; a: string }[] = [
 
 function Faq() {
   return (
-    <section aria-labelledby="faq" className="border-t border-rule bg-ink-2">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <h2 id="faq" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
+    <section id="faq" aria-labelledby="faq-heading" className="scroll-mt-20 border-t border-rule bg-ink-2">
+      <Reveal className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+        <SectionMark />
+        <h2 id="faq-heading" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
           Questions, answered
         </h2>
         <div className="mt-12 max-w-3xl">
@@ -417,7 +345,7 @@ function Faq() {
           ))}
           <div className="border-t border-rule" role="presentation" />
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }
@@ -425,8 +353,9 @@ function Faq() {
 function Closing() {
   return (
     <section className="relative border-t border-rule">
-      <div className="mx-auto max-w-6xl px-6 py-24 text-center md:py-32">
+      <Reveal className="mx-auto max-w-6xl px-6 py-24 text-center md:py-32">
         <GuillocheBand className="pointer-events-none absolute inset-x-0 bottom-0 h-24 w-full opacity-50" />
+        <SectionMark center />
         <h2 className="font-display text-[clamp(2rem,4.5vw,3.2rem)] font-extrabold">
           Write your first covered option.
         </h2>
@@ -434,10 +363,10 @@ function Closing() {
           Earn premium on idle sBTC, or buy downside protection with risk you can read off the
           contract - to the unit.
         </p>
-        <div className="mt-10 flex justify-center">
-          <SealButton to="/app">Enter the vault</SealButton>
+        <div className="mt-10 flex justify-center px-2">
+          <SealButton to="/app" className="w-full justify-center sm:w-auto">Enter the vault</SealButton>
         </div>
-      </div>
+      </Reveal>
       <footer className="border-t border-rule">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr]">
@@ -485,14 +414,15 @@ function Closing() {
 
 export function Landing() {
   return (
-    <div className="min-h-dvh">
+    <div id="top" className="min-h-dvh">
+      <LandingNav />
       <Hero />
       <Invariant />
       <HowItWorks />
-      <ProductShowcase />
+      <div id="product" className="scroll-mt-20">
+        <ProductShowcase />
+      </div>
       <LiveProof />
-      <Foundation />
-      <SecurityPosture />
       <Faq />
       <Closing />
     </div>

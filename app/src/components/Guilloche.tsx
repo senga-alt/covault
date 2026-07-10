@@ -92,6 +92,17 @@ export function GuillocheRosette({ className = "" }: { className?: string }) {
   );
 }
 
+/** Engraved section mark - a small rosette with a hairline flourish, the
+    recurring glyph that opens each landing section (like a plate number). */
+export function SectionMark({ center = false }: { center?: boolean }) {
+  return (
+    <div className={`mb-6 flex items-center gap-3 ${center ? "justify-center" : ""}`} aria-hidden="true">
+      <GuillocheRosette className="h-8 w-8 opacity-60" />
+      <div className="h-px w-14 bg-rule" />
+    </div>
+  );
+}
+
 /** Fine engraved corner marks, like a certificate's plate border. */
 export function CornerOrnaments({ className = "" }: { className?: string }) {
   const corner = (rot: number, x: number, y: number) => (

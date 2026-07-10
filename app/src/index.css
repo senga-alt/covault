@@ -82,6 +82,30 @@ h1, h2, h3 {
 .anim-rise-2 { animation-delay: 0.12s; }
 .anim-rise-3 { animation-delay: 0.24s; }
 
+/* small value-change tick for live-feeling mock figures */
+@keyframes tick {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.anim-tick {
+  animation: tick 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* slow ornament drift - whisper level */
+@keyframes float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-9px); }
+}
+.anim-float {
+  animation: float 11s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
