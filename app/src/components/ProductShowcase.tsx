@@ -4,20 +4,20 @@ import { CornerOrnaments, GuillocheRosette, SectionMark } from "./Guilloche";
 import { Reveal } from "./Reveal";
 import type { Series } from "../lib/contract";
 
-/* A settled 100 STX put - market-sized, same shape the live demo produced.
-   Drives the real PayoffChart component, so the landing shows the actual UI. */
+/* A settled 0.05 sBTC put - market-sized, Bitcoin-first. Drives the real
+   PayoffChart component, so the landing shows the actual interface. */
 const DEMO_SERIES: Series = {
   id: 0,
   creator: "",
-  asset: "stx",
+  asset: "sbtc",
   quoteToken: null,
-  underlying: "STX-USD",
+  underlying: "SBTC-USD",
   isCall: false,
-  strike: 100_000_000n,
-  maxPayoff: 100_000_000n,
+  strike: 5_000_000n,
+  maxPayoff: 5_000_000n,
   expiry: 0,
   settled: true,
-  settlementPrice: 60_000_000n,
+  settlementPrice: 3_000_000n,
 };
 
 /* ------------------------------------------------------------------ */
@@ -104,6 +104,7 @@ const ledgerRow = "flex items-baseline justify-between gap-6 border-t border-rul
 /* The risk ledger, recomputing itself: the contract count cycles and every
    dependent figure updates live - "risk before action" as behavior. */
 const QTYS = [2, 5, 8];
+const sb = (q: number) => ((q * 5) / 100).toString(); // 0.05 sBTC per contract
 
 function WriteLedgerMock() {
   const [i, setI] = useState(1);
@@ -129,7 +130,7 @@ function WriteLedgerMock() {
       <dl className="mt-4">
         <div className={ledgerRow}>
           <dt className="text-paper-dim">You lock now (collateral)</dt>
-          <dd className="tnum font-medium"><V>{q * 100} STX</V></dd>
+          <dd className="tnum font-medium"><V>{sb(q)} sBTC</V></dd>
         </div>
         <div className={ledgerRow}>
           <dt className="text-paper-dim">You receive</dt>
@@ -137,15 +138,15 @@ function WriteLedgerMock() {
         </div>
         <div className={ledgerRow}>
           <dt className="text-paper-dim">Maximum the holder can be paid</dt>
-          <dd className="tnum"><V>{q * 100} STX</V></dd>
+          <dd className="tnum"><V>{sb(q)} sBTC</V></dd>
         </div>
         <div className={ledgerRow}>
           <dt className="text-paper-dim">Your maximum loss</dt>
-          <dd className="tnum text-loss"><V>{q * 100} STX less premium</V></dd>
+          <dd className="tnum text-loss"><V>{sb(q)} sBTC less premium</V></dd>
         </div>
       </dl>
       <div className="mt-4 rounded-[2px] bg-seal px-5 py-2.5 text-center text-sm font-bold text-on-seal">
-        <V>Lock {q * 100} STX and write</V>
+        <V>Lock {sb(q)} sBTC and write</V>
       </div>
       <p className="mt-2 text-center text-[11px] text-paper-dim">
         Protected by a post-condition: exactly this amount, nothing else.
@@ -264,7 +265,7 @@ export function ProductShowcase() {
             eyebrow="Figure I"
             title="Read your risk to the unit"
             body="Writing an option shows the collateral you lock, the positions you receive, and your maximum loss in figures - then binds the transaction to that exact amount with a post-condition. No surprises reach your wallet."
-            plate={<Plate label="Writing a cash-secured put"><WriteLedgerMock /></Plate>}
+            plate={<Plate label="Writing a cash-secured sBTC put"><WriteLedgerMock /></Plate>}
           />
           <Row
             reverse
@@ -284,7 +285,7 @@ export function ProductShowcase() {
             eyebrow="Figure III"
             title="A market, not a middleman"
             body="List your options for premium and let anyone fill them, or buy directly from the on-chain order book. Peer to peer, partial fills, and a fee that stays off until there is usage to justify it."
-            plate={<Plate label="Trading on the order book"><OrderBookMock /></Plate>}
+            plate={<Plate label="Trading STX options on the order book"><OrderBookMock /></Plate>}
           />
         </div>
       </div>

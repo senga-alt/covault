@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cl } from "@stacks/transactions";
 import {
+  CONTRACT_ID,
   DIA_CONTRACT,
+  NETWORK,
   SETTLER_ID,
   getAllSeries,
   getBurnHeight,
@@ -549,6 +551,35 @@ export function Admin() {
           <span className="tnum">{shortAddress(cfg.oracle)}</span>
         </p>
       </div>
+
+      {/* protocol telemetry - operator data, deliberately not on the landing page */}
+      <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
+        {[
+          ["Option series", cfg.seriesCount.toString()],
+          ["Settled", (seriesQ.data ? seriesQ.data.filter((s) => s.settled).length : "-").toString()],
+          ["Open offers", cfg.offerCount.toString()],
+          ["Burn height", burnQ.data ? `#${burnQ.data.toLocaleString()}` : "-"],
+        ].map(([label, value]) => (
+          <div key={label} className="flex-1 px-4 py-3.5">
+            <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
+            <dd className="tnum mt-1.5 text-lg font-medium">{value}</dd>
+          </div>
+        ))}
+        <div className="flex-1 px-4 py-3.5">
+          <dt className="text-[11px] uppercase tracking-widest text-paper-dim">Contract</dt>
+          <dd className="mt-1.5 text-lg">
+            <a
+              href={`https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`}
+              target="_blank"
+              rel="noreferrer"
+              className="tnum text-seal-hi underline decoration-rule underline-offset-4 transition-colors duration-150 hover:text-seal"
+            >
+              explorer
+            </a>
+          </dd>
+        </div>
+      </dl>
+
       <CreateSeries burnHeight={burnQ.data ?? 0} />
       <Settle series={seriesQ.data ?? []} burnHeight={burnQ.data ?? 0} isOracle={address === cfg.oracle} />
       <Controls paused={cfg.paused} openCreation={cfg.openCreation} feeBps={cfg.feeBps} feeRecipient={cfg.feeRecipient} oracle={cfg.oracle} />

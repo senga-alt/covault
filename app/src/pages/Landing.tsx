@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { GuillocheBand, CornerOrnaments, SectionMark } from "../components/Guilloche";
 import { HeroPayoffArt } from "../components/HeroPayoffArt";
 import { ProductShowcase } from "../components/ProductShowcase";
-import { CountUp, Reveal } from "../components/Reveal";
+import { Reveal } from "../components/Reveal";
 import { PayoffDemo } from "../components/PayoffDemo";
-import { CONTRACT_ID, NETWORK, getAllSeries, getConfig } from "../lib/contract";
+import { CONTRACT_ID, NETWORK } from "../lib/contract";
 
 const GITHUB_URL = "https://github.com/senga-alt/covault";
 const EXPLORER_URL = `https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`;
@@ -44,7 +43,6 @@ const NAV_LINKS: [string, string][] = [
   ["Why Covault", "#why"],
   ["How it works", "#how-it-works"],
   ["Product", "#product"],
-  ["Live", "#live"],
   ["FAQ", "#faq"],
 ];
 
@@ -255,51 +253,6 @@ function HowItWorks() {
   );
 }
 
-function LiveProof() {
-  const cfg = useQuery({ queryKey: ["config"], queryFn: getConfig });
-  const series = useQuery({ queryKey: ["series"], queryFn: getAllSeries });
-  const settled = series.data?.filter((s) => s.settled).length;
-
-  const Stat = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <div className="py-6">
-      <dt className="text-sm text-paper-dim">{label}</dt>
-      <dd className="tnum mt-2 text-3xl font-medium">{value}</dd>
-    </div>
-  );
-
-  return (
-    <section id="live" aria-labelledby="proof" className="scroll-mt-20 border-t border-rule">
-      <Reveal className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <SectionMark />
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <h2 id="proof" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
-            Live on {NETWORK}
-          </h2>
-          <a
-            href={`https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`}
-            target="_blank"
-            rel="noreferrer"
-            className="tnum break-all text-sm text-paper-dim underline decoration-rule underline-offset-4 hover:text-paper"
-          >
-            {CONTRACT_ID}
-          </a>
-        </div>
-        <dl className="mt-10 grid grid-cols-2 gap-x-10 border-t border-rule md:grid-cols-4">
-          <Stat label="Option series" value={cfg.data ? <CountUp value={cfg.data.seriesCount} /> : "-"} />
-          <Stat label="Series settled" value={settled !== undefined ? <CountUp value={settled} /> : "-"} />
-          <Stat label="Collateral assets" value="sBTC + STX" />
-          <Stat label="Escrow conserved" value={<span className="text-gain">exact</span>} />
-        </dl>
-        <p className="mt-8 max-w-[70ch] text-sm text-paper-dim">
-          Every lifecycle - write, trade, settle, exercise, reclaim - has already been executed
-          on-chain in both collateral assets. Each figure above is read live from the contract;
-          nothing on this page is a mock.
-        </p>
-      </Reveal>
-    </section>
-  );
-}
-
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What exactly can I lose?",
@@ -422,7 +375,6 @@ export function Landing() {
       <div id="product" className="scroll-mt-20">
         <ProductShowcase />
       </div>
-      <LiveProof />
       <Faq />
       <Closing />
     </div>
