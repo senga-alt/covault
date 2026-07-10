@@ -6,6 +6,7 @@ import { HeroPayoffArt } from "../components/HeroPayoffArt";
 import { ProductShowcase } from "../components/ProductShowcase";
 import { Reveal } from "../components/Reveal";
 import { PayoffDemo } from "../components/PayoffDemo";
+import { BrandMark } from "../components/BrandMark";
 import { CONTRACT_ID, NETWORK } from "../lib/contract";
 
 const GITHUB_URL = "https://github.com/senga-alt/covault";
@@ -54,8 +55,11 @@ function LandingNav() {
         className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-0 px-4 py-3 md:h-16 md:flex-nowrap md:px-6 md:py-0"
         aria-label="Primary"
       >
-        <a href="#top" className="order-1 font-display text-xl font-bold tracking-tight">
-          Co<span className="text-seal">vault</span>
+        <a href="#top" className="order-1 inline-flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+          <BrandMark className="h-[26px] w-[26px]" />
+          <span>
+            Co<span className="text-seal">vault</span>
+          </span>
         </a>
         <div className="order-3 -mx-1 mt-2 flex w-full items-center gap-5 overflow-x-auto pb-0.5 md:order-2 md:mx-0 md:mt-0 md:w-auto md:gap-7 md:overflow-visible md:pb-0">
           {NAV_LINKS.map(([label, href]) => (
@@ -324,8 +328,11 @@ function Closing() {
         <div className="mx-auto max-w-6xl px-6 py-12">
           <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr]">
             <div>
-              <span className="font-display text-xl font-bold">
-                Co<span className="text-seal">vault</span>
+              <span className="inline-flex items-center gap-2.5 font-display text-xl font-bold">
+                <BrandMark className="h-[26px] w-[26px]" />
+                <span>
+                  Co<span className="text-seal">vault</span>
+                </span>
               </span>
               <p className="mt-3 max-w-[42ch] text-sm text-paper-dim">
                 A fully-collateralized options clearinghouse on Stacks. Solvent by

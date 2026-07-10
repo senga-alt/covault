@@ -11,7 +11,7 @@ import {
   getBalances,
   getBurnHeight,
   getConfig,
-  getContractActivity,
+  getContractActivityDays,
   hasSettler,
   isValidPrincipal,
   seriesStatus,
@@ -514,10 +514,12 @@ function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paus
 }
 
 /* ------------------------------------------------------------------ */
-/* analytics - custody, activity over time, and the on-chain feed      */
+/* analytics - custody, activity over time, composition, and the feed  */
 /* ------------------------------------------------------------------ */
 
 const DAY_MS = 86_400_000;
+const RANGES = [14, 30, 90] as const;
+type Range = (typeof RANGES)[number];
 
 function bucketByDay(items: ActivityItem[], daysBack: number): DayCount[] {
   const today = new Date();
@@ -538,12 +540,101 @@ const timeFmt = new Intl.DateTimeFormat("en", {
   month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false,
 });
 
-function Analytics() {
-  const escrowQ = useQuery({ queryKey: ["escrow"], queryFn: () => getBalances(CONTRACT_ID), refetchInterval: 60_000 });
-  const actQ = useQuery({ queryKey: ["activity"], queryFn: () => getContractActivity(50), refetchInterval: 60_000 });
+/* 100%-composition bar in the conserved-sum motif: segments in validated
+   categorical order (gold -> green -> seal -> neutral "Other"), 2px surface
+   gaps, legend carries identity + values in text tokens - never color alone. */
+interface Segment { label: string; value: number; color: string; note?: string }
 
-  const participants = actQ.data ? new Set(actQ.data.map((a) => a.sender)).size : null;
-  const days = actQ.data ? bucketByDay(actQ.data, 14) : null;
+function SplitBar({ title, segments, unit }: { title: string; segments: Segment[]; unit: string }) {
+  const total = segments.reduce((a, s) => a + s.value, 0);
+  return (
+    <div>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      {total === 0 ? (
+        <p className="mt-2 text-sm text-paper-dim">Nothing in this period.</p>
+      ) : (
+        <>
+          <div className="mt-2 flex h-7 w-full gap-[2px] overflow-hidden rounded-[2px]" aria-hidden="true">
+            {segments.filter((s) => s.value > 0).map((s) => (
+              <div key={s.label} style={{ width: `${(s.value / total) * 100}%`, background: s.color }} />
+            ))}
+          </div>
+          <ul className="mt-2.5 space-y-1.5">
+            {segments.map((s) => (
+              <li key={s.label} className="flex items-baseline justify-between gap-4 text-xs">
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-2.5 w-2.5 shrink-0" style={{ background: s.color }} aria-hidden />
+                  <span className="text-paper-dim">{s.label}</span>
+                </span>
+                <span className="tnum">
+                  {s.value} {s.value === 1 ? unit.replace(/s$/, "") : unit}
+                  {s.note && <span className="ml-1.5 text-paper-dim">({s.note})</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="sr-only">
+            {title}: {segments.map((s) => `${s.label} ${s.value} ${unit}`).join(", ")}.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+const rangeChip = (on: boolean) =>
+  `cursor-pointer rounded-[2px] border px-2.5 py-1 font-mono text-[11px] tracking-wider transition-colors duration-150 ${
+    on ? "border-seal bg-seal/10 text-paper" : "border-rule text-paper-dim hover:text-paper"
+  }`;
+
+const TRADE_FNS = new Set(["list-offer", "fill-offer", "cancel-offer"]);
+const SETTLE_FNS = new Set(["settle", "settle-from-dia", "exercise", "reclaim"]);
+
+function Analytics() {
+  const [range, setRange] = useState<Range>(14);
+  const escrowQ = useQuery({ queryKey: ["escrow"], queryFn: () => getBalances(CONTRACT_ID), refetchInterval: 60_000 });
+  const actQ = useQuery({
+    queryKey: ["activity", range],
+    queryFn: () => getContractActivityDays(range),
+    refetchInterval: 60_000,
+  });
+  const seriesQ = useQuery({ queryKey: ["series"], queryFn: getAllSeries });
+
+  const items = actQ.data;
+  const participants = items ? new Set(items.map((a) => a.sender)).size : null;
+  const days = items ? bucketByDay(items, range) : null;
+
+  // contracts written per asset (counts are commensurable; native amounts in the legend)
+  const byAsset = (() => {
+    if (!items || !seriesQ.data) return null;
+    const acc = {
+      sbtc: { contracts: 0, collateral: 0n },
+      stx: { contracts: 0, collateral: 0n },
+    };
+    for (const it of items) {
+      if (it.fn !== "write-options" || it.status !== "success") continue;
+      const id = Number((it.args[0] ?? "u").slice(1));
+      const qty = Number((it.args[1] ?? "u").slice(1));
+      const s = seriesQ.data.find((x) => x.id === id);
+      if (!s || !Number.isFinite(qty)) continue;
+      acc[s.asset].contracts += qty;
+      acc[s.asset].collateral += BigInt(qty) * s.maxPayoff;
+    }
+    return acc;
+  })();
+
+  // call mix in validated order: gold (trades) -> green (writes) -> seal (settlements & claims) -> neutral
+  const mix = (() => {
+    if (!items) return null;
+    const c = { trades: 0, writes: 0, settle: 0, other: 0 };
+    for (const it of items) {
+      if (TRADE_FNS.has(it.fn)) c.trades++;
+      else if (it.fn === "write-options") c.writes++;
+      else if (SETTLE_FNS.has(it.fn)) c.settle++;
+      else c.other++;
+    }
+    return c;
+  })();
 
   return (
     <Panel title="Analytics" sub="Custody and on-chain activity, read live. Nothing here is off-chain bookkeeping.">
@@ -552,8 +643,8 @@ function Analytics() {
         {[
           ["Escrow held (STX)", escrowQ.data ? formatAmount(escrowQ.data.stx, "stx") : "-"],
           ["Escrow held (sBTC)", escrowQ.data ? formatAmount(escrowQ.data.sbtc, "sbtc") : "-"],
-          ["Transactions (last 50)", actQ.data ? actQ.data.length.toString() : "-"],
-          ["Participants", participants !== null ? participants.toString() : "-"],
+          [`Transactions (${range}d)`, items ? items.length.toString() : "-"],
+          [`Participants (${range}d)`, participants !== null ? participants.toString() : "-"],
         ].map(([label, value]) => (
           <div key={label} className="flex-1 px-4 py-3.5">
             <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
@@ -562,25 +653,63 @@ function Analytics() {
         ))}
       </dl>
 
-      {/* activity over time */}
-      <div className="mt-5">
-        <div className="flex items-baseline justify-between">
-          <h3 className="text-sm font-semibold">Transactions per day</h3>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-paper-dim">last 14 days</span>
+      {/* one filter row governs everything below (chart, composition, feed) */}
+      <div className="mt-5 flex flex-wrap items-baseline justify-between gap-3">
+        <h3 className="text-sm font-semibold">Transactions per day</h3>
+        <div className="flex gap-1.5" role="group" aria-label="Time range">
+          {RANGES.map((r) => (
+            <button key={r} type="button" aria-pressed={range === r} onClick={() => setRange(r)} className={rangeChip(range === r)}>
+              {r}d
+            </button>
+          ))}
         </div>
-        {actQ.isLoading && <div className="mt-3 h-40 animate-pulse rounded-[2px] bg-ink-3" />}
-        {actQ.isError && (
-          <p role="alert" className="mt-3 text-sm text-loss">
-            Could not load activity.{" "}
-            <button onClick={() => actQ.refetch()} className="cursor-pointer font-medium underline">Retry</button>
-          </p>
-        )}
-        {days && <div className="mt-2"><ActivityChart days={days} /></div>}
       </div>
+      {actQ.isLoading && <div className="mt-3 h-40 animate-pulse rounded-[2px] bg-ink-3" />}
+      {actQ.isError && (
+        <p role="alert" className="mt-3 text-sm text-loss">
+          Could not load activity.{" "}
+          <button onClick={() => actQ.refetch()} className="cursor-pointer font-medium underline">Retry</button>
+        </p>
+      )}
+      {days && <div className="mt-2"><ActivityChart days={days} /></div>}
 
-      {/* the feed - also the chart's table alternative */}
-      {actQ.data && actQ.data.length > 0 && (
-        <div className="mt-5">
+      {/* composition - segmented bars in the conserved-sum motif */}
+      {items && mix && (
+        <div className="mt-6 grid gap-8 border-t border-rule pt-5 md:grid-cols-2">
+          <SplitBar
+            title={`Contracts written by asset (${range}d)`}
+            unit="contracts"
+            segments={[
+              {
+                label: "sBTC series",
+                value: byAsset?.sbtc.contracts ?? 0,
+                color: "var(--color-data-gold)",
+                note: byAsset ? `${formatAmount(byAsset.sbtc.collateral, "sbtc")} locked` : undefined,
+              },
+              {
+                label: "STX series",
+                value: byAsset?.stx.contracts ?? 0,
+                color: "var(--color-data)",
+                note: byAsset ? `${formatAmount(byAsset.stx.collateral, "stx")} locked` : undefined,
+              },
+            ]}
+          />
+          <SplitBar
+            title={`Call mix (${range}d)`}
+            unit="calls"
+            segments={[
+              { label: "Trades (list / fill / cancel)", value: mix.trades, color: "var(--color-data-gold)" },
+              { label: "Writes", value: mix.writes, color: "var(--color-data)" },
+              { label: "Settlements & claims", value: mix.settle, color: "var(--color-seal)" },
+              { label: "Other (series, admin)", value: mix.other, color: "var(--color-data-neutral)" },
+            ]}
+          />
+        </div>
+      )}
+
+      {/* the feed - also the charts' table alternative */}
+      {items && items.length > 0 && (
+        <div className="mt-6 border-t border-rule pt-5">
           <h3 className="text-sm font-semibold">Recent activity</h3>
           <div className="scroll-x mt-2 overflow-x-auto border-t-2 border-rule">
             <table className="w-full min-w-[520px] text-left text-sm">
@@ -594,7 +723,7 @@ function Analytics() {
                 </tr>
               </thead>
               <tbody>
-                {actQ.data.slice(0, 8).map((a) => (
+                {items.slice(0, 8).map((a) => (
                   <tr key={a.txid} className="border-t border-rule">
                     <td className="tnum py-2.5 pr-4 text-paper-dim">{timeFmt.format(a.time)}</td>
                     <td className="py-2.5 pr-4 font-mono text-[13px]">{a.fn}</td>

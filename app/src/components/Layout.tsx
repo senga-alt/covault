@@ -1,6 +1,7 @@
 import { NavLink, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { WalletButton } from "./WalletButton";
+import { BrandMark } from "./BrandMark";
 import { NETWORK, getBurnHeight, getConfig } from "../lib/contract";
 import { useWallet } from "../lib/wallet";
 
@@ -33,8 +34,11 @@ export function Layout() {
       <header className="sticky top-0 z-30 border-b border-rule bg-ink/95 backdrop-blur-sm">
         {/* two rows on mobile (logo+wallet, then nav); one row from sm up */}
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 sm:h-16 sm:flex-nowrap sm:gap-8 sm:px-6 sm:py-0">
-          <Link to="/" className="order-1 font-display text-xl font-bold tracking-tight">
-            Co<span className="text-seal">vault</span>
+          <Link to="/" className="order-1 inline-flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
+            <BrandMark className="h-[26px] w-[26px]" />
+            <span>
+              Co<span className="text-seal">vault</span>
+            </span>
           </Link>
           <nav
             aria-label="Primary"

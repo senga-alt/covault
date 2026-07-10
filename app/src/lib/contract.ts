@@ -154,12 +154,17 @@ export async function getOffer(id: number): Promise<Offer | null> {
   };
 }
 
-/** All open offers for one series (cancelled offers vanish; filled-out ones have qty 0). */
-export async function getOpenOffers(seriesId: number): Promise<Offer[]> {
+/** Every open offer across all series (cancelled offers vanish; filled ones have qty 0). */
+export async function getAllOpenOffers(): Promise<Offer[]> {
   const { offerCount } = await getConfig();
   const ids = Array.from({ length: offerCount }, (_, i) => i);
   const all = await Promise.all(ids.map(getOffer));
-  return all.filter((o): o is Offer => o !== null && o.seriesId === seriesId && o.qty > 0n);
+  return all.filter((o): o is Offer => o !== null && o.qty > 0n);
+}
+
+/** All open offers for one series. */
+export async function getOpenOffers(seriesId: number): Promise<Offer[]> {
+  return (await getAllOpenOffers()).filter((o) => o.seriesId === seriesId);
 }
 
 export async function getPosition(id: number, who: string): Promise<{ long: bigint; short: bigint }> {
@@ -200,19 +205,37 @@ export interface ActivityItem {
   sender: string;
   status: string;
   time: number; // ms epoch (burn block time)
+  args: string[]; // clarity arg reprs, e.g. ["u2", "u1", "none"]
 }
 
-export async function getContractActivity(limit = 50): Promise<ActivityItem[]> {
-  const r = await fetch(`${API_BASE}/extended/v1/address/${CONTRACT_ID}/transactions?limit=${limit}`);
-  if (!r.ok) throw new Error("Could not load contract activity.");
-  const j = await r.json();
-  return (j.results as any[]).map((tx) => ({
-    txid: tx.tx_id as string,
-    fn: tx.tx_type === "contract_call" ? (tx.contract_call.function_name as string) : "deploy",
-    sender: tx.sender_address as string,
-    status: tx.tx_status as string,
-    time: ((tx.burn_block_time as number) ?? 0) * 1000,
-  }));
+const mapTx = (tx: any): ActivityItem => ({
+  txid: tx.tx_id as string,
+  fn: tx.tx_type === "contract_call" ? (tx.contract_call.function_name as string) : "deploy",
+  sender: tx.sender_address as string,
+  status: tx.tx_status as string,
+  time: ((tx.burn_block_time as number) ?? 0) * 1000,
+  args:
+    tx.tx_type === "contract_call"
+      ? ((tx.contract_call.function_args ?? []) as any[]).map((a) => a.repr as string)
+      : [],
+});
+
+/** All contract transactions within the last `days`, paginated (capped at 300). */
+export async function getContractActivityDays(days: number): Promise<ActivityItem[]> {
+  const start = Date.now() - days * 86_400_000;
+  const out: ActivityItem[] = [];
+  for (let offset = 0; offset < 300; offset += 50) {
+    const r = await fetch(
+      `${API_BASE}/extended/v1/address/${CONTRACT_ID}/transactions?limit=50&offset=${offset}`
+    );
+    if (!r.ok) throw new Error("Could not load contract activity.");
+    const j = await r.json();
+    const page = (j.results as any[]).map(mapTx);
+    out.push(...page.filter((t) => t.time >= start));
+    const oldest = page[page.length - 1];
+    if (page.length < 50 || (oldest && oldest.time < start)) break;
+  }
+  return out;
 }
 
 /** Loose Stacks principal check (standard or contract), for form validation. */

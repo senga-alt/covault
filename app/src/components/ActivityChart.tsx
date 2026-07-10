@@ -24,7 +24,7 @@ export function ActivityChart({ days }: { days: DayCount[] }) {
   const innerW = W - PAD.l - PAD.r;
   const innerH = H - PAD.t - PAD.b;
   const band = innerW / days.length;
-  const barW = Math.min(26, Math.max(6, band - 2)); // thin marks, >=2px gap
+  const barW = Math.max(2, Math.min(26, band - 2)); // thin marks, >=2px gap
   const x = (i: number) => PAD.l + i * band + (band - barW) / 2;
   const y = (v: number) => PAD.t + innerH - (v / max) * innerH;
 
@@ -71,7 +71,7 @@ export function ActivityChart({ days }: { days: DayCount[] }) {
               onBlur={() => setHover(null)}
               style={{ outline: "none" }}
             />
-            {(days.length <= 10 || i % 2 === 0) && (
+            {i % Math.max(1, Math.ceil(days.length / 7)) === 0 && (
               <text x={PAD.l + i * band + band / 2} y={H - 8} textAnchor="middle" fontSize="9" fontFamily="var(--font-mono)" className="fill-[var(--color-paper-dim)]">
                 {d.label}
               </text>
