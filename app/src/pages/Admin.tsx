@@ -6,12 +6,16 @@ import {
   DIA_CONTRACT,
   NETWORK,
   SETTLER_ID,
+  explorerTxUrl,
   getAllSeries,
+  getBalances,
   getBurnHeight,
   getConfig,
+  getContractActivity,
   hasSettler,
   isValidPrincipal,
   seriesStatus,
+  type ActivityItem,
   type Asset,
   type Series,
 } from "../lib/contract";
@@ -21,6 +25,7 @@ import { useTx } from "../lib/tx";
 import { TxStatus } from "../components/TxStatus";
 import { tokenArgFor } from "../components/WritePanel";
 import { PageHeader } from "../components/PageHeader";
+import { ActivityChart, type DayCount } from "../components/ActivityChart";
 import { CornerOrnaments } from "../components/Guilloche";
 
 /* ------------------------------------------------------------------ */
@@ -509,6 +514,113 @@ function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paus
 }
 
 /* ------------------------------------------------------------------ */
+/* analytics - custody, activity over time, and the on-chain feed      */
+/* ------------------------------------------------------------------ */
+
+const DAY_MS = 86_400_000;
+
+function bucketByDay(items: ActivityItem[], daysBack: number): DayCount[] {
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const start = today.getTime() - (daysBack - 1) * DAY_MS;
+  const out: DayCount[] = Array.from({ length: daysBack }, (_, i) => {
+    const d = new Date(start + i * DAY_MS);
+    return { label: `${d.getUTCDate()} ${d.toLocaleString("en", { month: "short", timeZone: "UTC" })}`, count: 0 };
+  });
+  for (const it of items) {
+    const idx = Math.floor((it.time - start) / DAY_MS);
+    if (idx >= 0 && idx < daysBack) out[idx].count++;
+  }
+  return out;
+}
+
+const timeFmt = new Intl.DateTimeFormat("en", {
+  month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false,
+});
+
+function Analytics() {
+  const escrowQ = useQuery({ queryKey: ["escrow"], queryFn: () => getBalances(CONTRACT_ID), refetchInterval: 60_000 });
+  const actQ = useQuery({ queryKey: ["activity"], queryFn: () => getContractActivity(50), refetchInterval: 60_000 });
+
+  const participants = actQ.data ? new Set(actQ.data.map((a) => a.sender)).size : null;
+  const days = actQ.data ? bucketByDay(actQ.data, 14) : null;
+
+  return (
+    <Panel title="Analytics" sub="Custody and on-chain activity, read live. Nothing here is off-chain bookkeeping.">
+      {/* custody + participation tiles */}
+      <dl className="mt-4 flex flex-col divide-y divide-rule border border-rule bg-ink sm:flex-row sm:divide-x sm:divide-y-0">
+        {[
+          ["Escrow held (STX)", escrowQ.data ? formatAmount(escrowQ.data.stx, "stx") : "-"],
+          ["Escrow held (sBTC)", escrowQ.data ? formatAmount(escrowQ.data.sbtc, "sbtc") : "-"],
+          ["Transactions (last 50)", actQ.data ? actQ.data.length.toString() : "-"],
+          ["Participants", participants !== null ? participants.toString() : "-"],
+        ].map(([label, value]) => (
+          <div key={label} className="flex-1 px-4 py-3.5">
+            <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
+            <dd className="tnum mt-1.5 text-lg font-medium">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* activity over time */}
+      <div className="mt-5">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-sm font-semibold">Transactions per day</h3>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-paper-dim">last 14 days</span>
+        </div>
+        {actQ.isLoading && <div className="mt-3 h-40 animate-pulse rounded-[2px] bg-ink-3" />}
+        {actQ.isError && (
+          <p role="alert" className="mt-3 text-sm text-loss">
+            Could not load activity.{" "}
+            <button onClick={() => actQ.refetch()} className="cursor-pointer font-medium underline">Retry</button>
+          </p>
+        )}
+        {days && <div className="mt-2"><ActivityChart days={days} /></div>}
+      </div>
+
+      {/* the feed - also the chart's table alternative */}
+      {actQ.data && actQ.data.length > 0 && (
+        <div className="mt-5">
+          <h3 className="text-sm font-semibold">Recent activity</h3>
+          <div className="scroll-x mt-2 overflow-x-auto border-t-2 border-rule">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <caption className="sr-only">Recent contract transactions</caption>
+              <thead>
+                <tr className="text-[11px] uppercase tracking-widest text-paper-dim">
+                  <th scope="col" className="py-2 pr-4 font-medium">Time</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">Function</th>
+                  <th scope="col" className="py-2 pr-4 font-medium">Sender</th>
+                  <th scope="col" className="py-2 text-right font-medium">Tx</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actQ.data.slice(0, 8).map((a) => (
+                  <tr key={a.txid} className="border-t border-rule">
+                    <td className="tnum py-2.5 pr-4 text-paper-dim">{timeFmt.format(a.time)}</td>
+                    <td className="py-2.5 pr-4 font-mono text-[13px]">{a.fn}</td>
+                    <td className="tnum py-2.5 pr-4 text-paper-dim">{shortAddress(a.sender)}</td>
+                    <td className="py-2.5 text-right">
+                      <a
+                        href={explorerTxUrl(a.txid)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-seal-hi underline decoration-rule underline-offset-4 transition-colors duration-150 hover:text-seal"
+                      >
+                        view
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* page                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -592,6 +704,7 @@ export function Admin() {
       </dl>
       </div>
 
+      <Analytics />
       <CreateSeries burnHeight={burnQ.data ?? 0} />
       <Settle series={seriesQ.data ?? []} burnHeight={burnQ.data ?? 0} isOracle={address === cfg.oracle} />
       <Controls paused={cfg.paused} openCreation={cfg.openCreation} feeBps={cfg.feeBps} feeRecipient={cfg.feeRecipient} oracle={cfg.oracle} />

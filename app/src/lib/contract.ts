@@ -193,6 +193,28 @@ export async function getBalances(address: string): Promise<{ stx: bigint; sbtc:
   };
 }
 
+/** One row of the contract's on-chain history, for the operator activity feed. */
+export interface ActivityItem {
+  txid: string;
+  fn: string;
+  sender: string;
+  status: string;
+  time: number; // ms epoch (burn block time)
+}
+
+export async function getContractActivity(limit = 50): Promise<ActivityItem[]> {
+  const r = await fetch(`${API_BASE}/extended/v1/address/${CONTRACT_ID}/transactions?limit=${limit}`);
+  if (!r.ok) throw new Error("Could not load contract activity.");
+  const j = await r.json();
+  return (j.results as any[]).map((tx) => ({
+    txid: tx.tx_id as string,
+    fn: tx.tx_type === "contract_call" ? (tx.contract_call.function_name as string) : "deploy",
+    sender: tx.sender_address as string,
+    status: tx.tx_status as string,
+    time: ((tx.burn_block_time as number) ?? 0) * 1000,
+  }));
+}
+
 /** Loose Stacks principal check (standard or contract), for form validation. */
 export function isValidPrincipal(v: string): boolean {
   return /^S[TPMN][0-9A-HJKMNP-Z]{37,40}(\.[a-z]([a-z0-9-]{0,39}))?$/.test(v.trim());
