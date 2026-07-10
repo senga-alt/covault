@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react";
 import { GuillocheBand, SectionMark } from "../components/Guilloche";
 import { HeroPayoffArt } from "../components/HeroPayoffArt";
 import { ProductShowcase } from "../components/ProductShowcase";
@@ -283,27 +283,80 @@ const FAQS: { q: string; a: string }[] = [
   },
 ];
 
+/* Accordion card in the soft-surface idiom: no border - a faint top-lit wash
+   defines the plane; it brightens on hover and the answer's height animates
+   (grid-rows 0fr -> 1fr, so it works without measuring). */
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  return (
+    <div
+      className={`rounded-[2px] bg-linear-to-b transition-colors duration-300 ${
+        open ? "from-paper/[0.07] to-paper/[0.02]" : "from-paper/[0.045] to-paper/[0.01] hover:from-paper/[0.07]"
+      }`}
+    >
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen(!open)}
+        className="group flex w-full cursor-pointer items-start justify-between gap-6 px-6 py-5 text-left"
+      >
+        <span className="font-display text-lg font-bold leading-snug text-paper/85 transition-colors duration-200 group-hover:text-paper">
+          {q}
+        </span>
+        <ChevronDown
+          size={18}
+          aria-hidden
+          className={`mt-1 shrink-0 transition-transform duration-300 ${open ? "rotate-180 text-seal" : "text-paper-dim"}`}
+        />
+      </button>
+      <div
+        id={id}
+        role="region"
+        className="grid transition-[grid-template-rows] duration-300 ease-out"
+        style={{ gridTemplateRows: open ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <p
+            className={`max-w-[65ch] px-6 pb-6 text-paper-dim transition-opacity duration-300 ${open ? "opacity-100" : "opacity-0"}`}
+          >
+            {a}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Faq() {
   return (
     <section id="faq" aria-labelledby="faq-heading" className="scroll-mt-20 border-t border-rule bg-ink-2">
       <Reveal className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <SectionMark />
-        <h2 id="faq-heading" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
-          Questions, answered
-        </h2>
-        <div className="mt-12 max-w-3xl">
-          {FAQS.map((f) => (
-            <details key={f.q} className="group border-t border-rule">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 font-display text-lg font-bold marker:hidden [&::-webkit-details-marker]:hidden">
-                {f.q}
-                <span className="text-seal transition-transform duration-200 group-open:rotate-45" aria-hidden>
-                  +
-                </span>
-              </summary>
-              <p className="max-w-[65ch] pb-6 text-paper-dim">{f.a}</p>
-            </details>
-          ))}
-          <div className="border-t border-rule" role="presentation" />
+        <div className="grid gap-12 lg:grid-cols-[5fr_7fr] lg:gap-20">
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <SectionMark />
+            <h2 id="faq-heading" className="font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold">
+              Questions, answered
+            </h2>
+            <p className="mt-5 max-w-[38ch] text-paper-dim">
+              Still have something specific in mind? Ask us directly - and the contract
+              itself is small enough to read in one sitting.
+            </p>
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-flex items-center gap-1.5 text-[15px] font-medium text-paper underline decoration-rule underline-offset-4 transition-colors duration-200 hover:text-seal-hi"
+            >
+              Get in touch <ArrowUpRight size={15} aria-hidden />
+            </a>
+          </div>
+          <div className="space-y-2.5">
+            {FAQS.map((f) => (
+              <FaqItem key={f.q} q={f.q} a={f.a} />
+            ))}
+          </div>
         </div>
       </Reveal>
     </section>
