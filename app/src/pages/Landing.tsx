@@ -357,7 +357,7 @@ function Closing() {
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-6 text-xs text-paper-dim">
             <span>Testnet software. Not investment advice.</span>
-            <span className="tnum break-all">{CONTRACT_ID}</span>
+            <span>Built on Stacks - settled in Bitcoin.</span>
           </div>
         </div>
       </footer>

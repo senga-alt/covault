@@ -20,6 +20,8 @@ import { useWallet } from "../lib/wallet";
 import { useTx } from "../lib/tx";
 import { TxStatus } from "../components/TxStatus";
 import { tokenArgFor } from "../components/WritePanel";
+import { PageHeader } from "../components/PageHeader";
+import { CornerOrnaments } from "../components/Guilloche";
 
 /* ------------------------------------------------------------------ */
 /* shared bits                                                         */
@@ -42,10 +44,13 @@ const bigintOrNull = (s: string): bigint | null => {
   }
 };
 
-function Panel({ title, children, sub }: { title: string; sub?: string; children: React.ReactNode }) {
+function Panel({ title, children, sub, stamp = false }: { title: string; sub?: string; children: React.ReactNode; stamp?: boolean }) {
   return (
     <section aria-label={title} className="border border-rule bg-ink-2 p-5">
-      <h2 className="font-display text-lg font-bold">{title}</h2>
+      <h2 className="flex items-center gap-2.5 font-display text-lg font-bold">
+        {stamp && <span className="inline-block h-2.5 w-2.5 shrink-0 bg-seal" aria-hidden />}
+        {title}
+      </h2>
       {sub && <p className="mt-1 text-sm text-paper-dim">{sub}</p>}
       {children}
     </section>
@@ -119,6 +124,7 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
 
   return (
     <Panel
+      stamp
       title="Create series"
       sub="Curated in v1: only references with a reliable settlement price should be listed."
     >
@@ -544,16 +550,21 @@ export function Admin() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Operator panel</h1>
-        <p className="mt-2 text-[15px] text-paper-dim">
-          Owner: <span className="tnum">{shortAddress(cfg.owner)}</span> - Oracle:{" "}
-          <span className="tnum">{shortAddress(cfg.oracle)}</span>
-        </p>
-      </div>
+      <PageHeader
+        title="Operator panel"
+        description="Curate series, record settlements, and run the protocol switches."
+        meta={
+          <div className="flex flex-col items-end gap-1 font-mono text-[11px] text-paper-dim">
+            <span>owner <span className="tnum text-paper">{shortAddress(cfg.owner)}</span></span>
+            <span>oracle <span className="tnum text-paper">{shortAddress(cfg.oracle)}</span></span>
+          </div>
+        }
+      />
 
       {/* protocol telemetry - operator data, deliberately not on the landing page */}
-      <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
+      <div className="relative">
+        <CornerOrnaments />
+        <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
         {[
           ["Option series", cfg.seriesCount.toString()],
           ["Settled", (seriesQ.data ? seriesQ.data.filter((s) => s.settled).length : "-").toString()],
@@ -579,6 +590,7 @@ export function Admin() {
           </dd>
         </div>
       </dl>
+      </div>
 
       <CreateSeries burnHeight={burnQ.data ?? 0} />
       <Settle series={seriesQ.data ?? []} burnHeight={burnQ.data ?? 0} isOracle={address === cfg.oracle} />

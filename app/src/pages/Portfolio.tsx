@@ -4,6 +4,8 @@ import { getAllSeries, getPosition, type Series } from "../lib/contract";
 import { useWallet } from "../lib/wallet";
 import { formatAmount } from "../lib/format";
 import { EmptyState } from "../components/EmptyState";
+import { PageHeader } from "../components/PageHeader";
+import { CornerOrnaments } from "../components/Guilloche";
 
 interface Holding { series: Series; long: bigint; short: bigint }
 
@@ -25,10 +27,10 @@ export function Portfolio() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-3xl font-bold">Portfolio</h1>
-        <p className="mt-2 text-[15px] text-paper-dim">Your long and short positions across all series.</p>
-      </div>
+      <PageHeader
+        title="Portfolio"
+        description="Your long and short positions across all series."
+      />
 
       {!address && (
         <EmptyState title="Wallet not connected">
@@ -68,8 +70,26 @@ export function Portfolio() {
       )}
 
       {address && q.data && q.data.length > 0 && (
-        <div className="overflow-x-auto border border-rule bg-ink-2">
-          <table className="w-full min-w-[560px] text-left">
+        <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
+          {[
+            ["Series with positions", q.data.length.toString()],
+            ["Options held (long)", q.data.reduce((a, h) => a + h.long, 0n).toString()],
+            ["Written (short)", q.data.reduce((a, h) => a + h.short, 0n).toString()],
+          ].map(([label, value]) => (
+            <div key={label} className="flex-1 px-4 py-3.5">
+              <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
+              <dd className="tnum mt-1.5 text-lg font-medium">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {address && q.data && q.data.length > 0 && (
+        <figure className="m-0">
+          <div className="relative border border-rule bg-ink-2">
+            <CornerOrnaments />
+            <div className="scroll-x overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left">
             <caption className="sr-only">Your positions</caption>
             <thead>
               <tr className="text-xs uppercase tracking-widest text-paper-dim">
@@ -93,8 +113,13 @@ export function Portfolio() {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+              </table>
+            </div>
+          </div>
+          <figcaption className="mt-3 font-mono text-[11px] uppercase tracking-widest text-paper-dim">
+            Your ledger - longs are claims, shorts are obligations
+          </figcaption>
+        </figure>
       )}
     </div>
   );

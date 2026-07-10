@@ -113,3 +113,24 @@ h1, h2, h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* text selection carries the seal */
+::selection {
+  background: color-mix(in oklch, var(--color-seal) 30%, transparent);
+  color: var(--color-paper);
+}
+
+/* slim engraved scrollbars for in-panel overflow */
+.scroll-x {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-rule) transparent;
+}
+.scroll-x::-webkit-scrollbar {
+  height: 8px;
+}
+.scroll-x::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-x::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+}

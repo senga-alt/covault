@@ -4,20 +4,21 @@ import { CornerOrnaments, GuillocheRosette, SectionMark } from "./Guilloche";
 import { Reveal } from "./Reveal";
 import type { Series } from "../lib/contract";
 
-/* A settled 0.05 sBTC put - market-sized, Bitcoin-first. Drives the real
-   PayoffChart component, so the landing shows the actual interface. */
-const DEMO_SERIES: Series = {
-  id: 0,
-  creator: "",
-  asset: "sbtc",
-  quoteToken: null,
-  underlying: "SBTC-USD",
-  isCall: false,
-  strike: 5_000_000n,
-  maxPayoff: 5_000_000n,
-  expiry: 0,
-  settled: true,
-  settlementPrice: 3_000_000n,
+/* Market-sized settled puts in both assets - the whole showcase cycles
+   between them in sync, so every figure demonstrates sBTC and STX. */
+type ShowAsset = "sbtc" | "stx";
+
+const DEMO: Record<ShowAsset, Series> = {
+  sbtc: {
+    id: 0, creator: "", asset: "sbtc", quoteToken: null, underlying: "SBTC-USD",
+    isCall: false, strike: 5_000_000n, maxPayoff: 5_000_000n, expiry: 0,
+    settled: true, settlementPrice: 3_000_000n, // 0.05 strike, settled 0.03
+  },
+  stx: {
+    id: 0, creator: "", asset: "stx", quoteToken: null, underlying: "STX-USD",
+    isCall: false, strike: 100_000_000n, maxPayoff: 100_000_000n, expiry: 0,
+    settled: true, settlementPrice: 60_000_000n, // 100 strike, settled 60
+  },
 };
 
 /* ------------------------------------------------------------------ */
@@ -104,16 +105,18 @@ const ledgerRow = "flex items-baseline justify-between gap-6 border-t border-rul
 /* The risk ledger, recomputing itself: the contract count cycles and every
    dependent figure updates live - "risk before action" as behavior. */
 const QTYS = [2, 5, 8];
-const sb = (q: number) => ((q * 5) / 100).toString(); // 0.05 sBTC per contract
+// per-contract collateral: 0.05 sBTC or 100 STX
+const amt = (asset: ShowAsset, q: number) =>
+  asset === "sbtc" ? `${((q * 5) / 100).toString()} sBTC` : `${q * 100} STX`;
 
-function WriteLedgerMock() {
+function WriteLedgerMock({ asset }: { asset: ShowAsset }) {
   const [i, setI] = useState(1);
   const step = useCallback(() => setI((v) => (v + 1) % QTYS.length), []);
   const ref = useAmbient<HTMLDivElement>(step, 2600);
   const q = QTYS[i];
 
   const V = ({ children }: { children: React.ReactNode }) => (
-    <span key={q} className="anim-tick inline-block">
+    <span key={`${asset}-${q}`} className="anim-tick inline-block">
       {children}
     </span>
   );
@@ -130,7 +133,7 @@ function WriteLedgerMock() {
       <dl className="mt-4">
         <div className={ledgerRow}>
           <dt className="text-paper-dim">You lock now (collateral)</dt>
-          <dd className="tnum font-medium"><V>{sb(q)} sBTC</V></dd>
+          <dd className="tnum font-medium"><V>{amt(asset, q)}</V></dd>
         </div>
         <div className={ledgerRow}>
           <dt className="text-paper-dim">You receive</dt>
@@ -138,15 +141,15 @@ function WriteLedgerMock() {
         </div>
         <div className={ledgerRow}>
           <dt className="text-paper-dim">Maximum the holder can be paid</dt>
-          <dd className="tnum"><V>{sb(q)} sBTC</V></dd>
+          <dd className="tnum"><V>{amt(asset, q)}</V></dd>
         </div>
         <div className={ledgerRow}>
           <dt className="text-paper-dim">Your maximum loss</dt>
-          <dd className="tnum text-loss"><V>{sb(q)} sBTC less premium</V></dd>
+          <dd className="tnum text-loss"><V>{amt(asset, q)} less premium</V></dd>
         </div>
       </dl>
       <div className="mt-4 rounded-[2px] bg-seal px-5 py-2.5 text-center text-sm font-bold text-on-seal">
-        <V>Lock {sb(q)} sBTC and write</V>
+        <V>Lock {amt(asset, q)} and write</V>
       </div>
       <p className="mt-2 text-center text-[11px] text-paper-dim">
         Protected by a post-condition: exactly this amount, nothing else.
@@ -155,21 +158,35 @@ function WriteLedgerMock() {
   );
 }
 
-/* The order book, trading: the top offer fills down and fresh listings arrive. */
+/* The order book, trading: the top offer fills down and fresh listings arrive.
+   Premiums are quoted in the showcase's current asset. */
 interface MockOffer {
   id: number;
   qty: number;
-  price: number; // premium per contract, in hundredths of STX
+  price: number; // premium per contract, in asset minor display units
 }
-const BOOK_PRICES = [450, 520, 410, 480]; // 4.50, 5.20, 4.10, 4.80 STX
+const BOOK = {
+  stx: { prices: [450, 520, 410, 480], fmt: (p: number) => `${(p / 100).toFixed(2)} STX` },
+  sbtc: { prices: [25, 32, 21, 28], fmt: (p: number) => `${(p / 10000).toFixed(4)} sBTC` },
+} as const;
 
-function OrderBookMock() {
+function OrderBookMock({ asset }: { asset: ShowAsset }) {
+  const book = BOOK[asset];
   const [offers, setOffers] = useState<MockOffer[]>([
-    { id: 0, qty: 3, price: 450 },
-    { id: 1, qty: 2, price: 520 },
+    { id: 0, qty: 3, price: book.prices[0] },
+    { id: 1, qty: 2, price: book.prices[1] },
   ]);
   const [flash, setFlash] = useState<number | null>(null);
   const nextId = useRef(2);
+
+  // fresh book whenever the showcase flips asset
+  useEffect(() => {
+    setOffers([
+      { id: nextId.current++, qty: 3, price: book.prices[0] },
+      { id: nextId.current++, qty: 2, price: book.prices[1] },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asset]);
 
   const step = useCallback(() => {
     setOffers((prev) => {
@@ -179,14 +196,12 @@ function OrderBookMock() {
       window.setTimeout(() => setFlash(null), 600);
       if (head.qty <= 1) {
         const id = nextId.current++;
-        return [...rest, { id, qty: 3, price: BOOK_PRICES[id % BOOK_PRICES.length] }];
+        return [...rest, { id, qty: 3, price: book.prices[id % book.prices.length] }];
       }
       return [{ ...head, qty: head.qty - 1 }, ...rest];
     });
-  }, []);
+  }, [book]);
   const ref = useAmbient<HTMLDivElement>(step, 2200);
-
-  const stxAmt = (hundredths: number) => (hundredths / 100).toFixed(2);
 
   return (
     <div ref={ref}>
@@ -194,7 +209,7 @@ function OrderBookMock() {
         <p className="font-display text-base font-bold">Order book</p>
         <span className="text-[11px] text-paper-dim">no protocol fee</span>
       </div>
-      <ul className="mt-3">
+      <ul key={asset} className="anim-tick mt-3">
         {offers.map((o) => (
           <li
             key={o.id}
@@ -205,11 +220,11 @@ function OrderBookMock() {
             <span>
               <span className="tnum">{o.qty}</span>
               <span className="text-paper-dim"> @ </span>
-              <span className="tnum">{stxAmt(o.price)} STX</span>
+              <span className="tnum">{book.fmt(o.price)}</span>
               <span className="ml-1.5 text-[11px] text-paper-dim">premium</span>
             </span>
             <span className="rounded-[2px] bg-seal px-3 py-1.5 text-xs font-bold text-on-seal">
-              Buy for {stxAmt(o.qty * o.price)} STX
+              Buy for {book.fmt(o.qty * o.price)}
             </span>
           </li>
         ))}
@@ -247,6 +262,9 @@ function Row({
 }
 
 export function ProductShowcase() {
+  const [asset, setAsset] = useState<ShowAsset>("sbtc");
+  const flip = useCallback(() => setAsset((a) => (a === "sbtc" ? "stx" : "sbtc")), []);
+  const cycleRef = useAmbient<HTMLDivElement>(flip, 7200);
   return (
     <section aria-labelledby="showcase" className="relative border-t border-rule">
       <GuillocheRosette className="pointer-events-none absolute right-6 top-16 hidden h-32 w-32 opacity-30 lg:block" />
@@ -260,12 +278,12 @@ export function ProductShowcase() {
           exact shape of the payoff - before you ever sign.
         </p>
 
-        <div className="mt-16 space-y-20 md:space-y-28">
+        <div ref={cycleRef} className="mt-16 space-y-20 md:space-y-28">
           <Row
             eyebrow="Figure I"
             title="Read your risk to the unit"
             body="Writing an option shows the collateral you lock, the positions you receive, and your maximum loss in figures - then binds the transaction to that exact amount with a post-condition. No surprises reach your wallet."
-            plate={<Plate label="Writing a cash-secured sBTC put"><WriteLedgerMock /></Plate>}
+            plate={<Plate label={`Writing a cash-secured ${asset === "sbtc" ? "sBTC" : "STX"} put`}><WriteLedgerMock asset={asset} /></Plate>}
           />
           <Row
             reverse
@@ -276,7 +294,7 @@ export function ProductShowcase() {
               <div className="relative shadow-[0_18px_54px_-24px_rgba(0,0,0,0.85)]">
                 <CornerOrnaments />
                 <InView minHeight={300}>
-                  <PayoffChart series={DEMO_SERIES} />
+                  <PayoffChart key={asset} series={DEMO[asset]} />
                 </InView>
               </div>
             }
@@ -285,7 +303,7 @@ export function ProductShowcase() {
             eyebrow="Figure III"
             title="A market, not a middleman"
             body="List your options for premium and let anyone fill them, or buy directly from the on-chain order book. Peer to peer, partial fills, and a fee that stays off until there is usage to justify it."
-            plate={<Plate label="Trading STX options on the order book"><OrderBookMock /></Plate>}
+            plate={<Plate label={`Trading ${asset === "sbtc" ? "sBTC" : "STX"} options on the order book`}><OrderBookMock asset={asset} /></Plate>}
           />
         </div>
       </div>

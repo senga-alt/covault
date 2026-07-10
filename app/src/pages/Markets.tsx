@@ -5,6 +5,8 @@ import { getAllSeries, getBurnHeight, seriesStatus, type Series } from "../lib/c
 import { formatAmount, estimateExpiry } from "../lib/format";
 import { StatusChip } from "../components/StatusChip";
 import { EmptyState } from "../components/EmptyState";
+import { PageHeader } from "../components/PageHeader";
+import { CornerOrnaments } from "../components/Guilloche";
 
 function TypeBadge({ isCall }: { isCall: boolean }) {
   return isCall ? (
@@ -36,7 +38,11 @@ function Row({ s, burnHeight }: { s: Series; burnHeight: number }) {
         </Link>
       </td>
       <td className="px-4 py-3 text-sm"><TypeBadge isCall={s.isCall} /></td>
-      <td className="px-4 py-3 text-sm text-paper-dim">{s.asset === "sbtc" ? "sBTC" : "STX"}</td>
+      <td className="px-4 py-3">
+        <span className="rounded-[2px] border border-rule px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wider text-paper-dim">
+          {s.asset === "sbtc" ? "sBTC" : "STX"}
+        </span>
+      </td>
       <td className="tnum px-4 py-3 text-right text-sm">{formatAmount(s.strike, s.asset)}</td>
       <td className="tnum px-4 py-3 text-right text-sm">{formatAmount(s.maxPayoff, s.asset)}</td>
       <td className="tnum px-4 py-3 text-right text-sm text-paper-dim">
@@ -54,21 +60,19 @@ export function Markets() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Markets</h1>
-          <p className="mt-2 text-[15px] text-paper-dim">
-            Every payoff is capped at its locked collateral. Read the risk off the row.
-          </p>
-        </div>
-        <button
-          onClick={() => { seriesQ.refetch(); burnQ.refetch(); }}
-          aria-label="Refresh markets"
-          className="cursor-pointer rounded-[2px] border border-rule p-2 text-paper-dim transition-colors duration-200 hover:bg-ink-3 hover:text-paper"
-        >
-          <RefreshCw size={16} className={seriesQ.isFetching ? "animate-spin" : ""} aria-hidden />
-        </button>
-      </div>
+      <PageHeader
+        title="Markets"
+        description="Every payoff is capped at its locked collateral. Read the risk off the row."
+        meta={
+          <button
+            onClick={() => { seriesQ.refetch(); burnQ.refetch(); }}
+            aria-label="Refresh markets"
+            className="cursor-pointer rounded-[2px] border border-rule p-2 text-paper-dim transition-colors duration-200 hover:bg-ink-3 hover:text-paper"
+          >
+            <RefreshCw size={16} className={seriesQ.isFetching ? "animate-spin" : ""} aria-hidden />
+          </button>
+        }
+      />
 
       {seriesQ.isLoading && (
         <div className="space-y-2" aria-label="Loading markets">
@@ -95,8 +99,32 @@ export function Markets() {
       )}
 
       {seriesQ.data && seriesQ.data.length > 0 && (
-        <div className="overflow-x-auto border border-rule bg-ink-2">
-          <table className="w-full min-w-[720px] text-left">
+        <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
+          {(() => {
+            const burn = burnQ.data ?? 0;
+            const counts = { active: 0, expired: 0, settled: 0 };
+            for (const s of seriesQ.data) counts[seriesStatus(s, burn)]++;
+            return [
+              ["Active", counts.active],
+              ["Awaiting settlement", counts.expired],
+              ["Settled", counts.settled],
+              ["Collateral assets", "sBTC + STX"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex-1 px-4 py-3.5">
+                <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
+                <dd className="tnum mt-1.5 text-lg font-medium">{value}</dd>
+              </div>
+            ));
+          })()}
+        </dl>
+      )}
+
+      {seriesQ.data && seriesQ.data.length > 0 && (
+        <figure className="m-0">
+          <div className="relative border border-rule bg-ink-2">
+            <CornerOrnaments />
+            <div className="scroll-x overflow-x-auto">
+              <table className="w-full min-w-[720px] text-left">
             <caption className="sr-only">Option series listed on Covault</caption>
             <thead>
               <tr className="text-xs uppercase tracking-widest text-paper-dim">
@@ -114,8 +142,13 @@ export function Markets() {
                 <Row key={s.id} s={s} burnHeight={burnQ.data ?? 0} />
               ))}
             </tbody>
-          </table>
-        </div>
+              </table>
+            </div>
+          </div>
+          <figcaption className="mt-3 font-mono text-[11px] uppercase tracking-widest text-paper-dim">
+            Series registry - read live from covault-core
+          </figcaption>
+        </figure>
       )}
     </div>
   );

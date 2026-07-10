@@ -1,7 +1,7 @@
 import { NavLink, Link, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { WalletButton } from "./WalletButton";
-import { NETWORK, getConfig } from "../lib/contract";
+import { NETWORK, getBurnHeight, getConfig } from "../lib/contract";
 import { useWallet } from "../lib/wallet";
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
@@ -19,10 +19,11 @@ function networkMismatch(address: string | null): boolean {
 export function Layout() {
   const { address } = useWallet();
   const configQ = useQuery({ queryKey: ["config"], queryFn: getConfig });
+  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
   const isOwner = !!address && address === configQ.data?.owner;
   const mismatch = networkMismatch(address);
   return (
-    <div className="min-h-dvh">
+    <div className="flex min-h-dvh flex-col">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-[2px] focus:bg-seal focus:px-3 focus:py-2 focus:text-on-seal"
@@ -52,6 +53,15 @@ export function Layout() {
             )}
           </nav>
           <div className="order-2 ml-auto flex items-center gap-3 sm:order-3">
+            {burnQ.data && (
+              <span
+                className="hidden items-center gap-1.5 font-mono text-[11px] text-paper-dim lg:flex"
+                title="Bitcoin burn-block height - the clock series expire on"
+              >
+                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gain" aria-hidden />
+                burn <span className="tnum text-paper">#{burnQ.data.toLocaleString()}</span>
+              </span>
+            )}
             <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[420px]:inline-block">
               {NETWORK}
             </span>
@@ -68,11 +78,12 @@ export function Layout() {
           </p>
         </div>
       )}
-      <main id="main" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6">
         <Outlet />
       </main>
-      <footer className="mx-auto max-w-7xl border-t border-rule px-4 py-6 text-xs text-paper-dim sm:px-6">
-        Solvent by construction: every payoff is capped at its locked collateral.
+      <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-rule px-4 py-6 text-xs text-paper-dim sm:px-6">
+        <span>Solvent by construction: every payoff is capped at its locked collateral.</span>
+        <span>Testnet software. Not investment advice.</span>
       </footer>
     </div>
   );
