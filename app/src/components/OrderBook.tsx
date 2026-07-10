@@ -6,6 +6,7 @@ import { formatAmount, shortAddress } from "../lib/format";
 import { useWallet } from "../lib/wallet";
 import { useTx } from "../lib/tx";
 import { TxStatus } from "./TxStatus";
+import { EmptyState } from "./EmptyState";
 import { sendExactPc, tokenArgFor } from "./WritePanel";
 
 function useInvalidateBook(seriesId: number) {
@@ -68,7 +69,7 @@ function FillRow({ offer, series, feeBps }: { offer: Offer; series: Series; feeB
           <button
             onClick={cancel}
             disabled={busy}
-            className="cursor-pointer rounded-[2px] border border-loss/50 px-3 py-1.5 text-xs font-bold text-loss transition-colors duration-200 hover:bg-loss/10 disabled:opacity-50"
+            className="cursor-pointer rounded-[2px] border border-loss/50 px-3 py-1.5 text-xs font-bold text-loss transition duration-200 hover:bg-loss/10 active:scale-[0.98] disabled:opacity-50"
           >
             {busy ? "Waiting..." : "Cancel offer"}
           </button>
@@ -89,7 +90,7 @@ function FillRow({ offer, series, feeBps }: { offer: Offer; series: Series; feeB
             <button
               type="submit"
               disabled={busy || qty === null}
-              className="cursor-pointer rounded-[2px] bg-seal px-3 py-1.5 text-xs font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded-[2px] bg-seal px-3 py-1.5 text-xs font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? "Waiting..." : total !== null ? `Buy for ${formatAmount(total, series.asset)}` : "Buy"}
             </button>
@@ -184,7 +185,7 @@ function ListForm({ series, long }: { series: Series; long: bigint }) {
         <button
           type="submit"
           disabled={busy || qty === null || price === null}
-          className="cursor-pointer rounded-[2px] border border-rule px-4 py-2 text-sm font-bold text-paper transition-colors duration-200 hover:bg-ink-3 disabled:cursor-not-allowed disabled:opacity-50"
+          className="cursor-pointer rounded-[2px] border border-rule px-4 py-2 text-sm font-bold text-paper transition duration-200 hover:bg-ink-3 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "Waiting..." : qty !== null && price !== null ? `List for ${formatAmount(qty * price, series.asset)}` : "List"}
         </button>
@@ -234,9 +235,11 @@ export function OrderBook({ series, long }: { series: Series; long: bigint }) {
       )}
 
       {offersQ.data && offersQ.data.length === 0 && (
-        <p className="border-t border-rule px-4 py-5 text-sm text-paper-dim">
-          No open offers. {long > 0n ? "List yours below." : "Write options to have something to sell."}
-        </p>
+        <div className="border-t border-rule">
+          <EmptyState compact title="No open offers.">
+            {long > 0n ? "List yours below to earn premium." : "Write options first to have something to sell."}
+          </EmptyState>
+        </div>
       )}
 
       {offersQ.data && offersQ.data.length > 0 && (

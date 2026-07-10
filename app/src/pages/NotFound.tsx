@@ -14,7 +14,7 @@ export function NotFound() {
         </Link>
         <Link
           to="/app"
-          className="rounded-[2px] bg-seal px-4 py-2 text-sm font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi"
+          className="rounded-[2px] bg-seal px-4 py-2 text-sm font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98]"
         >
           Go to markets
         </Link>

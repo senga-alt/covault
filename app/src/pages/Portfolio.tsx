@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getAllSeries, getPosition, type Series } from "../lib/contract";
 import { useWallet } from "../lib/wallet";
 import { formatAmount } from "../lib/format";
+import { EmptyState } from "../components/EmptyState";
 
 interface Holding { series: Series; long: bigint; short: bigint }
 
@@ -30,10 +31,9 @@ export function Portfolio() {
       </div>
 
       {!address && (
-        <div className="border border-rule bg-ink-2 px-6 py-14 text-center">
-          <p className="font-display text-lg font-bold">Wallet not connected</p>
-          <p className="mt-2 text-sm text-paper-dim">Connect your wallet to see your positions.</p>
-        </div>
+        <EmptyState title="Wallet not connected">
+          Connect your wallet (top right) to see the options you hold and the ones you have written.
+        </EmptyState>
       )}
 
       {address && q.isLoading && (
@@ -52,12 +52,19 @@ export function Portfolio() {
       )}
 
       {address && q.data && q.data.length === 0 && (
-        <div className="border border-rule bg-ink-2 px-6 py-14 text-center">
-          <p className="font-display text-lg font-bold">No positions yet</p>
-          <p className="mt-2 text-sm text-paper-dim">
-            Browse the <Link to="/app" className="text-seal-hi underline">markets</Link> to write or buy your first option.
-          </p>
-        </div>
+        <EmptyState
+          title="No positions yet"
+          action={
+            <Link
+              to="/app"
+              className="rounded-[2px] bg-seal px-4 py-2 text-sm font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98]"
+            >
+              Browse markets
+            </Link>
+          }
+        >
+          Write an option to earn premium, or buy one to hedge - your longs and shorts will show up here.
+        </EmptyState>
       )}
 
       {address && q.data && q.data.length > 0 && (

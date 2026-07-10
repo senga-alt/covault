@@ -54,9 +54,9 @@ const inputCls =
   "tnum mt-1 w-full rounded-[2px] border border-rule bg-ink-3 px-3 py-2 text-sm text-paper placeholder:text-paper-dim focus:border-seal disabled:opacity-50";
 const labelCls = "block text-xs text-paper-dim";
 const sealBtn =
-  "cursor-pointer rounded-[2px] bg-seal px-4 py-2.5 text-sm font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:cursor-not-allowed disabled:opacity-50";
+  "cursor-pointer rounded-[2px] bg-seal px-4 py-2.5 text-sm font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
 const ruleBtn =
-  "cursor-pointer rounded-[2px] border border-rule px-4 py-2.5 text-sm font-bold text-paper transition-colors duration-200 hover:bg-ink-3 disabled:cursor-not-allowed disabled:opacity-50";
+  "cursor-pointer rounded-[2px] border border-rule px-4 py-2.5 text-sm font-bold text-paper transition duration-200 hover:bg-ink-3 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
 
 /* ------------------------------------------------------------------ */
 /* create series                                                       */

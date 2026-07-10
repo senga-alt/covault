@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { ArrowDownRight, ArrowUpRight, RefreshCw } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronRight, RefreshCw } from "lucide-react";
 import { getAllSeries, getBurnHeight, seriesStatus, type Series } from "../lib/contract";
 import { formatAmount, estimateExpiry } from "../lib/format";
 import { StatusChip } from "../components/StatusChip";
+import { EmptyState } from "../components/EmptyState";
 
 function TypeBadge({ isCall }: { isCall: boolean }) {
   return isCall ? (
@@ -20,10 +21,18 @@ function TypeBadge({ isCall }: { isCall: boolean }) {
 function Row({ s, burnHeight }: { s: Series; burnHeight: number }) {
   const status = seriesStatus(s, burnHeight);
   return (
-    <tr className="border-t border-rule transition-colors duration-150 hover:bg-ink-3/60">
+    <tr className="group border-t border-rule transition-colors duration-150 hover:bg-ink-3/60">
       <td className="px-4 py-3">
-        <Link to={`/app/series/${s.id}`} className="font-medium text-paper hover:text-seal-hi">
+        <Link
+          to={`/app/series/${s.id}`}
+          className="inline-flex items-center gap-1 font-medium text-paper transition-colors duration-150 hover:text-seal-hi"
+        >
           #{s.id} {s.underlying}
+          <ChevronRight
+            size={14}
+            aria-hidden
+            className="-translate-x-1 text-seal-hi opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+          />
         </Link>
       </td>
       <td className="px-4 py-3 text-sm"><TypeBadge isCall={s.isCall} /></td>
@@ -79,12 +88,10 @@ export function Markets() {
       )}
 
       {seriesQ.data && seriesQ.data.length === 0 && (
-        <div className="rounded-[2px] border border-rule bg-ink-2 px-6 py-14 text-center">
-          <p className="font-display text-lg font-bold">No option series yet</p>
-          <p className="mt-2 text-sm text-paper-dim">
-            Series are curated by the operator in v1. The first markets will appear here.
-          </p>
-        </div>
+        <EmptyState title="No option series yet">
+          Series are curated by the operator in v1. The first markets - covered calls and
+          cash-secured puts on sBTC and STX - will appear here.
+        </EmptyState>
       )}
 
       {seriesQ.data && seriesQ.data.length > 0 && (

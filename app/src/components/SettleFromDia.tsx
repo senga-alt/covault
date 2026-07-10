@@ -26,7 +26,7 @@ export function SettleFromDia({ id }: { id: number }) {
       <button
         onClick={() => run("settle-from-dia", [Cl.uint(id), Cl.principal(DIA_CONTRACT)], [], SETTLER_ID)}
         disabled={busy}
-        className="cursor-pointer rounded-[2px] bg-seal px-4 py-2.5 text-sm font-bold text-on-seal transition-colors duration-200 hover:bg-seal-hi disabled:cursor-not-allowed disabled:opacity-50"
+        className="cursor-pointer rounded-[2px] bg-seal px-4 py-2.5 text-sm font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {busy ? "Waiting..." : "Settle now from DIA"}
       </button>
