@@ -17,6 +17,7 @@
 (define-constant ERR-SERIES-NOT-FOUND (err u203))
 (define-constant ERR-UNSUPPORTED-PAIR (err u204))
 (define-constant ERR-BAD-PRICE (err u205))
+(define-constant ERR-STALE-PRICE (err u206))
 
 ;; DIA feeds are 8-decimal fixed point. Cross-price scaling:
 (define-constant SATS-PER-BTC u100000000) ;; sBTC has 8 decimals
@@ -25,8 +26,46 @@
 (define-data-var contract-owner principal tx-sender)
 (define-data-var price-oracle (optional principal) none)
 
+;; The canonical DIA deployment for this network. settle-from-dia only accepts
+;; this exact principal: without the pin, anyone could pass a lookalike
+;; contract returning attacker-chosen prices to a permissionless entrypoint.
+(define-data-var dia-oracle (optional principal) none)
+
+;; Freshness window: reject DIA values older than this many seconds at
+;; settlement time. DIA pushes on deviation with a heartbeat, so the default
+;; is deliberately wide; the owner can tighten it per network once observed
+;; update cadence is known. If a feed goes quiet past the window, settlement
+;; fails closed with ERR-STALE-PRICE (funds stay locked, nothing pays out
+;; on a stale price) until the feed resumes or governance re-points the
+;; core's oracle.
+(define-data-var max-price-age uint u21600) ;; 6 hours
+
 (define-read-only (get-owner) (var-get contract-owner))
 (define-read-only (get-oracle) (var-get price-oracle))
+(define-read-only (get-dia-oracle) (var-get dia-oracle))
+(define-read-only (get-max-price-age) (var-get max-price-age))
+
+;; A quote is fresh if its timestamp is within max-price-age of the current
+;; Stacks block time (future-dated timestamps count as fresh: block time may
+;; trail a just-pushed feed by seconds).
+(define-read-only (is-fresh (ts uint))
+  (or (>= ts stacks-block-time)
+      (<= (- stacks-block-time ts) (var-get max-price-age))))
+
+(define-public (set-max-price-age (secs uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (asserts! (> secs u0) ERR-BAD-PRICE)
+    (var-set max-price-age secs)
+    (ok true)))
+
+;; Pin the canonical DIA principal (testnet ST1S5..., mainnet SP1G48...).
+;; #[allow(unchecked_data)]
+(define-public (set-dia-oracle (dia principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR-NOT-OWNER)
+    (var-set dia-oracle (some dia))
+    (ok true)))
 
 ;; #[allow(unchecked_data)]
 (define-public (set-owner (new-owner principal))
@@ -84,12 +123,19 @@
 ;; trait so this works with real DIA and is unit-testable with a mock.
 ;; This contract must be covault-core's authorized `oracle`.
 (define-public (settle-from-dia (id uint) (dia <dia-trait>))
-  (let (
-      (s (unwrap! (contract-call? .covault-core get-series id) ERR-SERIES-NOT-FOUND))
-      (stx-usd (get value (try! (contract-call? dia get-value "STX/USD"))))
-      (sbtc-usd (get value (try! (contract-call? dia get-value "sBTC/USD"))))
-      (price (try! (derive-price (get underlying s) stx-usd sbtc-usd)))
-    )
-    (try! (as-contract? () (try! (contract-call? .covault-core settle id price))))
-    (print { event: "settle-from-dia", id: id, price: price, stx-usd: stx-usd, sbtc-usd: sbtc-usd })
-    (ok price)))
+  (begin
+    ;; pin check first: never call into an unvetted principal
+    (asserts! (is-eq (contract-of dia) (unwrap! (var-get dia-oracle) ERR-NO-ORACLE))
+      ERR-WRONG-ORACLE)
+    (let (
+        (s (unwrap! (contract-call? .covault-core get-series id) ERR-SERIES-NOT-FOUND))
+        (stx-quote (try! (contract-call? dia get-value "STX/USD")))
+        (sbtc-quote (try! (contract-call? dia get-value "sBTC/USD")))
+        (price (try! (derive-price (get underlying s) (get value stx-quote) (get value sbtc-quote))))
+      )
+      (asserts! (and (is-fresh (get timestamp stx-quote)) (is-fresh (get timestamp sbtc-quote)))
+        ERR-STALE-PRICE)
+      (try! (as-contract? () (try! (contract-call? .covault-core settle id price))))
+      (print { event: "settle-from-dia", id: id, price: price,
+               stx-usd: (get value stx-quote), sbtc-usd: (get value sbtc-quote) })
+      (ok price))))
