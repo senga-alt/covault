@@ -10,19 +10,21 @@ import {
   type Series,
   type SeriesStatus,
 } from "../lib/contract";
-import { formatAmount, estimateExpiry } from "../lib/format";
+import { formatAmount, estimateExpiryDate } from "../lib/format";
 import { StatusChip } from "../components/StatusChip";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
 import { CornerOrnaments } from "../components/Guilloche";
 
 function TypeBadge({ isCall }: { isCall: boolean }) {
+  // Categorical colors, not the gain/loss semantic pair: an instrument's type is
+  // not an outcome, and the loss red must keep meaning "loss".
   return isCall ? (
     <span className="inline-flex items-center gap-1 text-gain">
       <ArrowUpRight size={14} aria-hidden /> Capped call
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-loss">
+    <span className="inline-flex items-center gap-1 text-data-gold">
       <ArrowDownRight size={14} aria-hidden /> Put
     </span>
   );
@@ -47,6 +49,7 @@ interface Quote {
 
 function Row({ s, burnHeight, quote }: { s: Series; burnHeight: number; quote?: Quote }) {
   const status = seriesStatus(s, burnHeight);
+  const expiryDate = status === "active" ? estimateExpiryDate(s.expiry, burnHeight) : null;
   return (
     <tr className="group border-t border-rule transition-colors duration-150 hover:bg-ink-3/60">
       <td className="px-4 py-3">
@@ -85,8 +88,14 @@ function Row({ s, burnHeight, quote }: { s: Series; burnHeight: number; quote?: 
         )}
       </td>
       <td className="tnum px-4 py-3 text-right text-sm text-paper-dim">
-        #{s.expiry.toLocaleString()}
-        <span className="ml-2 text-xs">({estimateExpiry(s.expiry, burnHeight)})</span>
+        {expiryDate ? (
+          <>
+            <span className="text-paper">&asymp; {expiryDate}</span>
+            <span className="ml-2 text-xs">#{s.expiry.toLocaleString()}</span>
+          </>
+        ) : (
+          <>#{s.expiry.toLocaleString()}</>
+        )}
       </td>
       <td className="px-4 py-3 text-right"><StatusChip status={status} /></td>
     </tr>
@@ -127,6 +136,21 @@ export function Markets() {
       (status === "all" || seriesStatus(s, burn) === status) &&
       (asset === "all" || s.asset === asset)
   );
+
+  const stats = useMemo(() => {
+    const counts = { active: 0, expired: 0, settled: 0 };
+    for (const s of seriesQ.data ?? []) counts[seriesStatus(s, burn)]++;
+    const onOffer = (offersQ.data ?? []).reduce((a, o) => a + o.qty, 0n);
+    return { counts, onOffer };
+  }, [seriesQ.data, offersQ.data, burn]);
+
+  // "Nothing actionable" is a real market state, not an error: every series has
+  // run its course and no offers remain. Say so instead of a strip of zeros.
+  const allQuiet =
+    burnQ.data !== undefined &&
+    (seriesQ.data?.length ?? 0) > 0 &&
+    stats.counts.active === 0 &&
+    stats.onOffer === 0n;
 
   return (
     <div className="space-y-8">
@@ -170,24 +194,56 @@ export function Markets() {
 
       {seriesQ.data && seriesQ.data.length > 0 && (
         <>
-          <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
-            {(() => {
-              const counts = { active: 0, expired: 0, settled: 0 };
-              for (const s of seriesQ.data) counts[seriesStatus(s, burn)]++;
-              const openInterest = (offersQ.data ?? []).reduce((a, o) => a + o.qty, 0n);
-              return [
-                ["Active", counts.active.toString()],
-                ["Awaiting settlement", counts.expired.toString()],
-                ["Settled", counts.settled.toString()],
-                ["Contracts on offer", openInterest.toString()],
+          {allQuiet ? (
+            <section aria-label="Market status" className="border border-rule bg-ink-2 px-5 py-5">
+              <h2 className="font-display text-lg font-bold">
+                {stats.counts.expired > 0 ? "No active series right now." : "All series have settled."}
+              </h2>
+              <p className="mt-1.5 max-w-[65ch] text-sm text-paper-dim">
+                {stats.counts.expired > 0 ? (
+                  <>
+                    <span className="tnum">{stats.counts.expired}</span>
+                    {stats.counts.expired === 1 ? " series awaits" : " series await"} a settlement
+                    price; once it is recorded, exercise and reclaim open with no deadline.{" "}
+                  </>
+                ) : (
+                  <>
+                    Every payoff was paid from its locked collateral and the remainder returned to
+                    its writers - the registry below is the permanent record.{" "}
+                  </>
+                )}
+                New series are curated by the operator and appear here the moment they open.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                <Link
+                  to="/app/portfolio"
+                  className="inline-flex items-center rounded-[2px] border border-rule px-4 py-2 text-sm font-medium text-paper transition duration-200 hover:bg-ink-3 active:scale-[0.98] pointer-coarse:min-h-11"
+                >
+                  Check your claims
+                </Link>
+                <a
+                  href="/#how-it-works"
+                  className="inline-flex items-center text-sm text-paper-dim underline decoration-rule underline-offset-4 transition-colors duration-150 hover:text-paper pointer-coarse:min-h-11"
+                >
+                  How writing works
+                </a>
+              </div>
+            </section>
+          ) : (
+            <dl className="flex flex-col divide-y divide-rule border border-rule bg-ink-2 sm:flex-row sm:divide-x sm:divide-y-0">
+              {[
+                ["Active", stats.counts.active.toString()],
+                ["Awaiting settlement", stats.counts.expired.toString()],
+                ["Settled", stats.counts.settled.toString()],
+                ["Contracts on offer", stats.onOffer.toString()],
               ].map(([label, value]) => (
                 <div key={label} className="flex-1 px-4 py-3.5">
                   <dt className="text-[11px] uppercase tracking-widest text-paper-dim">{label}</dt>
                   <dd className="tnum mt-1.5 text-lg font-medium">{value}</dd>
                 </div>
-              ));
-            })()}
-          </dl>
+              ))}
+            </dl>
+          )}
 
           {/* one filter row governs the registry */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -236,7 +292,7 @@ export function Markets() {
                         <th scope="col" className="px-4 py-3 font-medium">Collateral</th>
                         <th scope="col" className="px-4 py-3 text-right font-medium">Strike</th>
                         <th scope="col" className="px-4 py-3 text-right font-medium">Best offer</th>
-                        <th scope="col" className="px-4 py-3 text-right font-medium">Expiry (burn block)</th>
+                        <th scope="col" className="px-4 py-3 text-right font-medium">Expiry</th>
                         <th scope="col" className="px-4 py-3 text-right font-medium">Status</th>
                       </tr>
                     </thead>

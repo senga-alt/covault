@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { getBurnHeight, getPosition, getSeries, seriesStatus } from "../lib/contract";
-import { formatAmount, estimateExpiry } from "../lib/format";
+import { formatAmount, estimateExpiryDate } from "../lib/format";
 import { StatusChip } from "../components/StatusChip";
 import { WritePanel } from "../components/WritePanel";
 import { ClaimPanel, ClosePanel } from "../components/ClaimPanel";
@@ -80,7 +80,7 @@ export function SeriesDetail() {
           </h1>
           <StatusChip status={status} />
         </div>
-        <p className="mt-3 max-w-[70ch] text-[15px] text-paper-dim">
+        <p className="mt-3 max-w-[60ch] text-[15px] text-paper-dim">
           {s.isCall ? "Capped call" : "Cash-secured put"} settled in {s.asset === "sbtc" ? "sBTC" : "native STX"}.
           Writers lock {formatAmount(s.maxPayoff, s.asset)} per contract; the holder&apos;s payoff can never
           exceed that amount.
@@ -91,8 +91,14 @@ export function SeriesDetail() {
         <Stat label="Strike">{formatAmount(s.strike, s.asset)}</Stat>
         <Stat label="Collateral / contract">{formatAmount(s.maxPayoff, s.asset)}</Stat>
         <Stat label="Expiry">
-          #{s.expiry.toLocaleString()}
-          <span className="ml-2 text-xs text-paper-dim">({estimateExpiry(s.expiry, burn)})</span>
+          {status === "active" && estimateExpiryDate(s.expiry, burn) ? (
+            <>
+              &asymp; {estimateExpiryDate(s.expiry, burn)}
+              <span className="ml-2 text-xs text-paper-dim">block #{s.expiry.toLocaleString()}</span>
+            </>
+          ) : (
+            <>#{s.expiry.toLocaleString()}</>
+          )}
         </Stat>
         <Stat label={s.settled ? "Settlement price" : "Status"}>
           {s.settled ? formatAmount(s.settlementPrice, s.asset) : status === "expired" ? "Awaiting price" : "Trading"}
@@ -126,7 +132,7 @@ export function SeriesDetail() {
               </p>
             </section>
           )}
-          <OrderBook series={s} long={posQ.data?.long ?? 0n} />
+          <OrderBook series={s} long={posQ.data?.long ?? 0n} status={status} />
         </div>
 
         <div className="space-y-6">

@@ -176,7 +176,7 @@ function ClaimItem({ t, d }: { t: string; d: string }) {
     <li
       ref={ref}
       className="border-t border-rule py-9 transition-opacity duration-300"
-      style={{ opacity: on ? 1 : 0.3 }}
+      style={{ opacity: on ? 1 : 0.6 }}
     >
       <h3 className="flex items-center gap-3 font-display text-2xl font-bold md:text-3xl">
         <span

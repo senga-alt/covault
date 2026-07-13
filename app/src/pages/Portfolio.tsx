@@ -218,7 +218,9 @@ export function Portfolio() {
                               {hint && <span className="text-[10px] text-paper-dim">{hint}</span>}
                             </span>
                           ) : (
-                            <span className="text-paper-dim" title="Settles at expiry">-</span>
+                            <span className="text-paper-dim" title="Settles at expiry">
+                              -<span className="sr-only"> (settles at expiry)</span>
+                            </span>
                           )}
                         </td>
                       </tr>
