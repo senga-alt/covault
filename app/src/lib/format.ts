@@ -36,3 +36,18 @@ export function estimateExpiry(expiry: number, burnHeight: number): string {
   if (mins < 60 * 24) return `~${Math.round(mins / 60)} h`;
   return `~${Math.round(mins / 60 / 24)} d`;
 }
+
+// Date-first expiry: the treasurer thinks in dates, the block is the ground
+// truth beside it. Null once the expiry block has passed.
+export function estimateExpiryDate(expiry: number, burnHeight: number): string | null {
+  const blocks = expiry - burnHeight;
+  if (blocks <= 0 || burnHeight === 0) return null;
+  const d = new Date(Date.now() + blocks * 10 * 60 * 1000);
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}

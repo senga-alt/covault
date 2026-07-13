@@ -28,6 +28,9 @@ export const API_BASE = NETWORK === "mainnet" ? "https://api.hiro.so" : "https:/
 export const explorerTxUrl = (txid: string) =>
   `https://explorer.hiro.so/txid/${txid.startsWith("0x") ? txid : `0x${txid}`}?chain=${NETWORK}`;
 
+export const explorerAddressUrl = (address: string) =>
+  `https://explorer.hiro.so/address/${address}?chain=${NETWORK}`;
+
 // --- domain types ---
 export type Asset = "stx" | "sbtc";
 
