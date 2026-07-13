@@ -11,13 +11,12 @@ export function PageHeader({
 }) {
   return (
     <header className="mb-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-bold">{title}</h1>
-          {description && <p className="mt-2 max-w-[70ch] text-[15px] text-paper-dim">{description}</p>}
-        </div>
-        {meta && <div className="flex items-center gap-3">{meta}</div>}
+      {/* title and meta share one row at every width - meta must not orphan below */}
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="font-display text-3xl font-bold">{title}</h1>
+        {meta && <div className="flex shrink-0 items-center gap-3">{meta}</div>}
       </div>
+      {description && <p className="mt-2 max-w-[60ch] text-[15px] text-paper-dim">{description}</p>}
       <div className="double-rule mt-6 h-[5px]" role="presentation" />
     </header>
   );

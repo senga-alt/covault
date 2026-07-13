@@ -146,7 +146,11 @@ export function WritePanel({ series }: { series: Series }) {
         </p>
       </form>
 
-      <TxStatus state={state} onDismiss={reset} />
+      <TxStatus
+        state={state}
+        onDismiss={reset}
+        successHint="Written. List your new contracts for premium in the order book below."
+      />
     </section>
   );
 }

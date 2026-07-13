@@ -70,6 +70,20 @@ h1, h2, h3 {
   outline-offset: 2px;
 }
 
+/* PRODUCT.md commits to >= 44px touch targets. Enforce it where fingers are the
+   pointer; mouse users keep the compact engraved density. Icon-only buttons carry
+   aria-label, which is how they get the width guarantee too. */
+@media (pointer: coarse) {
+  button,
+  input,
+  select {
+    min-height: 44px;
+  }
+  button[aria-label] {
+    min-width: 44px;
+  }
+}
+
 /* landing hero choreography - content visible by default, motion enhances */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }
@@ -84,6 +98,16 @@ h1, h2, h3 {
 }
 .anim-rise-2 { animation-delay: 0.12s; }
 .anim-rise-3 { animation-delay: 0.24s; }
+
+/* header popovers settle into place */
+@keyframes pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.anim-pop {
+  animation: pop 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: top right;
+}
 
 /* small value-change tick for live-feeling mock figures */
 @keyframes tick {
@@ -114,6 +138,14 @@ h1, h2, h3 {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* scroll-reveals must never blank a printed page */
+@media print {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

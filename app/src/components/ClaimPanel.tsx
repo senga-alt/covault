@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Cl } from "@stacks/transactions";
 import { CONTRACT_ID, payoffPerContract, type Series } from "../lib/contract";
@@ -6,6 +7,7 @@ import { formatAmount } from "../lib/format";
 import { useWallet } from "../lib/wallet";
 import { useTx } from "../lib/tx";
 import { TxStatus } from "./TxStatus";
+import { ConservedSumBar } from "./ConservedSumBar";
 import { sendExactPc, tokenArgFor } from "./WritePanel";
 
 function useInvalidate(seriesId: number) {
@@ -95,7 +97,19 @@ function ClaimForm({
           Enter a whole number between 1 and {held.toString()}.
         </p>
       )}
-      <TxStatus state={state} onDismiss={reset} />
+      <TxStatus
+        state={state}
+        onDismiss={reset}
+        successHint={
+          <>
+            {kind === "exercise" ? "Payoff claimed." : "Collateral returned."}{" "}
+            <Link to="/app/portfolio" className="underline decoration-rule underline-offset-4 hover:text-paper">
+              See your portfolio
+            </Link>{" "}
+            for what remains.
+          </>
+        }
+      />
     </form>
   );
 }
@@ -116,6 +130,13 @@ export function ClaimPanel({ series, long, short }: { series: Series; long: bigi
           Settled at <span className="tnum">{formatAmount(series.settlementPrice, series.asset)}</span>. Claims stay
           open forever - there is no deadline.
         </p>
+        {/* the invariant, per contract: exercise draws the payoff side, reclaim the leftover */}
+        <ConservedSumBar
+          payoff={payoffPerContract(series)}
+          total={series.maxPayoff}
+          asset={series.asset}
+          className="mt-3"
+        />
       </div>
       {long > 0n && <ClaimForm series={series} kind="exercise" held={long} />}
       {short > 0n && <ClaimForm series={series} kind="reclaim" held={short} />}

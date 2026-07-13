@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * Whisper-level scroll reveal: content rises 14px and fades in once, when it
- * enters the viewport. Respects prefers-reduced-motion (instant), falls back
- * to visible when IntersectionObserver is unavailable, and never re-hides.
+ * enters the viewport. Content is VISIBLE by default - the effect only hides
+ * an element after confirming it is below the fold with motion allowed, so
+ * print, snapshots, crawlers, and no-JS contexts always see the full page
+ * (DESIGN.md: motion enhances, never gates). Never re-hides.
  */
 export function Reveal({
   children,
@@ -15,7 +17,7 @@ export function Reveal({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  const [phase, setPhase] = useState<"visible" | "waiting" | "revealed">("visible");
 
   useEffect(() => {
     const el = ref.current;
@@ -24,13 +26,16 @@ export function Reveal({
       !("IntersectionObserver" in window) ||
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      setShown(true);
-      return;
+      return; // stays visible
     }
+    // Only elements genuinely below the viewport earn the entrance; anything
+    // already on screen must never flash out.
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return;
+    setPhase("waiting");
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setShown(true);
+          setPhase("revealed");
           io.disconnect();
         }
       },
@@ -40,14 +45,19 @@ export function Reveal({
     return () => io.disconnect();
   }, []);
 
+  const hidden = phase === "waiting";
   return (
     <div
       ref={ref}
+      data-reveal=""
       className={className}
       style={{
-        opacity: shown ? 1 : 0,
-        transform: shown ? "none" : "translateY(14px)",
-        transition: `opacity 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+        opacity: hidden ? 0 : 1,
+        transform: hidden ? "translateY(14px)" : "none",
+        transition:
+          phase === "revealed"
+            ? `opacity 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`
+            : undefined,
       }}
     >
       {children}

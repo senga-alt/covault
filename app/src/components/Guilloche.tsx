@@ -103,26 +103,22 @@ export function SectionMark({ center = false }: { center?: boolean }) {
   );
 }
 
-/** Fine engraved corner marks, like a certificate's plate border. */
+/** Fine engraved corner marks, like a certificate's plate border. Four
+    fixed-size marks (not one stretched SVG) so the engraving stays crisp and
+    square on panels of any proportion. */
 export function CornerOrnaments({ className = "" }: { className?: string }) {
-  const corner = (rot: number, x: number, y: number) => (
-    <g transform={`translate(${x},${y}) rotate(${rot})`} key={rot}>
-      <path d="M0,18 L0,0 L18,0" fill="none" stroke="var(--color-gilt)" strokeWidth="1" opacity="0.55" />
+  const mark = (
+    <svg viewBox="0 0 28 28" className="h-7 w-7" aria-hidden="true" focusable="false">
+      <path d="M0.5,18 L0.5,0.5 L18,0.5" fill="none" stroke="var(--color-gilt)" strokeWidth="1" opacity="0.55" />
       <path d="M4,26 L4,4 L26,4" fill="none" stroke="var(--color-gilt)" strokeWidth="0.6" opacity="0.35" />
-    </g>
+    </svg>
   );
   return (
-    <svg
-      className={`pointer-events-none absolute inset-0 h-full w-full ${className}`}
-      aria-hidden="true"
-      focusable="false"
-      preserveAspectRatio="none"
-      viewBox="0 0 100 100"
-    >
-      <g transform="scale(0.28)">{corner(0, 8, 8)}</g>
-      <g transform="translate(100,0) scale(-0.28,0.28)">{corner(0, 8, 8)}</g>
-      <g transform="translate(0,100) scale(0.28,-0.28)">{corner(0, 8, 8)}</g>
-      <g transform="translate(100,100) scale(-0.28,-0.28)">{corner(0, 8, 8)}</g>
-    </svg>
+    <div className={`pointer-events-none absolute inset-0 ${className}`} aria-hidden="true">
+      <div className="absolute left-1.5 top-1.5">{mark}</div>
+      <div className="absolute right-1.5 top-1.5 -scale-x-100">{mark}</div>
+      <div className="absolute bottom-1.5 left-1.5 -scale-y-100">{mark}</div>
+      <div className="absolute bottom-1.5 right-1.5 -scale-100">{mark}</div>
+    </div>
   );
 }

@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cl } from "@stacks/transactions";
-import { getConfig, getOpenOffers, type Offer, type Series } from "../lib/contract";
+import {
+  getConfig,
+  getOpenOffers,
+  payoffPerContract,
+  type Offer,
+  type Series,
+  type SeriesStatus,
+} from "../lib/contract";
 import { formatAmount, shortAddress } from "../lib/format";
 import { useWallet } from "../lib/wallet";
 import { useTx } from "../lib/tx";
@@ -22,10 +29,25 @@ function useInvalidateBook(seriesId: number) {
 /* fill                                                                */
 /* ------------------------------------------------------------------ */
 
-function FillRow({ offer, series, feeBps }: { offer: Offer; series: Series; feeBps: number }) {
+function FillRow({
+  offer,
+  series,
+  feeBps,
+  status,
+}: {
+  offer: Offer;
+  series: Series;
+  feeBps: number;
+  status: SeriesStatus;
+}) {
   const { address } = useWallet();
   const [qtyStr, setQtyStr] = useState("1");
   const { state, run, reset } = useTx(useInvalidateBook(series.id));
+
+  // The most a contract can ever pay back: the settled claim value once known,
+  // the collateral cap before that. An offer priced above it cannot profit.
+  const ceiling = status === "settled" ? payoffPerContract(series) : series.maxPayoff;
+  const overpriced = offer.price > ceiling;
 
   const qty = useMemo(() => {
     try {
@@ -99,6 +121,13 @@ function FillRow({ offer, series, feeBps }: { offer: Offer; series: Series; feeB
           <span className="text-xs text-paper-dim">connect wallet to buy</span>
         )}
       </div>
+      {overpriced && (
+        <p className="mt-1.5 text-xs text-loss">
+          Priced above {status === "settled" ? "the claim value" : "the maximum payoff"} of{" "}
+          <span className="tnum">{formatAmount(ceiling, series.asset)}</span> per contract - a buyer
+          cannot come out ahead.
+        </p>
+      )}
       {qtyStr !== "" && qty === null && !isMine && address && (
         <p role="alert" className="mt-1.5 text-xs text-loss">
           Enter a whole number between 1 and {offer.qty.toString()}.
@@ -113,7 +142,7 @@ function FillRow({ offer, series, feeBps }: { offer: Offer; series: Series; feeB
 /* list                                                                */
 /* ------------------------------------------------------------------ */
 
-function ListForm({ series, long }: { series: Series; long: bigint }) {
+function ListForm({ series, long, status }: { series: Series; long: bigint; status: SeriesStatus }) {
   const [qtyStr, setQtyStr] = useState("1");
   const [priceStr, setPriceStr] = useState("");
   const { state, run, reset } = useTx(useInvalidateBook(series.id));
@@ -152,6 +181,13 @@ function ListForm({ series, long }: { series: Series; long: bigint }) {
         You hold <span className="tnum">{long.toString()}</span>. Listed options are escrowed until
         bought or cancelled; the premium is paid straight to you on each fill.
       </p>
+      {status === "settled" && (
+        <p className="mt-1 text-xs text-paper-dim">
+          This series has settled: each contract's claim is worth exactly{" "}
+          <span className="tnum">{formatAmount(payoffPerContract(series), series.asset)}</span>.
+          Listing below that value gives the buyer the difference.
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <div>
           <label htmlFor="list-qty" className="block text-xs text-paper-dim">
@@ -190,6 +226,11 @@ function ListForm({ series, long }: { series: Series; long: bigint }) {
           {busy ? "Waiting..." : qty !== null && price !== null ? `List for ${formatAmount(qty * price, series.asset)}` : "List"}
         </button>
       </div>
+      {price !== null && (
+        <p className="mt-1.5 text-xs text-paper-dim">
+          = <span className="tnum">{formatAmount(price, series.asset)}</span> per contract
+        </p>
+      )}
       <TxStatus state={state} onDismiss={reset} />
     </form>
   );
@@ -199,7 +240,7 @@ function ListForm({ series, long }: { series: Series; long: bigint }) {
 /* section                                                             */
 /* ------------------------------------------------------------------ */
 
-export function OrderBook({ series, long }: { series: Series; long: bigint }) {
+export function OrderBook({ series, long, status }: { series: Series; long: bigint; status: SeriesStatus }) {
   const offersQ = useQuery({
     queryKey: ["offers", series.id],
     queryFn: () => getOpenOffers(series.id),
@@ -237,22 +278,47 @@ export function OrderBook({ series, long }: { series: Series; long: bigint }) {
       {offersQ.data && offersQ.data.length === 0 && (
         <div className="border-t border-rule">
           <EmptyState compact title="No open offers.">
-            {long > 0n ? "List yours below to earn premium." : "Write options first to have something to sell."}
+            {long > 0n
+              ? status === "active"
+                ? "List yours below to earn premium."
+                : "You can still list yours below - trading stays open after expiry."
+              : status === "active"
+                ? "Write options first to have something to sell."
+                : status === "expired"
+                  ? "Writing closed at expiry. Awaiting the settlement price."
+                  : "Writing closed at expiry. Existing claims can still be traded or exercised."}
           </EmptyState>
         </div>
       )}
 
       {offersQ.data && offersQ.data.length > 0 && (
-        <ul aria-label="Open offers">
-          {[...offersQ.data]
-            .sort((a, b) => (a.price < b.price ? -1 : a.price > b.price ? 1 : 0))
-            .map((o) => (
-              <FillRow key={o.id} offer={o} series={series} feeBps={feeBps} />
-            ))}
-        </ul>
+        <>
+          {/* risk before action, buyer's side: the bounds hold for every offer below */}
+          <p className="border-t border-rule px-4 py-2.5 text-xs text-paper-dim">
+            {status === "settled" ? (
+              <>
+                This series has settled: each contract's claim is worth exactly{" "}
+                <span className="tnum">{formatAmount(payoffPerContract(series), series.asset)}</span>.
+                Buying an offer transfers that claim.
+              </>
+            ) : (
+              <>
+                The most a buyer can lose is what they pay. The most a contract can pay back is{" "}
+                <span className="tnum">{formatAmount(series.maxPayoff, series.asset)}</span>.
+              </>
+            )}
+          </p>
+          <ul aria-label="Open offers">
+            {[...offersQ.data]
+              .sort((a, b) => (a.price < b.price ? -1 : a.price > b.price ? 1 : 0))
+              .map((o) => (
+                <FillRow key={o.id} offer={o} series={series} feeBps={feeBps} status={status} />
+              ))}
+          </ul>
+        </>
       )}
 
-      {long > 0n && <ListForm series={series} long={long} />}
+      {long > 0n && <ListForm series={series} long={long} status={status} />}
     </section>
   );
 }

@@ -1,5 +1,6 @@
 import { payoffPerContract, type Series } from "../lib/contract";
 import { formatAmount, assetSymbol } from "../lib/format";
+import { ConservedSumBar } from "./ConservedSumBar";
 
 /**
  * Payoff-at-settlement curve: the instrument's signature visual.
@@ -51,6 +52,13 @@ export function PayoffChart({ series: s }: { series: Series }) {
 
   const tickLabel = (v: bigint) => formatAmount(v, s.asset, { withUnit: false });
 
+  // Labels render as HTML over the SVG so they keep a readable fixed size at every
+  // viewport; SVG <text> scales with the viewBox and drops to ~7px effective on
+  // mobile. Positions are percentages of the same chart geometry.
+  const pctX = (n: number) => `${((n / W) * 100).toFixed(2)}%`;
+  const pctY = (n: number) => `${((n / H) * 100).toFixed(2)}%`;
+  const axisLabel = "pointer-events-none absolute font-mono text-[11px] leading-none text-paper-dim";
+
   return (
     <figure className="border border-rule bg-ink-2 p-5">
       <figcaption className="flex items-baseline justify-between gap-4">
@@ -58,70 +66,84 @@ export function PayoffChart({ series: s }: { series: Series }) {
         <span className="text-xs text-paper-dim">{assetSymbol(s.asset)} per contract</span>
       </figcaption>
 
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary} className="mt-3 w-full">
-        {/* zero baseline + cap gridline */}
-        <line x1={PAD.l} y1={y(0)} x2={W - PAD.r} y2={y(0)} stroke="var(--color-rule)" strokeWidth="1" />
-        <line
-          x1={PAD.l} y1={y(cap)} x2={W - PAD.r} y2={y(cap)}
-          stroke="var(--color-gilt)" strokeWidth="0.75" strokeDasharray="3 4" opacity="0.5"
-        />
-        <text x={W - PAD.r} y={y(cap) - 5} textAnchor="end" className="fill-[var(--color-gilt)]" fontSize="10" opacity="0.8" fontFamily="var(--font-mono)">
-          max {tickLabel(s.maxPayoff)}
-        </text>
+      <div className="relative mt-3">
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary} className="w-full">
+          {/* zero baseline + cap gridline */}
+          <line x1={PAD.l} y1={y(0)} x2={W - PAD.r} y2={y(0)} stroke="var(--color-rule)" strokeWidth="1" />
+          <line
+            x1={PAD.l} y1={y(cap)} x2={W - PAD.r} y2={y(cap)}
+            stroke="var(--color-gilt)" strokeWidth="0.75" strokeDasharray="3 4" opacity="0.5"
+          />
 
-        {/* strike marker */}
-        <line
-          x1={x(strike)} y1={PAD.t} x2={x(strike)} y2={y(0)}
-          stroke="var(--color-gilt)" strokeWidth="0.75" strokeDasharray="3 4" opacity="0.5"
-        />
-        <text x={x(strike)} y={H - 12} textAnchor="middle" className="fill-[var(--color-paper-dim)]" fontSize="10" fontFamily="var(--font-mono)">
-          strike {tickLabel(s.strike)}
-        </text>
+          {/* strike marker */}
+          <line
+            x1={x(strike)} y1={PAD.t} x2={x(strike)} y2={y(0)}
+            stroke="var(--color-gilt)" strokeWidth="0.75" strokeDasharray="3 4" opacity="0.5"
+          />
 
-        {/* payoff region + line (the line draws itself in on mount) */}
-        <path d={area} fill="var(--color-gain)" opacity="0.08" />
-        <path
-          d={line}
-          fill="none"
-          stroke="var(--color-gain)"
-          strokeWidth="1.75"
-          style={{
-            strokeDasharray: 1000,
-            ["--dash" as string]: 1000,
-            animation: "draw 0.9s 0.12s cubic-bezier(0.16,1,0.3,1) both",
-          }}
-        />
+          {/* payoff region + line (the line draws itself in on mount) */}
+          <path d={area} fill="var(--color-gain)" opacity="0.08" />
+          <path
+            d={line}
+            fill="none"
+            stroke="var(--color-gain)"
+            strokeWidth="1.75"
+            style={{
+              strokeDasharray: 1000,
+              ["--dash" as string]: 1000,
+              animation: "draw 0.9s 0.12s cubic-bezier(0.16,1,0.3,1) both",
+            }}
+          />
 
-        {/* settlement price marker */}
-        {spClamped !== null && payoffAtSp !== null && (
-          <g>
-            <line
-              x1={x(spClamped)} y1={PAD.t} x2={x(spClamped)} y2={y(0)}
-              stroke="var(--color-seal)" strokeWidth="1"
-            />
-            <circle cx={x(spClamped)} cy={y(payoffAtSp)} r="3.5" fill="var(--color-seal)" />
-            <text x={x(spClamped)} y={PAD.t + 2} textAnchor="middle" dominantBaseline="hanging" className="fill-[var(--color-seal)]" fontSize="10" fontFamily="var(--font-mono)">
+          {/* settlement price marker */}
+          {spClamped !== null && payoffAtSp !== null && (
+            <g>
+              <line
+                x1={x(spClamped)} y1={PAD.t} x2={x(spClamped)} y2={y(0)}
+                stroke="var(--color-seal)" strokeWidth="1"
+              />
+              <circle cx={x(spClamped)} cy={y(payoffAtSp)} r="3.5" fill="var(--color-seal)" />
+            </g>
+          )}
+        </svg>
+
+        {/* chart labels: fixed-size, screen-readers get the prose summary instead */}
+        <div aria-hidden="true">
+          <span
+            className={axisLabel}
+            style={{ right: pctX(PAD.r), top: `calc(${pctY(y(cap))} - 4px)`, transform: "translateY(-100%)" }}
+          >
+            max {tickLabel(s.maxPayoff)}
+          </span>
+          <span
+            className={axisLabel}
+            style={{ left: pctX(x(strike)), bottom: "2px", transform: "translateX(-50%)" }}
+          >
+            strike {tickLabel(s.strike)}
+          </span>
+          {spClamped !== null && (
+            <span
+              className="pointer-events-none absolute font-mono text-[11px] leading-none text-seal"
+              style={{ left: pctX(x(spClamped)), top: "0px", transform: "translateX(-50%)" }}
+            >
               settled {sp !== null && sp > domainMax ? ">" : ""}{tickLabel(s.settlementPrice)}
-            </text>
-          </g>
-        )}
-
-        {/* x-axis extremes */}
-        <text x={PAD.l} y={H - 12} textAnchor="start" className="fill-[var(--color-paper-dim)]" fontSize="10" fontFamily="var(--font-mono)">
-          0
-        </text>
-        <text x={W - PAD.r} y={H - 12} textAnchor="end" className="fill-[var(--color-paper-dim)]" fontSize="10" fontFamily="var(--font-mono)">
-          price
-        </text>
-      </svg>
+            </span>
+          )}
+          <span className={axisLabel} style={{ left: pctX(PAD.l), bottom: "2px" }}>0</span>
+          <span className={axisLabel} style={{ right: pctX(PAD.r), bottom: "2px" }}>price</span>
+        </div>
+      </div>
 
       <p className="sr-only">{summary}</p>
       {s.settled && (
-        <p className="mt-2 border-t border-rule pt-2 text-xs text-paper-dim">
-          Settled: each contract pays <span className="tnum text-gain">{formatAmount(payoffPerContract(s), s.asset)}</span> to
-          the holder and returns <span className="tnum">{formatAmount(s.maxPayoff - payoffPerContract(s), s.asset)}</span> to
-          the writer.
-        </p>
+        <div className="mt-2 border-t border-rule pt-3">
+          <ConservedSumBar payoff={payoffPerContract(s)} total={s.maxPayoff} asset={s.asset} />
+          <p className="mt-1.5 text-xs text-paper-dim">
+            Settled: each contract pays <span className="tnum text-gain">{formatAmount(payoffPerContract(s), s.asset)}</span> to
+            the holder and returns <span className="tnum">{formatAmount(s.maxPayoff - payoffPerContract(s), s.asset)}</span> to
+            the writer.
+          </p>
+        </div>
       )}
     </figure>
   );

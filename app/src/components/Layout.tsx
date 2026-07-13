@@ -6,7 +6,7 @@ import { NETWORK, getBurnHeight, getConfig } from "../lib/contract";
 import { useWallet } from "../lib/wallet";
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
-  `rounded-[2px] px-3 py-2 text-[15px] font-medium transition-colors duration-200 ${
+  `inline-flex items-center rounded-[2px] px-3 py-2 text-[15px] font-medium transition-colors duration-200 pointer-coarse:min-h-11 ${
     isActive ? "bg-ink-3 text-paper" : "text-paper-dim hover:text-paper"
   }`;
 
@@ -64,6 +64,9 @@ export function Layout() {
               >
                 <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gain" aria-hidden />
                 burn <span className="tnum text-paper">#{burnQ.data.toLocaleString()}</span>
+                <span className="sr-only">
+                  Bitcoin burn-block height - the clock series expire on.
+                </span>
               </span>
             )}
             <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[420px]:inline-block">

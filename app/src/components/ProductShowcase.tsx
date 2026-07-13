@@ -151,7 +151,7 @@ function WriteLedgerMock({ asset }: { asset: ShowAsset }) {
       <div className="mt-4 rounded-[2px] bg-seal px-5 py-2.5 text-center text-sm font-bold text-on-seal">
         <V>Lock {amt(asset, q)} and write</V>
       </div>
-      <p className="mt-2 text-center text-[11px] text-paper-dim">
+      <p className="mt-2 text-center text-xs text-paper-dim">
         Protected by a post-condition: exactly this amount, nothing else.
       </p>
     </div>
