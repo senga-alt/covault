@@ -7,10 +7,9 @@ import { ProductShowcase } from "../components/ProductShowcase";
 import { Reveal } from "../components/Reveal";
 import { PayoffDemo } from "../components/PayoffDemo";
 import { BrandMark } from "../components/BrandMark";
-import { CONTRACT_ID, NETWORK } from "../lib/contract";
+import { NETWORK } from "../lib/contract";
 
 const GITHUB_URL = "https://github.com/senga-alt/covault";
-const EXPLORER_URL = `https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`;
 
 /* ------------------------------------------------------------------ */
 /* small pieces                                                        */
@@ -109,14 +108,6 @@ function Hero() {
               </p>
               <div className="anim-rise anim-rise-3 mt-9 flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
                 <SealButton to="/app" className="justify-center sm:justify-start">Enter the vault</SealButton>
-                <a
-                  href={`https://explorer.hiro.so/txid/${CONTRACT_ID}?chain=${NETWORK}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center rounded-[2px] border border-rule px-6 py-3 text-[15px] font-medium text-paper transition duration-200 hover:bg-ink-3 active:scale-[0.98]"
-                >
-                  Verify the contract on-chain
-                </a>
               </div>
               <p className="anim-rise anim-rise-3 mt-6 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-paper-dim">
                 <span className="inline-flex items-center gap-1.5">
@@ -382,7 +373,7 @@ function Closing() {
       </Reveal>
       <footer className="border-t border-rule">
         <div className="mx-auto max-w-6xl px-6 py-12">
-          <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr]">
+          <div className="grid gap-10 md:grid-cols-[2fr_1fr]">
             <div>
               <span className="inline-flex items-center gap-2.5 font-display text-xl font-bold">
                 <BrandMark className="h-[26px] w-[26px]" />
@@ -400,21 +391,6 @@ function Closing() {
               <ul className="mt-3 space-y-2 text-sm text-paper-dim">
                 <li><Link to="/app" className="hover:text-paper">Markets</Link></li>
                 <li><Link to="/app/portfolio" className="hover:text-paper">Portfolio</Link></li>
-              </ul>
-            </nav>
-            <nav aria-label="Verify">
-              <h3 className="font-display text-sm font-bold">Verify</h3>
-              <ul className="mt-3 space-y-2 text-sm text-paper-dim">
-                <li>
-                  <a href={EXPLORER_URL} target="_blank" rel="noreferrer" className="hover:text-paper">
-                    Contract on explorer
-                  </a>
-                </li>
-                <li>
-                  <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="hover:text-paper">
-                    Source on GitHub
-                  </a>
-                </li>
               </ul>
             </nav>
           </div>
