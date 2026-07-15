@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Contract tests (Clarinet SDK + Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # vitest-environment-clarinet compiles covault-core and runs the 41-test
+      # suite against real sBTC + native STX in simnet. Green here means the
+      # contracts compile and behave correctly, so this is the source of truth for CI.
+      - name: Run tests
+        run: npm test
+
+      # Property-based fuzzing of covault-core's settlement arithmetic
+      # (Rendezvous). Fixed seed keeps CI deterministic; developers run fresh
+      # seeds locally via `npm run fuzz`. See docs/SECURITY-REVIEW.md.
+      - name: Fuzz invariants
+        run: npm run fuzz:ci
+
+  clarinet-check:
+    name: clarinet check
+    runs-on: ubuntu-latest
+    env:
+      CLARINET_VERSION: "3.21.1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Clarinet
+        run: |
+          curl -sL "https://github.com/hirosystems/clarinet/releases/download/v${CLARINET_VERSION}/clarinet-linux-x64-glibc.tar.gz" -o clarinet.tar.gz
+          tar -xf clarinet.tar.gz
+          chmod +x clarinet
+          sudo mv clarinet /usr/local/bin/clarinet
+      - name: clarinet check
+        run: clarinet check
