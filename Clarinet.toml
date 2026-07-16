@@ -10,8 +10,29 @@ contract_id = 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standa
 
 [[project.requirements]]
 contract_id = 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token'
+
+[contracts.oracle-trait]
+path = 'contracts/traits/oracle-trait.clar'
+clarity_version = 4
+epoch = 'latest'
+[contracts.dia-trait]
+path = 'contracts/traits/dia-trait.clar'
+clarity_version = 4
+epoch = 'latest'
 [contracts.covault-core]
 path = 'contracts/covault-core.clar'
+clarity_version = 4
+epoch = 'latest'
+[contracts.covault-settler]
+path = 'contracts/covault-settler.clar'
+clarity_version = 4
+epoch = 'latest'
+[contracts.mock-oracle]
+path = 'contracts/mocks/mock-oracle.clar'
+clarity_version = 4
+epoch = 'latest'
+[contracts.mock-dia]
+path = 'contracts/mocks/mock-dia.clar'
 clarity_version = 4
 epoch = 'latest'
 [repl.analysis]
