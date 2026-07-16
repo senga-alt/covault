@@ -45,6 +45,14 @@ h1, h2, h3 {
   line-height: 1.15;
 }
 
+/* Long prose (landing paragraphs) gets orphan/river-aware wrapping. Schibsted
+   Grotesk exposes no stylistic sets to tune, so this - plus the balance above and
+   tabular figures below - is the whole intentional-type story. Single-line UI
+   labels are unaffected (pretty is a no-op on one line). */
+p {
+  text-wrap: pretty;
+}
+
 /* figures never reflow */
 .tnum {
   font-family: var(--font-mono);
@@ -81,6 +89,14 @@ h1, h2, h3 {
   }
   button[aria-label] {
     min-width: 44px;
+  }
+  /* Nav anchors are tap targets too (primary + footer navs). min-height only
+     applies once the anchor is a flex box, so give them one; mouse users keep
+     the compact inline density above. */
+  nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 
@@ -153,6 +169,35 @@ h1, h2, h3 {
 ::selection {
   background: color-mix(in oklch, var(--color-seal) 30%, transparent);
   color: var(--color-paper);
+}
+
+/* Honor notch / rounded-corner safe areas when installed to home screen or in
+   landscape. The existing 1rem / 1.5rem gutters stay as the floor, so nothing
+   changes on hardware without insets (env() resolves to 0). */
+@supports (padding: max(0px)) {
+  .gutter-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  @media (min-width: 640px) {
+    .gutter-safe {
+      padding-left: max(1.5rem, env(safe-area-inset-left));
+      padding-right: max(1.5rem, env(safe-area-inset-right));
+    }
+  }
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch pointers never fire :hover, so hover-gated affordances (Tailwind v4
+   already scopes `hover:` to `@media (hover: hover)`) would stay hidden. Reveal
+   them by default where the primary pointer can't hover. */
+@media (hover: none) {
+  [data-hover-reveal] {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* slim engraved scrollbars for in-panel overflow */

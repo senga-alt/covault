@@ -9,6 +9,7 @@ import { ClaimPanel, ClosePanel } from "../components/ClaimPanel";
 import { OrderBook } from "../components/OrderBook";
 import { PayoffChart } from "../components/PayoffChart";
 import { SettleFromDia } from "../components/SettleFromDia";
+import { Term } from "../components/Term";
 import { useWallet } from "../lib/wallet";
 
 // One cell of the facts strip - borderless; the strip provides the hairlines.
@@ -81,9 +82,13 @@ export function SeriesDetail() {
           <StatusChip status={status} />
         </div>
         <p className="mt-3 max-w-[60ch] text-[15px] text-paper-dim">
-          {s.isCall ? "Capped call" : "Cash-secured put"} settled in {s.asset === "sbtc" ? "sBTC" : "native STX"}.
-          Writers lock {formatAmount(s.maxPayoff, s.asset)} per contract; the holder&apos;s payoff can never
-          exceed that amount.
+          {s.isCall ? (
+            <Term term="capped-call">Capped call</Term>
+          ) : (
+            <Term term="cash-secured-put">Cash-secured put</Term>
+          )}{" "}
+          settled in {s.asset === "sbtc" ? "sBTC" : "native STX"}. Writers lock{" "}
+          {formatAmount(s.maxPayoff, s.asset)} per contract; the holder&apos;s payoff can never exceed that amount.
         </p>
       </div>
 

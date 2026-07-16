@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { PayoffChart } from "./PayoffChart";
 import { CornerOrnaments, GuillocheRosette, SectionMark } from "./Guilloche";
 import { Reveal } from "./Reveal";
-import type { Series } from "../lib/contract";
+import type { Series } from "../lib/series";
 
 /* Market-sized settled puts in both assets - the whole showcase cycles
    between them in sync, so every figure demonstrates sBTC and STX. */

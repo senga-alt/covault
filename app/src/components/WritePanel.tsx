@@ -6,6 +6,7 @@ import { formatAmount } from "../lib/format";
 import { useWallet } from "../lib/wallet";
 import { useTx } from "../lib/tx";
 import { TxStatus } from "./TxStatus";
+import { Term } from "./Term";
 
 /** The (optional trait) token argument matching a series' collateral asset. */
 export function tokenArgFor(series: Series) {
@@ -91,8 +92,9 @@ export function WritePanel({ series }: { series: Series }) {
         Write options
       </h2>
       <p className="mt-1.5 text-sm text-paper-dim">
-        Lock collateral, receive {qty !== null ? qty.toString() : "N"} option{qty === 1n ? "" : "s"} (long) and the
-        matching obligation{qty === 1n ? "" : "s"} (short). Sell the longs for premium; your risk never exceeds the
+        Lock collateral, receive {qty !== null ? qty.toString() : "N"} option{qty === 1n ? "" : "s"} (
+        <Term term="long">long</Term>) and the matching obligation{qty === 1n ? "" : "s"} (
+        <Term term="short">short</Term>). Sell the longs for premium; your risk never exceeds the
         collateral you lock here.
       </p>
 
@@ -142,7 +144,7 @@ export function WritePanel({ series }: { series: Series }) {
           {busy ? "Waiting..." : collateral !== null ? `Lock ${formatAmount(collateral, series.asset)} and write` : "Write"}
         </button>
         <p className="mt-2 text-center text-xs text-paper-dim">
-          Protected by a post-condition: the transaction can move exactly this amount, nothing else.
+          Protected by a <Term term="post-condition">post-condition</Term>: the transaction can move exactly this amount, nothing else.
         </p>
       </form>
 

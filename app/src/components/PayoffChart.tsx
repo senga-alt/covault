@@ -1,4 +1,4 @@
-import { payoffPerContract, type Series } from "../lib/contract";
+import { payoffPerContract, type Series } from "../lib/series";
 import { formatAmount, assetSymbol } from "../lib/format";
 import { ConservedSumBar } from "./ConservedSumBar";
 

@@ -61,6 +61,7 @@ function Row({ s, burnHeight, quote }: { s: Series; burnHeight: number; quote?: 
           <ChevronRight
             size={14}
             aria-hidden
+            data-hover-reveal
             className="-translate-x-1 text-seal-hi opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
           />
         </Link>

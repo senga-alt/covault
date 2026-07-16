@@ -7,7 +7,7 @@ import { ProductShowcase } from "../components/ProductShowcase";
 import { Reveal } from "../components/Reveal";
 import { PayoffDemo } from "../components/PayoffDemo";
 import { BrandMark } from "../components/BrandMark";
-import { NETWORK } from "../lib/contract";
+import { NETWORK } from "../lib/config";
 
 const GITHUB_URL = "https://github.com/senga-alt/covault";
 
@@ -338,7 +338,7 @@ function Faq() {
               href={GITHUB_URL}
               target="_blank"
               rel="noreferrer"
-              className="mt-6 inline-flex items-center gap-1.5 text-[15px] font-medium text-paper underline decoration-rule underline-offset-4 transition-colors duration-200 hover:text-seal-hi"
+              className="mt-6 inline-flex items-center gap-1.5 text-[15px] font-medium text-paper underline decoration-rule underline-offset-4 transition-colors duration-200 hover:text-seal-hi pointer-coarse:min-h-11"
             >
               Get in touch <ArrowUpRight size={15} aria-hidden />
             </a>

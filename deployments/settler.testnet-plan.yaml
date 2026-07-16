@@ -1,0 +1,51 @@
+id: 0
+name: Covault settler + oracle traits (testnet)
+# Publishes ONLY the oracle integration: dia-trait, oracle-trait, covault-settler.
+# covault-core is already deployed on testnet (same deployer) and is referenced,
+# not republished. The mock-* contracts are test-only and intentionally excluded.
+# Apply with:
+#   clarinet deployments apply --testnet --deployment-plan-path deployments/settler.testnet-plan.yaml
+# If the deployer changes, update every expected-sender below and re-check.
+network: testnet
+stacks-node: https://api.testnet.hiro.so
+bitcoin-node: http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332
+plan:
+  batches:
+  - id: 0
+    transactions:
+    - transaction-type: contract-publish
+      contract-name: dia-trait
+      expected-sender: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+      cost: 500000
+      path: contracts/traits/dia-trait.clar
+      anchor-block-only: true
+      clarity-version: 4
+    - transaction-type: contract-publish
+      contract-name: oracle-trait
+      expected-sender: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+      cost: 500000
+      path: contracts/traits/oracle-trait.clar
+      anchor-block-only: true
+      clarity-version: 4
+    epoch: '3.4'
+  - id: 1
+    transactions:
+    - transaction-type: contract-publish
+      contract-name: covault-settler
+      expected-sender: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+      cost: 1000000
+      path: contracts/covault-settler.clar
+      anchor-block-only: true
+      clarity-version: 4
+    epoch: '3.4'
+  - id: 2
+    transactions:
+    # pin the canonical testnet DIA principal - settle-from-dia refuses any other source
+    - transaction-type: contract-call
+      contract-id: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler
+      expected-sender: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+      method: set-dia-oracle
+      parameters:
+      - "'ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle"
+      cost: 100000
+    epoch: '3.4'

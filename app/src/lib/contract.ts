@@ -1,7 +1,17 @@
 import { Cl, cvToJSON, fetchCallReadOnlyFunction, type ClarityValue } from "@stacks/transactions";
+import { NETWORK } from "./config";
+import {
+  payoffPerContract,
+  seriesStatus,
+  type Asset,
+  type Series,
+  type SeriesStatus,
+} from "./series";
 
 // --- deployment config (env-overridable, defaults = live testnet deployment) ---
-export const NETWORK = (import.meta.env.VITE_NETWORK ?? "testnet") as "testnet" | "mainnet";
+// NETWORK lives in ./config (no @stacks import) so brand/landing code can read it
+// without dragging the SDK into the initial bundle; re-exported here for app callers.
+export { NETWORK };
 export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS ?? "ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R";
 export const CONTRACT_NAME = import.meta.env.VITE_CONTRACT_NAME ?? "covault-core";
 export const CONTRACT_ID = `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`;
@@ -31,22 +41,9 @@ export const explorerTxUrl = (txid: string) =>
 export const explorerAddressUrl = (address: string) =>
   `https://explorer.hiro.so/address/${address}?chain=${NETWORK}`;
 
-// --- domain types ---
-export type Asset = "stx" | "sbtc";
-
-export interface Series {
-  id: number;
-  creator: string;
-  asset: Asset;
-  quoteToken: string | null; // SIP-010 principal, null = native STX
-  underlying: string;
-  isCall: boolean;
-  strike: bigint;
-  maxPayoff: bigint;
-  expiry: number; // burn-block-height
-  settled: boolean;
-  settlementPrice: bigint;
-}
+// --- domain types + pure math (defined in ./series; re-exported for app callers) ---
+export { payoffPerContract, seriesStatus };
+export type { Asset, Series, SeriesStatus };
 
 export interface ProtocolConfig {
   owner: string;
@@ -57,21 +54,6 @@ export interface ProtocolConfig {
   feeRecipient: string;
   seriesCount: number;
   offerCount: number;
-}
-
-export type SeriesStatus = "active" | "expired" | "settled";
-
-export function seriesStatus(s: Series, burnHeight: number): SeriesStatus {
-  if (s.settled) return "settled";
-  if (burnHeight >= s.expiry) return "expired";
-  return "active";
-}
-
-/** Client-side mirror of the contract's calc-payoff, for showing claim amounts. */
-export function payoffPerContract(s: Series): bigint {
-  const p = s.settlementPrice;
-  const intrinsic = s.isCall ? (p > s.strike ? p - s.strike : 0n) : (s.strike > p ? s.strike - p : 0n);
-  return intrinsic > s.maxPayoff ? s.maxPayoff : intrinsic;
 }
 
 // --- read-only plumbing ---

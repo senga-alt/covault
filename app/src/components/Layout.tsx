@@ -33,7 +33,7 @@ export function Layout() {
       </a>
       <header className="sticky top-0 z-30 border-b border-rule bg-ink/95 backdrop-blur-sm">
         {/* two rows on mobile (logo+wallet, then nav); one row from sm up */}
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 sm:h-16 sm:flex-nowrap sm:gap-8 sm:px-6 sm:py-0">
+        <div className="gutter-safe mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 py-3 sm:h-16 sm:flex-nowrap sm:gap-8 sm:py-0">
           <Link to="/" className="order-1 inline-flex items-center gap-2.5 font-display text-xl font-bold tracking-tight">
             <BrandMark className="h-[26px] w-[26px]" />
             <span>
@@ -78,17 +78,17 @@ export function Layout() {
       </header>
       {mismatch && (
         <div role="alert" className="border-b border-loss/40 bg-loss/10">
-          <p className="mx-auto max-w-7xl px-4 py-2.5 text-sm sm:px-6">
+          <p className="gutter-safe mx-auto max-w-7xl py-2.5 text-sm">
             Your wallet is connected with a {NETWORK === "testnet" ? "mainnet" : "testnet"} address, but this app
             runs on {NETWORK}. Switch the network inside your wallet, then reconnect - transactions will fail
             until then.
           </p>
         </div>
       )}
-      <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-10 sm:px-6">
+      <main id="main" className="gutter-safe mx-auto w-full max-w-7xl flex-1 py-10">
         <Outlet />
       </main>
-      <footer className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-rule px-4 py-6 text-xs text-paper-dim sm:px-6">
+      <footer className="gutter-safe pb-safe mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-rule pt-6 text-xs text-paper-dim">
         <span>Solvent by construction: every payoff is capped at its locked collateral.</span>
         <span>Testnet software. Not investment advice.</span>
       </footer>
