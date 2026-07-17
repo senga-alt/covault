@@ -261,12 +261,20 @@ const FAQS: { q: string; a: string }[] = [
     a: "A call whose payout stops at a cap above the strike. Capping the upside is what lets the full payout be locked as cash collateral up front - it is the same payoff as a call spread, and it is why Covault can never be undercollateralized.",
   },
   {
+    q: "How is the premium decided?",
+    a: "By the market, not the protocol. Writers list their options at a price of their choosing on the built-in order book, and buyers fill the offers they like. Covault never sets or suggests a price.",
+  },
+  {
     q: "Where does the settlement price come from?",
     a: "Each series records one settlement price at expiry, measured on Bitcoin block height. In the current version an authorized reporter posts it; the integration underway replaces this with an on-chain price feed. A wrong price can only ever affect its own series.",
   },
   {
     q: "Which assets can collateralize a series?",
     a: "sBTC (Bitcoin on Stacks) or native STX, chosen when the series is created. Payoffs settle in the same asset that was locked.",
+  },
+  {
+    q: "What does it cost to use?",
+    a: "There is no protocol fee today. The contract supports a taker fee on order-book fills, hard-capped at 5% and currently set to zero. Writing, exercising, and reclaiming are never charged - you only ever pay the network's transaction fee.",
   },
   {
     q: "Do I need to exercise manually?",
