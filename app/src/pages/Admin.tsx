@@ -77,6 +77,11 @@ const ruleBtn =
 function CreateSeries({ burnHeight }: { burnHeight: number }) {
   const [asset, setAsset] = useState<Asset>("stx");
   const [underlying, setUnderlying] = useState("");
+  // With a settler wired, settlement is DIA-only and the pair label is fixed by
+  // the collateral asset. A free-typed label could never settle (u204), locking
+  // writers in until close-pair - so the form derives it instead of asking.
+  const diaLabel = asset === "sbtc" ? "STX-SBTC" : "SBTC-STX";
+  const label = hasSettler ? diaLabel : underlying.trim();
   const [isCall, setIsCall] = useState(false);
   const [strikeStr, setStrikeStr] = useState("");
   const [capStr, setCapStr] = useState("");
@@ -100,9 +105,9 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
           : `~${Math.round((ahead * 10) / 60 / 24)} days`;
 
   const valid =
-    underlying.trim().length > 0 &&
-    underlying.trim().length <= 16 &&
-    /^[\x20-\x7E]+$/.test(underlying.trim()) &&
+    label.length > 0 &&
+    label.length <= 16 &&
+    /^[\x20-\x7E]+$/.test(label) &&
     strike !== null &&
     maxPayoff !== null &&
     ahead !== null;
@@ -117,7 +122,7 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
       "create-series",
       [
         tokenArgFor(fakeSeries),
-        Cl.stringAscii(underlying.trim()),
+        Cl.stringAscii(label),
         Cl.bool(isCall),
         Cl.uint(strike),
         Cl.uint(maxPayoff),
@@ -179,21 +184,29 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="cs-underlying" className={labelCls}>
-              Underlying label (max 16 chars, e.g. STX-SBTC)
+              {hasSettler ? "Underlying pair (fixed by collateral)" : "Underlying label (max 16 chars, e.g. STX-SBTC)"}
             </label>
             <input
               id="cs-underlying"
-              value={underlying}
+              value={hasSettler ? diaLabel : underlying}
               onChange={(e) => setUnderlying(e.target.value)}
               maxLength={16}
-              disabled={busy}
-              className={inputCls}
+              disabled={busy || hasSettler}
+              readOnly={hasSettler}
+              className={`${inputCls} ${hasSettler ? "opacity-70" : ""}`}
               placeholder="STX-SBTC"
             />
-            {underlying !== "" && !/^[\x20-\x7E]+$/.test(underlying.trim()) && (
-              <p role="alert" className="mt-1 text-xs text-loss">
-                Plain characters only (letters, digits, dashes) - this is stored on-chain as ASCII.
+            {hasSettler ? (
+              <p className="mt-1 text-xs text-paper-dim">
+                Settlement is via DIA, so the pair follows the collateral:{" "}
+                {asset === "sbtc" ? "sats per STX" : "microSTX per sBTC"}. Any other label could never settle.
               </p>
+            ) : (
+              underlying !== "" && !/^[\x20-\x7E]+$/.test(underlying.trim()) && (
+                <p role="alert" className="mt-1 text-xs text-loss">
+                  Plain characters only (letters, digits, dashes) - this is stored on-chain as ASCII.
+                </p>
+              )
             )}
           </div>
           <div>

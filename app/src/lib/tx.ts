@@ -28,6 +28,13 @@ const CONTRACT_ERRORS: Record<number, string> = {
   115: "New writes are paused. Exits (exercise, reclaim, close) stay open.",
   116: "Series creation is limited to the operator in v1.",
   117: "Fee exceeds the 5% cap.",
+  200: "Only the settler's owner can do that.",
+  201: "The settler has no price source configured yet.",
+  202: "That is not the settler's pinned price source.",
+  203: "That series does not exist.",
+  204: "This series' pair label cannot settle from DIA.",
+  205: "The price feed returned a zero value - settlement refused.",
+  206: "The DIA price is older than the freshness window. Try again after the next feed update.",
 };
 
 export function explainTxFailure(status: string, resultRepr?: string): string {

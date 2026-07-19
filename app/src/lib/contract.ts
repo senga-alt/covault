@@ -223,6 +223,56 @@ export async function getContractActivityDays(days: number): Promise<ActivityIte
   return out;
 }
 
+/** What settle-from-dia would record right now, using the settler's own
+ *  on-chain derive-price so the preview can never disagree with the chain. */
+export interface DiaPreview {
+  price: bigint; // settlement price in the series' collateral units
+  ageSeconds: number; // oldest of the two feeds, normalized to seconds
+  fresh: boolean; // would pass the settler's freshness window (approximate: wall clock)
+  maxAge: number;
+}
+
+async function roAt(contractId: string, fn: string, args: ClarityValue[]): Promise<any> {
+  const [contractAddress, contractName] = contractId.split(".");
+  const cv = await fetchCallReadOnlyFunction({
+    contractAddress,
+    contractName,
+    functionName: fn,
+    functionArgs: args,
+    senderAddress: contractAddress,
+    network: NETWORK,
+  });
+  return cvToJSON(cv);
+}
+
+// DIA deployments emit second- or millisecond-precision timestamps; mirror the
+// settler's normalization (>= 1e11 means milliseconds).
+const normTs = (t: number) => (t >= 1e11 ? Math.floor(t / 1000) : t);
+
+export async function getDiaSettlePreview(underlying: string): Promise<DiaPreview> {
+  const [stxQ, sbtcQ, ageJ] = await Promise.all([
+    roAt(DIA_CONTRACT, "get-value", [Cl.stringAscii("STX/USD")]),
+    roAt(DIA_CONTRACT, "get-value", [Cl.stringAscii("sBTC/USD")]),
+    roAt(SETTLER_ID, "get-max-price-age", []),
+  ]);
+  const stx = stxQ.value.value;
+  const sbtc = sbtcQ.value.value;
+  const priceJ = await roAt(SETTLER_ID, "derive-price", [
+    Cl.stringAscii(underlying),
+    Cl.uint(stx.value.value),
+    Cl.uint(sbtc.value.value),
+  ]);
+  if (!priceJ.success) throw new Error("This series' pair label cannot settle from DIA.");
+  const now = Math.floor(Date.now() / 1000);
+  const age = Math.max(
+    now - normTs(Number(stx.timestamp.value)),
+    now - normTs(Number(sbtc.timestamp.value)),
+    0
+  );
+  const maxAge = Number(ageJ.value);
+  return { price: BigInt(priceJ.value.value), ageSeconds: age, fresh: age <= maxAge, maxAge };
+}
+
 /** Loose Stacks principal check (standard or contract), for form validation. */
 export function isValidPrincipal(v: string): boolean {
   return /^S[TPMN][0-9A-HJKMNP-Z]{37,40}(\.[a-z]([a-z0-9-]{0,39}))?$/.test(v.trim());

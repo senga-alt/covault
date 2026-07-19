@@ -123,7 +123,7 @@ export function SeriesDetail() {
                 This series passed its expiry block. Once the settlement price is recorded,
                 exercise and reclaim open here - with no deadline.
               </p>
-              <SettleFromDia id={s.id} />
+              <SettleFromDia id={s.id} underlying={s.underlying} />
             </section>
           )}
           {status === "settled" && posQ.data && (

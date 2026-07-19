@@ -45,12 +45,24 @@
 (define-read-only (get-dia-oracle) (var-get dia-oracle))
 (define-read-only (get-max-price-age) (var-get max-price-age))
 
-;; A quote is fresh if its timestamp is within max-price-age of the current
-;; Stacks block time (future-dated timestamps count as fresh: block time may
-;; trail a just-pushed feed by seconds).
+;; DIA deployments report Unix timestamps at second or millisecond precision
+;; (the live testnet feed emits milliseconds). Normalize before comparing:
+;; anything at or above u100000000000 (~year 5138 as seconds) is milliseconds.
+;; Without this, a millisecond timestamp always reads as far-future and the
+;; freshness window never binds.
+(define-private (ts-seconds (ts uint))
+  (if (>= ts u100000000000) (/ ts u1000) ts))
+
+;; The current Stacks block time, exposed for UIs and debugging.
+(define-read-only (current-time) stacks-block-time)
+
+;; A quote is fresh if its (normalized) timestamp is within max-price-age of
+;; the current Stacks block time (future-dated timestamps count as fresh:
+;; block time may trail a just-pushed feed by seconds).
 (define-read-only (is-fresh (ts uint))
-  (or (>= ts stacks-block-time)
-      (<= (- stacks-block-time ts) (var-get max-price-age))))
+  (let ((t (ts-seconds ts)))
+    (or (>= t stacks-block-time)
+        (<= (- stacks-block-time t) (var-get max-price-age)))))
 
 (define-public (set-max-price-age (secs uint))
   (begin
