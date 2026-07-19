@@ -70,6 +70,12 @@ function LandingNav() {
               {label}
             </a>
           ))}
+          <Link
+            to="/docs"
+            className="whitespace-nowrap px-1 text-sm font-medium text-paper-dim transition-colors duration-200 hover:text-paper md:text-[15px]"
+          >
+            Docs
+          </Link>
         </div>
         <div className="order-2 ml-auto flex items-center gap-3 md:order-3 md:ml-0">
           <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[480px]:inline-block">
@@ -399,6 +405,7 @@ function Closing() {
               <ul className="mt-3 space-y-2 text-sm text-paper-dim">
                 <li><Link to="/app" className="hover:text-paper">Markets</Link></li>
                 <li><Link to="/app/portfolio" className="hover:text-paper">Portfolio</Link></li>
+                <li><Link to="/docs" className="hover:text-paper">Documentation</Link></li>
               </ul>
             </nav>
           </div>
