@@ -90,7 +90,10 @@ export function Layout() {
       </main>
       <footer className="gutter-safe pb-safe mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-rule pt-6 text-xs text-paper-dim">
         <span>Solvent by construction: every payoff is capped at its locked collateral.</span>
-        <span>Testnet software. Not investment advice.</span>
+        <span className="flex items-center gap-4">
+          <Link to="/docs" className="transition-colors duration-150 hover:text-paper">Docs</Link>
+          <span>Testnet software. Not investment advice.</span>
+        </span>
       </footer>
     </div>
   );

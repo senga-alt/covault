@@ -13,6 +13,16 @@ const SeriesDetail = lazy(() => import("./pages/SeriesDetail").then((m) => ({ de
 const Portfolio = lazy(() => import("./pages/Portfolio").then((m) => ({ default: m.Portfolio })));
 const Admin = lazy(() => import("./pages/Admin").then((m) => ({ default: m.Admin })));
 
+// Docs cluster: its own shell, split from both the landing and the app.
+const DocsLayout = lazy(() => import("./docs/DocsLayout").then((m) => ({ default: m.DocsLayout })));
+const DocsIntroduction = lazy(() => import("./docs/pages/Introduction").then((m) => ({ default: m.Introduction })));
+const DocsQuickstart = lazy(() => import("./docs/pages/Quickstart").then((m) => ({ default: m.Quickstart })));
+const DocsLifecycle = lazy(() => import("./docs/pages/Lifecycle").then((m) => ({ default: m.Lifecycle })));
+const DocsSettlement = lazy(() => import("./docs/pages/Settlement").then((m) => ({ default: m.Settlement })));
+const DocsFees = lazy(() => import("./docs/pages/Fees").then((m) => ({ default: m.Fees })));
+const DocsContract = lazy(() => import("./docs/pages/Contract").then((m) => ({ default: m.Contract })));
+const DocsErrors = lazy(() => import("./docs/pages/Errors").then((m) => ({ default: m.Errors })));
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 15_000, retry: 2 } },
 });
@@ -38,6 +48,16 @@ export default function App() {
               <Route path="series/:id" element={<SeriesDetail />} />
               <Route path="portfolio" element={<Portfolio />} />
               <Route path="admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+            <Route path="docs" element={<DocsLayout />}>
+              <Route index element={<DocsIntroduction />} />
+              <Route path="quickstart" element={<DocsQuickstart />} />
+              <Route path="lifecycle" element={<DocsLifecycle />} />
+              <Route path="settlement" element={<DocsSettlement />} />
+              <Route path="fees" element={<DocsFees />} />
+              <Route path="contract" element={<DocsContract />} />
+              <Route path="errors" element={<DocsErrors />} />
               <Route path="*" element={<NotFound />} />
             </Route>
             <Route path="*" element={<NotFound />} />
