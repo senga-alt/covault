@@ -1,6 +1,15 @@
 /* Engraved prose for the docs pages. One class on the article; elements style
    themselves so page files stay readable. */
 
+/* Two bars stack above the article: the masthead (3.5rem) and the contents
+   register (~2.5rem). Anchored headings must clear BOTH, plus a gap - at the
+   old 5rem the clicked heading landed 17px under the register, hiding its
+   engraved section mark and rule. Kept as one variable so the offset can never
+   drift from the chrome again. */
+:root {
+  --docs-chrome-offset: 7.25rem;
+}
+
 .doc-prose {
   color: var(--color-paper);
   font-size: 15px;
@@ -19,7 +28,7 @@
   margin-top: 2.75rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--color-rule);
-  scroll-margin-top: 5rem;
+  scroll-margin-top: var(--docs-chrome-offset);
   counter-increment: clause;
 }
 
@@ -41,7 +50,7 @@
   font-weight: 700;
   font-size: 1.05rem;
   margin-top: 2rem;
-  scroll-margin-top: 5rem;
+  scroll-margin-top: var(--docs-chrome-offset);
 }
 
 .doc-prose p,

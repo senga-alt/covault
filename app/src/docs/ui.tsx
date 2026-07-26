@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { CornerOrnaments } from "../components/Guilloche";
 import { DOCS_NAV, ALL_DOCS, getDocsSiblings, numeralFor, sectionFor } from "./nav";
@@ -9,9 +9,27 @@ import { DOCS_NAV, ALL_DOCS, getDocsSiblings, numeralFor, sectionFor } from "./n
 /* ------------------------------------------------------------------ */
 
 export function ContentsRegister() {
+  const navRef = useRef<HTMLElement>(null);
+  const { pathname } = useLocation();
+
+  // The register is one horizontal strip; past ~section III the current section
+  // sits beyond a phone's viewport, so a reader arriving deep in the document
+  // saw only sections I-II and no "you are here". Centre the active entry on
+  // every route change. Scrolls the strip itself (not the page) so it can never
+  // fight the layout's scroll-to-top.
+  useEffect(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLAnchorElement>('a[aria-current="page"]');
+    if (!nav || !active) return;
+    if (nav.scrollWidth <= nav.clientWidth) return; // nothing to scroll on desktop
+    const left = active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    nav.scrollTo({ left: Math.max(0, left), behavior: reduce ? "auto" : "smooth" });
+  }, [pathname]);
+
   return (
     <div className="sticky top-14 z-20 border-b border-rule/70 bg-ink/95 backdrop-blur-sm">
-      <nav aria-label="Contents" className="scroll-x mx-auto flex max-w-4xl overflow-x-auto px-4 lg:px-6">
+      <nav ref={navRef} aria-label="Contents" className="scroll-x mx-auto flex max-w-4xl overflow-x-auto px-4 lg:px-6">
         {ALL_DOCS.map((item) => (
           <NavLink
             key={item.slug}

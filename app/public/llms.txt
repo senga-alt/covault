@@ -1,0 +1,25 @@
+# Covault
+
+> A fully-collateralized, cash-settled European options clearinghouse on Stacks,
+> settled in sBTC or native STX. Every payoff is capped at its locked collateral,
+> so the system is solvent by construction: no liquidations, no margin, no funding.
+
+Covault is testnet software. Nothing here is investment advice.
+
+The core invariant, which the whole product is built around:
+`payoff + leftover = collateral` — a writer's maximum loss is exactly the
+collateral they lock, and the holder's maximum gain can never exceed it.
+
+## Docs
+
+- [Introduction](https://covault-testnet.vercel.app/docs): what Covault is and the solvency argument
+- [Quickstart](https://covault-testnet.vercel.app/docs/quickstart): write or buy a first option
+- [Lifecycle](https://covault-testnet.vercel.app/docs/lifecycle): create, write, trade, settle, claim
+- [Settlement](https://covault-testnet.vercel.app/docs/settlement): oracle price source, freshness checks, fallbacks
+- [Fees](https://covault-testnet.vercel.app/docs/fees): protocol fee model
+- [Contract](https://covault-testnet.vercel.app/docs/contract): public functions and read-only entry points
+- [Error codes](https://covault-testnet.vercel.app/docs/errors): every contract error and what triggers it
+
+## Source
+
+- [GitHub](https://github.com/senga-alt/covault): Clarity contracts, tests, and this frontend

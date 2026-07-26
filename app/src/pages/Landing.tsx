@@ -204,12 +204,16 @@ function Invariant() {
             payoff + leftover <span className="text-seal">=</span> collateral
           </p>
         </div>
-        <ul className="md:pt-1">
-          {CLAIMS.map((c) => (
-            <ClaimItem key={c.t} t={c.t} d={c.d} />
-          ))}
+        {/* the closing hairline is a terminator rule, not a claim - it sits
+            outside the list so the list contains only <li> (a11y: axe "list") */}
+        <div className="md:pt-1">
+          <ul>
+            {CLAIMS.map((c) => (
+              <ClaimItem key={c.t} t={c.t} d={c.d} />
+            ))}
+          </ul>
           <div className="border-t border-rule" role="presentation" />
-        </ul>
+        </div>
       </div>
     </section>
   );
@@ -385,7 +389,15 @@ function Closing() {
           <SealButton to="/app" className="w-full justify-center sm:w-auto">Enter the vault</SealButton>
         </div>
       </Reveal>
-      <footer className="border-t border-rule">
+    </section>
+  );
+}
+
+/* The footer is a sibling of <main>, not nested inside a <section>: only a
+   top-level <footer> earns the contentinfo landmark. */
+function LandingFooter() {
+  return (
+    <footer className="border-t border-rule">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <div className="grid gap-10 md:grid-cols-[2fr_1fr]">
             <div>
@@ -414,8 +426,7 @@ function Closing() {
             <span>Built on Stacks - settled in Bitcoin.</span>
           </div>
         </div>
-      </footer>
-    </section>
+    </footer>
   );
 }
 
@@ -423,14 +434,17 @@ export function Landing() {
   return (
     <div id="top" className="min-h-dvh">
       <LandingNav />
-      <Hero />
-      <Invariant />
-      <HowItWorks />
-      <div id="product" className="scroll-mt-20">
-        <ProductShowcase />
-      </div>
-      <Faq />
-      <Closing />
+      <main>
+        <Hero />
+        <Invariant />
+        <HowItWorks />
+        <div id="product" className="scroll-mt-20">
+          <ProductShowcase />
+        </div>
+        <Faq />
+        <Closing />
+      </main>
+      <LandingFooter />
     </div>
   );
 }

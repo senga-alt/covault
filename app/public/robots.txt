@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# The dApp routes are wallet-gated and read live chain state; nothing there is
+# useful to a crawler, and they render empty without JS.
+Disallow: /app
+
+Sitemap: https://covault-testnet.vercel.app/sitemap.xml
