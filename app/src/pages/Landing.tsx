@@ -95,7 +95,12 @@ function LandingNav() {
           </Link>
         </div>
         <div className="order-2 ml-auto flex items-center gap-3 md:order-3 md:ml-0">
-          <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[480px]:inline-block">
+          {/* Between md and lg the nav is a single row and the full set
+              (brand + 5 links + badge + CTA) overflows the viewport by ~42px;
+              this 72px badge is the cheapest thing to drop, and the hero's
+              trust line still states the network. Two-row layout below md and
+              the roomier row at lg both keep it. */}
+          <span className="hidden rounded-[2px] border border-rule px-2 py-0.5 font-mono text-[11px] uppercase tracking-widest text-paper-dim min-[480px]:inline-block md:hidden lg:inline-block">
             {NETWORK}
           </span>
           <Link
