@@ -5,34 +5,53 @@
  */
 
 const W = 1200;
+const H = 120;
+const MID = H / 2;
 
-function bandPath(amp: number, freq: number, phase: number, mid: number): string {
+/**
+ * One strand of the woven band. Real guilloche is engine-turned: strands are
+ * BOUNDED by a slow envelope and evenly phased, so they interlock into a
+ * repeating motif. (Free-running sinusoids at mixed frequencies instead produce
+ * a wave-interference pattern, which reads as tangled string, not engraving.)
+ * `dir` flips the travel direction - two counter-phased sets cross to give the
+ * lathe-work lattice.
+ */
+function strandPath(phase: number, freq: number, dir: 1 | -1): string {
   const pts: string[] = [];
-  const steps = 160;
+  const steps = 720; // fine enough that crossings stay crisp at hero size
   for (let i = 0; i <= steps; i++) {
     const x = (i / steps) * W;
-    const y =
-      mid +
-      amp * Math.sin((2 * Math.PI * freq * x) / W + phase) +
-      amp * 0.35 * Math.sin((2 * Math.PI * freq * 2.7 * x) / W + phase * 1.7);
+    const envelope = 34 * (0.6 + 0.4 * Math.cos((2 * Math.PI * x) / W));
+    const y = MID + envelope * Math.sin((dir * 2 * Math.PI * freq * x) / W + phase);
     pts.push(`${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`);
   }
   return pts.join("");
 }
 
+const STRANDS_PER_SET = 9;
 const BAND_LAYERS: { d: string; o: number }[] = [];
-for (let l = 0; l < 14; l++) {
-  BAND_LAYERS.push({
-    d: bandPath(26 + l * 2.4, 3 + (l % 5) * 0.5, (l * Math.PI) / 7, 80),
-    o: 0.14 + 0.16 * Math.abs(Math.sin(l * 1.3)),
-  });
+for (const dir of [1, -1] as const) {
+  for (let k = 0; k < STRANDS_PER_SET; k++) {
+    BAND_LAYERS.push({
+      d: strandPath((2 * Math.PI * k) / STRANDS_PER_SET, 11, dir),
+      o: 0.22 + 0.1 * Math.abs(Math.sin(k * 1.3)),
+    });
+  }
 }
+
+// Longer than any strand's arc length (~2050 at this amplitude/frequency), so
+// the draw-in starts fully hidden.
+const STRAND_DASH = 2600;
 
 export function GuillocheBand({ className = "", animate = false }: { className?: string; animate?: boolean }) {
   return (
     <svg
-      viewBox={`0 0 ${W} 160`}
-      preserveAspectRatio="none"
+      viewBox={`0 0 ${W} ${H}`}
+      /* `slice` scales uniformly and crops the overflow. `none` would stretch
+         the box anisotropically, rendering the 0.75px strokes at different
+         apparent weights horizontally vs vertically - engraving depends on a
+         constant stroke weight, so it must scale uniformly. */
+      preserveAspectRatio="xMidYMid slice"
       className={className}
       aria-hidden="true"
       focusable="false"
@@ -44,12 +63,17 @@ export function GuillocheBand({ className = "", animate = false }: { className?:
           fill="none"
           stroke="var(--color-gilt)"
           strokeWidth="0.75"
+          /* Engraving is a constant hairline regardless of plate size. Without
+             this, `slice` scales the stroke with the viewport - 1.2px at 1920,
+             0.72px on the closing band - so the same motif prints at two
+             weights. Pins it to 0.75 CSS px everywhere. */
+          vectorEffect="non-scaling-stroke"
           opacity={p.o}
           style={
             animate
               ? {
-                  strokeDasharray: 1400,
-                  ["--dash" as string]: 1400,
+                  strokeDasharray: STRAND_DASH,
+                  ["--dash" as string]: STRAND_DASH,
                   animation: `draw 1.6s ${0.05 * i}s cubic-bezier(0.16,1,0.3,1) both`,
                 }
               : undefined

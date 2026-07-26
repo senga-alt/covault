@@ -19,7 +19,9 @@ function SealButton({ to, children, className = "" }: { to: string; children: Re
   return (
     <Link
       to={to}
-      className={`group inline-flex items-center gap-2 rounded-[2px] bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] ${className}`}
+      /* transparent border matches OutlineButton's 1px so the pair computes to
+         the same height - without it the bordered secondary sits 2px taller */
+      className={`group inline-flex items-center gap-2 rounded-[2px] border border-transparent bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] ${className}`}
     >
       {children}
       <ArrowRight
@@ -28,6 +30,21 @@ function SealButton({ to, children, className = "" }: { to: string; children: Re
         className="transition-transform duration-200 group-hover:translate-x-0.5"
       />
     </Link>
+  );
+}
+
+/* Secondary action: outline-rule per DESIGN.md's button vocabulary (seal =
+   primary, outline-rule = secondary). Same metrics as SealButton so the pair
+   sits on one baseline. In-page anchor, not a route - the reader who needs to
+   understand first should not be sent off the page to do it. */
+function OutlineButton({ href, children, className = "" }: { href: string; children: React.ReactNode; className?: string }) {
+  return (
+    <a
+      href={href}
+      className={`inline-flex items-center gap-2 rounded-[2px] border border-rule px-6 py-3 font-sans text-[15px] font-medium text-paper transition duration-200 hover:border-paper-dim hover:bg-ink-3 active:scale-[0.98] ${className}`}
+    >
+      {children}
+    </a>
   );
 }
 
@@ -114,6 +131,9 @@ function Hero() {
               </p>
               <div className="anim-rise anim-rise-3 mt-9 flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
                 <SealButton to="/app" className="justify-center sm:justify-start">Enter the vault</SealButton>
+                <OutlineButton href="#how-it-works" className="justify-center sm:justify-start">
+                  How it works
+                </OutlineButton>
               </div>
               <p className="anim-rise anim-rise-3 mt-6 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-paper-dim">
                 <span className="inline-flex items-center gap-1.5">
