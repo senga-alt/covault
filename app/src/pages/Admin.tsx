@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cl } from "@stacks/transactions";
 import {
@@ -386,6 +386,7 @@ function Settle({ series, burnHeight, isOracle }: { series: Series[]; burnHeight
 /* ------------------------------------------------------------------ */
 
 function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paused: boolean; openCreation: boolean; feeBps: number; feeRecipient: string; oracle: string }) {
+  const { address } = useWallet();
   const pauseTx = useTx(useInvalidateAdmin());
   const openTx = useTx(useInvalidateAdmin());
   const feeTx = useTx(useInvalidateAdmin());
@@ -405,6 +406,16 @@ function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paus
 
   const anyBusy = (s: { phase: string }) => s.phase === "signing" || s.phase === "pending";
 
+  // Re-pointing the oracle is reversible, but it decides who can call `settle`:
+  // a valid-but-wrong principal stalls settlement for every holder until someone
+  // notices. Validation catches malformed input, never wrong-but-well-formed, so
+  // the change itself is shown before it is signed (risk before action). Inline,
+  // not a modal - this panel's whole idiom is inline.
+  const [confirmOracle, setConfirmOracle] = useState(false);
+  const oracleTarget = oracleStr.trim();
+  // Any edit after arming invalidates the preview the operator agreed to.
+  useEffect(() => setConfirmOracle(false), [oracleStr]);
+
   return (
     <Panel title="Protocol controls" sub="Owner-only switches. A pause never blocks exits.">
       <div className="mt-4 space-y-5">
@@ -413,7 +424,9 @@ function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paus
           onSubmit={(e) => {
             e.preventDefault();
             if (!oracleValid) return;
-            oracleTx.run("set-oracle", [Cl.principal(oracleStr.trim())], []);
+            if (!confirmOracle) { setConfirmOracle(true); return; } // arm, don't send
+            oracleTx.run("set-oracle", [Cl.principal(oracleTarget)], []);
+            setConfirmOracle(false);
           }}
           className="border-t border-rule pt-4"
         >
@@ -431,10 +444,52 @@ function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paus
               </label>
               <input id="oracle-principal" value={oracleStr} onChange={(e) => setOracleStr(e.target.value)} className={inputCls} placeholder="ST3XC6....covault-settler" />
             </div>
-            <button type="submit" disabled={anyBusy(oracleTx.state) || !oracleValid || oracleStr.trim() === oracle} className={ruleBtn}>
-              {anyBusy(oracleTx.state) ? "Waiting..." : "Set oracle"}
-            </button>
+            {!confirmOracle && (
+              <button type="submit" disabled={anyBusy(oracleTx.state) || !oracleValid || oracleTarget === oracle} className={ruleBtn}>
+                {anyBusy(oracleTx.state) ? "Waiting..." : "Set oracle"}
+              </button>
+            )}
           </div>
+
+          {confirmOracle && (
+            <div className="anim-rise mt-3 border border-rule bg-ink-3 p-4">
+              <p className="font-display text-sm font-bold">Confirm this change</p>
+              <dl className="mt-2.5 space-y-1.5 text-xs">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <dt className="w-20 shrink-0 text-paper-dim">Now</dt>
+                  <dd className="tnum">{shortAddress(oracle)}{oracle === address ? " (you)" : ""}</dd>
+                </div>
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  <dt className="w-20 shrink-0 text-paper-dim">After</dt>
+                  <dd className="tnum text-paper">
+                    {shortAddress(oracleTarget)}
+                    {hasSettler && oracleTarget === SETTLER_ID && (
+                      <span className="ml-2 text-gain">the configured settler</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+              <p className="mt-3 text-xs leading-relaxed text-paper">
+                Only this principal can call <span className="tnum">settle</span> afterwards. If it cannot,
+                settlement stalls for every holder until the oracle is re-pointed.
+                {hasSettler && oracleTarget !== SETTLER_ID && (
+                  <> This is <em>not</em> the settler this app is configured for.</>
+                )}
+              </p>
+              <div className="mt-3.5 flex flex-wrap items-center gap-3">
+                <button type="submit" disabled={anyBusy(oracleTx.state)} className={sealBtn}>
+                  {anyBusy(oracleTx.state) ? "Waiting..." : "Confirm: re-point oracle"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmOracle(false)}
+                  className="cursor-pointer text-xs text-paper-dim underline transition-colors duration-150 hover:text-paper"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
           {oracleStr !== "" && !oracleValid && (
             <p role="alert" className="mt-1.5 text-xs text-loss">
               Not a valid Stacks contract principal (expected ST/SP....contract-name).
