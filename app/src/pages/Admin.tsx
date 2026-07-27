@@ -204,7 +204,7 @@ function CreateSeries({ burnHeight }: { burnHeight: number }) {
             ) : (
               underlying !== "" && !/^[\x20-\x7E]+$/.test(underlying.trim()) && (
                 <p role="alert" className="mt-1 text-xs text-loss">
-                  Plain characters only (letters, digits, dashes) - this is stored on-chain as ASCII.
+                  Plain characters only (letters, digits, dashes). This is stored on-chain as ASCII.
                 </p>
               )
             )}
@@ -338,7 +338,7 @@ function Settle({ series, burnHeight, isOracle }: { series: Series[]; burnHeight
           ? "Permissionless: the settler reads DIA on-chain and records the derived price. No manual entry."
           : isOracle
             ? "Records the settlement price for an expired series. One price, once."
-            : "The connected wallet is not the oracle - settlement calls will be rejected."
+            : "The connected wallet is not the oracle; settlement calls will be rejected."
       }
     >
       {eligible.length === 0 ? (
@@ -422,7 +422,7 @@ function Controls({ paused, openCreation, feeBps, feeRecipient, oracle }: { paus
           </p>
           <p className="text-xs text-paper-dim">
             Current: <span className="tnum">{shortAddress(oracle)}</span>. Point this at the settler to make
-            settlement permissionless via DIA. Afterwards the operator can no longer settle manually - by design.
+            settlement permissionless via DIA. Afterwards the operator can no longer settle manually, by design.
           </p>
           <div className="mt-3 flex flex-wrap items-end gap-3">
             <div className="grow">
@@ -555,7 +555,7 @@ const timeFmt = new Intl.DateTimeFormat("en", {
 
 /* 100%-composition bar in the conserved-sum motif: segments in validated
    categorical order (gold -> green -> seal -> neutral "Other"), 2px surface
-   gaps, legend carries identity + values in text tokens - never color alone. */
+   gaps, legend carries identity + values in text tokens—never color alone. */
 interface Segment { label: string; value: number; color: string; note?: string }
 
 function SplitBar({ title, segments, unit }: { title: string; segments: Segment[]; unit: string }) {

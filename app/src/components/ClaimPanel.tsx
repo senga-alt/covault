@@ -128,7 +128,7 @@ export function ClaimPanel({ series, long, short }: { series: Series; long: bigi
         </h2>
         <p className="mt-1 text-sm text-paper-dim">
           Settled at <span className="tnum">{formatAmount(series.settlementPrice, series.asset)}</span>. Claims stay
-          open forever - there is no deadline.
+          open forever; there is no deadline.
         </p>
         {/* the invariant, per contract: exercise draws the payoff side, reclaim the leftover */}
         <ConservedSumBar

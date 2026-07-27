@@ -124,7 +124,7 @@ function FillRow({
       {overpriced && (
         <p className="mt-1.5 text-xs text-loss">
           Priced above {status === "settled" ? "the claim value" : "the maximum payoff"} of{" "}
-          <span className="tnum">{formatAmount(ceiling, series.asset)}</span> per contract - a buyer
+          <span className="tnum">{formatAmount(ceiling, series.asset)}</span> per contract, a buyer
           cannot come out ahead.
         </p>
       )}
@@ -281,7 +281,7 @@ export function OrderBook({ series, long, status }: { series: Series; long: bigi
             {long > 0n
               ? status === "active"
                 ? "List yours below to earn premium."
-                : "You can still list yours below - trading stays open after expiry."
+                : "You can still list yours below; trading stays open after expiry."
               : status === "active"
                 ? "Write options first to have something to sell."
                 : status === "expired"

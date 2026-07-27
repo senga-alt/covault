@@ -20,7 +20,7 @@ function SealButton({ to, children, className = "" }: { to: string; children: Re
     <Link
       to={to}
       /* transparent border matches OutlineButton's 1px so the pair computes to
-         the same height - without it the bordered secondary sits 2px taller */
+         the same height—without it the bordered secondary sits 2px taller */
       className={`group inline-flex items-center gap-2 rounded-[2px] border border-transparent bg-seal px-6 py-3 font-sans text-[15px] font-bold text-on-seal transition duration-200 hover:bg-seal-hi active:scale-[0.98] ${className}`}
     >
       {children}
@@ -35,7 +35,7 @@ function SealButton({ to, children, className = "" }: { to: string; children: Re
 
 /* Secondary action: outline-rule per DESIGN.md's button vocabulary (seal =
    primary, outline-rule = secondary). Same metrics as SealButton so the pair
-   sits on one baseline. In-page anchor, not a route - the reader who needs to
+   sits on one baseline. In-page anchor, not a route—the reader who needs to
    understand first should not be sent off the page to do it. */
 function OutlineButton({ href, children, className = "" }: { href: string; children: React.ReactNode; className?: string }) {
   return (
@@ -130,9 +130,8 @@ function Hero() {
           <div className="mt-10 grid items-start gap-12 md:mt-12 lg:grid-cols-[7fr_5fr] lg:gap-16">
             <div>
               <p className="anim-rise anim-rise-2 max-w-[52ch] text-xl leading-relaxed text-paper-dim">
-                An options clearinghouse on Stacks. Every contract is backed in full by
-                collateral locked on-chain - sBTC or native STX. No margin calls, no
-                liquidations, nothing to go insolvent.
+                Every contract is backed in full by collateral locked on-chain, in sBTC or
+                native STX. No margin calls, no liquidations, nothing to go insolvent.
               </p>
               <div className="anim-rise anim-rise-3 mt-9 flex flex-col items-stretch gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:gap-5">
                 <SealButton to="/app" className="justify-center sm:justify-start">Enter the vault</SealButton>
@@ -167,7 +166,7 @@ const CLAIMS: { t: string; d: string }[] = [
   { t: "No margin calls", d: "Collateral is locked once, in full, the moment an option is written. Nothing can demand more later." },
   { t: "No liquidation engine", d: "There is no position to liquidate, no keeper race, no cascade. The machinery that makes derivatives dangerous simply is not here." },
   { t: "One price, once", d: "A single settlement price per series, at expiry, on Bitcoin block time. That is the entire trusted surface." },
-  { t: "Nothing to go insolvent", d: "The holder's payoff and the writer's leftover are two cuts of one escrow. They sum to the collateral - exactly, every time." },
+  { t: "Nothing to go insolvent", d: "The holder's payoff and the writer's leftover are two cuts of one escrow. They sum to the collateral. Exactly, every time." },
 ];
 
 /* Scroll-driven emphasis: each claim brightens as it crosses the viewport's
@@ -248,7 +247,7 @@ function Invariant() {
 const STEPS: { n: string; t: string; d: string }[] = [
   { n: "I", t: "Write", d: "Lock collateral in sBTC or STX. Receive the option and the obligation as separate, tradable positions." },
   { n: "II", t: "Trade", d: "Sell the option for premium on the on-chain order book, or peer-to-peer. Partial fills supported." },
-  { n: "III", t: "Settle", d: "At expiry, one settlement price is recorded per series - measured in Bitcoin blocks, not server time." },
+  { n: "III", t: "Settle", d: "At expiry, one settlement price is recorded per series, measured in Bitcoin blocks, not server time." },
   { n: "IV", t: "Exercise & reclaim", d: "The holder takes the payoff, the writer reclaims the rest. The two always sum to the escrow." },
 ];
 
@@ -289,11 +288,11 @@ function HowItWorks() {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What exactly can I lose?",
-    a: "If you buy an option, at most the premium you paid. If you write one, at most the collateral you lock when writing - the amount is shown before you sign, and nothing can increase it afterward. There are no margin calls and no liquidations.",
+    a: "If you buy an option, at most the premium you paid. If you write one, at most the collateral you lock when writing; the amount is shown before you sign, and nothing can increase it afterward. There are no margin calls and no liquidations.",
   },
   {
     q: "What is a capped call?",
-    a: "A call whose payout stops at a cap above the strike. Capping the upside is what lets the full payout be locked as cash collateral up front - it is the same payoff as a call spread, and it is why Covault can never be undercollateralized.",
+    a: "A call whose payout stops at a cap above the strike. Capping the upside is what lets the full payout be locked as cash collateral up front; it is the same payoff as a call spread, and it is why Covault can never be undercollateralized.",
   },
   {
     q: "How is the premium decided?",
@@ -309,11 +308,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What does it cost to use?",
-    a: "There is no protocol fee today. The contract supports a taker fee on order-book fills, hard-capped at 5% and currently set to zero. Writing, exercising, and reclaiming are never charged - you only ever pay the network's transaction fee.",
+    a: "There is no protocol fee today. The contract supports a taker fee on order-book fills, hard-capped at 5% and currently set to zero. Writing, exercising, and reclaiming are never charged. You only ever pay the network's transaction fee.",
   },
   {
     q: "Do I need to exercise manually?",
-    a: "After settlement, exercising and reclaiming are open forever - there is no deadline race. Holders claim their payoff and writers reclaim their leftover whenever they choose.",
+    a: "After settlement, exercising and reclaiming are open forever. There is no deadline race. Holders claim their payoff and writers reclaim their leftover whenever they choose.",
   },
 ];
 
@@ -374,7 +373,7 @@ function Faq() {
               Questions, answered
             </h2>
             <p className="mt-5 max-w-[38ch] text-paper-dim">
-              Still have something specific in mind? Ask us directly - and the contract
+              Still have something specific in mind? Ask us directly, and the contract
               itself is small enough to read in one sitting.
             </p>
             <a
@@ -408,7 +407,7 @@ function Closing() {
         </h2>
         <p className="mx-auto mt-6 max-w-[52ch] text-paper-dim">
           Earn premium on idle sBTC, or buy downside protection with risk you can read off the
-          contract - to the unit.
+          contract, to the unit.
         </p>
         <div className="mt-10 flex justify-center px-2">
           <SealButton to="/app" className="w-full justify-center sm:w-auto">Enter the vault</SealButton>
@@ -448,7 +447,7 @@ function LandingFooter() {
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-6 text-xs text-paper-dim">
             <span>Testnet software. Not investment advice.</span>
-            <span>Built on Stacks - settled in Bitcoin.</span>
+            <span>Built on Stacks, settled in Bitcoin.</span>
           </div>
         </div>
     </footer>

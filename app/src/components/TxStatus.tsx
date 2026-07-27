@@ -38,7 +38,7 @@ export function TxStatus({
       {state.phase === "pending" && (
         <p className="flex items-center gap-2 text-paper-dim">
           <Loader2 size={15} className="animate-spin" aria-hidden />
-          Broadcast. Waiting for confirmation - {link(state.txid)}
+          Broadcast. Waiting for confirmation: {link(state.txid)}
         </p>
       )}
       {state.phase === "success" && (
@@ -46,7 +46,7 @@ export function TxStatus({
           <div className="flex items-start justify-between gap-4">
             <p className="flex items-center gap-2 text-gain">
               <CheckCircle2 size={15} aria-hidden />
-              Confirmed on-chain - {link(state.txid)}
+              Confirmed on-chain: {link(state.txid)}
             </p>
             <button onClick={onDismiss} className="cursor-pointer text-xs text-paper-dim underline hover:text-paper">
               dismiss

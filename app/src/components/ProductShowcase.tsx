@@ -54,7 +54,7 @@ function useAmbient<T extends HTMLElement>(step: () => void, ms: number) {
 }
 
 /** Mounts children the first time they scroll into view, so entrance
-    animations - like the payoff curve drawing itself - actually play. */
+    animations—like the payoff curve drawing itself—actually play. */
 function InView({ children, minHeight }: { children: React.ReactNode; minHeight: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false);
@@ -230,7 +230,7 @@ function OrderBookMock({ asset }: { asset: ShowAsset }) {
         ))}
       </ul>
       <div className="mt-2 border-t border-rule pt-3 text-xs text-paper-dim">
-        Sell your options - listed longs are escrowed until bought or cancelled.
+        Sell your options. Listed longs are escrowed until bought or cancelled.
       </div>
     </div>
   );
@@ -275,21 +275,21 @@ export function ProductShowcase() {
         </h2>
         <p className="mt-5 max-w-[62ch] text-paper-dim">
           No dashboards to decode. Every series shows what you lock, what you can be paid, and the
-          exact shape of the payoff - before you ever sign.
+          exact shape of the payoff, before you ever sign.
         </p>
 
         <div ref={cycleRef} className="mt-16 space-y-20 md:space-y-28">
           <Row
             eyebrow="Figure I"
             title="Read your risk to the unit"
-            body="Writing an option shows the collateral you lock, the positions you receive, and your maximum loss in figures - then binds the transaction to that exact amount with a post-condition. No surprises reach your wallet."
+            body="Writing an option shows the collateral you lock, the positions you receive, and your maximum loss in figures, then binds the transaction to that exact amount with a post-condition. No surprises reach your wallet."
             plate={<Plate label={`Writing a cash-secured ${asset === "sbtc" ? "sBTC" : "STX"} put`}><WriteLedgerMock asset={asset} /></Plate>}
           />
           <Row
             reverse
             eyebrow="Figure II"
             title="Every outcome, drawn in advance"
-            body="The payoff curve is computed from the contract, not illustrated. Strike, cap, and - once settled - the exact settlement price and what each side is owed, to the smallest unit."
+            body="The payoff curve is computed from the contract, not illustrated. Strike, cap, and (once settled) the exact settlement price and what each side is owed, to the smallest unit."
             plate={
               <div className="relative shadow-[0_18px_54px_-24px_rgba(0,0,0,0.85)]">
                 <CornerOrnaments />

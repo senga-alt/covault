@@ -59,7 +59,7 @@ export function Contract() {
         </p>
       </Callout>
 
-      <H2 id="core-functions">covault-core - public functions</H2>
+      <H2 id="core-functions">covault-core: public functions</H2>
       <DocTable>
         <table>
           <thead>
@@ -83,7 +83,7 @@ export function Contract() {
       <p>
         Read-only: <code>get-series</code>, <code>get-long</code>, <code>get-short</code>,{" "}
         <code>get-offer</code>, <code>quote-payoff</code>, <code>get-config</code>, and
-        counters - everything the app displays is served by these.
+        counters. Everything the app displays is served by these.
       </p>
 
       <H2 id="settler-functions">covault-settler-v2</H2>
@@ -102,7 +102,7 @@ export function Contract() {
       </DocTable>
       <p>
         The settler only ever accepts the pinned canonical DIA principal as its price
-        source - passing any other contract fails before a single external call is made.
+        source; passing any other contract fails before a single external call is made.
       </p>
     </DocArticle>
   );

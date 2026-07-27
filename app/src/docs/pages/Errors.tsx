@@ -18,7 +18,7 @@ const CORE: [string, string, string][] = [
   ["u114", "Not the maker", "Cancelling someone else's offer"],
   ["u115", "Paused", "New writes and series creation are paused (every exit still works)"],
   ["u116", "Creation restricted", "Series creation is curated and the caller is not the operator"],
-  ["u117", "Fee too high", "A fee above the hard 5% cap - rejected by the contract itself"],
+  ["u117", "Fee too high", "A fee above the hard 5% cap, rejected by the contract itself"],
 ];
 
 const SETTLER: [string, string, string][] = [
@@ -26,9 +26,9 @@ const SETTLER: [string, string, string][] = [
   ["u201", "No price source", "The DIA principal has not been pinned yet"],
   ["u202", "Wrong price source", "The passed oracle is not the pinned canonical DIA contract"],
   ["u203", "Series not found", "The series id does not exist"],
-  ["u204", "Unsupported pair", "The series' label is not a DIA-settleable pair - it cannot settle through the settler"],
+  ["u204", "Unsupported pair", "The series' label is not a DIA-settleable pair, so it cannot settle through the settler"],
   ["u205", "Bad price", "A feed returned zero, or a zero freshness window was attempted"],
-  ["u206", "Stale price", "A DIA quote is older than the freshness window; settlement fails closed - retry after the next update"],
+  ["u206", "Stale price", "A DIA quote is older than the freshness window; settlement fails closed. Retry after the next update"],
 ];
 
 function ErrorRows({ rows }: { rows: [string, string, string][] }) {
@@ -74,7 +74,7 @@ export function Errors() {
       </p>
       <Callout tone="warn" title="If a post-condition ever fires">
         <p className="!text-paper-dim">
-          By design this should never happen. Do not simply retry - it means the
+          By design this should never happen. Do not simply retry; it means the
           transaction would have moved something other than what was shown. Stop and
           report it.
         </p>

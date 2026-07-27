@@ -53,7 +53,7 @@ export function SettleFromDia({ id, underlying }: { id: number; underlying: stri
       )}
       {preview.data && !preview.data.fresh && (
         <p role="alert" className="mb-3 text-xs text-loss">
-          The DIA quotes are {fmtAge(preview.data.ageSeconds)} old - older than the settler's
+          The DIA quotes are {fmtAge(preview.data.ageSeconds)} old, older than the settler's
           freshness window ({fmtAge(preview.data.maxAge)}). Settlement would be rejected;
           it opens again after the next DIA update.
         </p>
@@ -71,7 +71,7 @@ export function SettleFromDia({ id, underlying }: { id: number; underlying: stri
         {busy ? "Waiting..." : "Settle now from DIA"}
       </button>
       <p className="mt-2 text-xs text-paper-dim">
-        Permissionless - anyone can record the on-chain settlement price from DIA. No manual entry.
+        Permissionless: anyone can record the on-chain settlement price from DIA. No manual entry.
       </p>
       <TxStatus state={state} onDismiss={reset} />
     </div>

@@ -121,7 +121,7 @@ export function SeriesDetail() {
               <h2 className="font-display text-lg font-bold">Awaiting settlement</h2>
               <p className="mt-2 text-sm text-paper-dim">
                 This series passed its expiry block. Once the settlement price is recorded,
-                exercise and reclaim open here - with no deadline.
+                exercise and reclaim open here, with no deadline.
               </p>
               <SettleFromDia id={s.id} underlying={s.underlying} />
             </section>

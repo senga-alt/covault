@@ -188,8 +188,8 @@ export function Markets() {
 
       {seriesQ.data && seriesQ.data.length === 0 && (
         <EmptyState title="No option series yet">
-          Series are curated by the operator in v1. The first markets - covered calls and
-          cash-secured puts on sBTC and STX - will appear here.
+          Series are curated by the operator in v1. The first markets (covered calls and
+          cash-secured puts on sBTC and STX) will appear here.
         </EmptyState>
       )}
 
@@ -210,7 +210,7 @@ export function Markets() {
                 ) : (
                   <>
                     Every payoff was paid from its locked collateral and the remainder returned to
-                    its writers - the registry below is the permanent record.{" "}
+                    its writers; the registry below is the permanent record.{" "}
                   </>
                 )}
                 New series are curated by the operator and appear here the moment they open.
@@ -306,7 +306,7 @@ export function Markets() {
                 </div>
               </div>
               <figcaption className="mt-3 font-mono text-[11px] uppercase tracking-widest text-paper-dim">
-                Series registry - read live from covault-core
+                Series registry: read live from covault-core
               </figcaption>
             </figure>
           )}

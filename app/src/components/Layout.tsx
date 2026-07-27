@@ -60,12 +60,12 @@ export function Layout() {
             {burnQ.data && (
               <span
                 className="hidden items-center gap-1.5 font-mono text-[11px] text-paper-dim lg:flex"
-                title="Bitcoin burn-block height - the clock series expire on"
+                title="Bitcoin burn-block height: the clock series expire on"
               >
                 <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-gain" aria-hidden />
                 burn <span className="tnum text-paper">#{burnQ.data.toLocaleString()}</span>
                 <span className="sr-only">
-                  Bitcoin burn-block height - the clock series expire on.
+                  Bitcoin burn-block height: the clock series expire on.
                 </span>
               </span>
             )}
@@ -80,7 +80,7 @@ export function Layout() {
         <div role="alert" className="border-b border-loss/40 bg-loss/10">
           <p className="gutter-safe mx-auto max-w-7xl py-2.5 text-sm">
             Your wallet is connected with a {NETWORK === "testnet" ? "mainnet" : "testnet"} address, but this app
-            runs on {NETWORK}. Switch the network inside your wallet, then reconnect - transactions will fail
+            runs on {NETWORK}. Switch the network inside your wallet, then reconnect; transactions will fail
             until then.
           </p>
         </div>

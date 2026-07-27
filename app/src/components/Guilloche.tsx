@@ -49,7 +49,7 @@ export function GuillocheBand({ className = "", animate = false }: { className?:
       viewBox={`0 0 ${W} ${H}`}
       /* `slice` scales uniformly and crops the overflow. `none` would stretch
          the box anisotropically, rendering the 0.75px strokes at different
-         apparent weights horizontally vs vertically - engraving depends on a
+         apparent weights horizontally vs vertically—engraving depends on a
          constant stroke weight, so it must scale uniformly. */
       preserveAspectRatio="xMidYMid slice"
       className={className}
@@ -64,8 +64,8 @@ export function GuillocheBand({ className = "", animate = false }: { className?:
           stroke="var(--color-gilt)"
           strokeWidth="0.75"
           /* Engraving is a constant hairline regardless of plate size. Without
-             this, `slice` scales the stroke with the viewport - 1.2px at 1920,
-             0.72px on the closing band - so the same motif prints at two
+             this, `slice` scales the stroke with the viewport—1.2px at 1920,
+             0.72px on the closing band—so the same motif prints at two
              weights. Pins it to 0.75 CSS px everywhere. */
           vectorEffect="non-scaling-stroke"
           opacity={p.o}

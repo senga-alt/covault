@@ -141,7 +141,7 @@ export function Portfolio() {
             </Link>
           }
         >
-          Write an option to earn premium, or buy one to hedge - your longs and shorts will show up here.
+          Write an option to earn premium, or buy one to hedge; your longs and shorts will show up here.
         </EmptyState>
       )}
 
@@ -232,7 +232,7 @@ export function Portfolio() {
             </div>
           </div>
           <figcaption className="mt-3 font-mono text-[11px] uppercase tracking-widest text-paper-dim">
-            Your ledger - longs are claims, shorts are obligations
+            Your ledger: longs are claims, shorts are obligations
           </figcaption>
         </figure>
       )}

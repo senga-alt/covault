@@ -6,7 +6,7 @@ export function Introduction() {
     <DocArticle
       slug=""
       title="Introduction"
-      lead="Covault is a fully collateralized, cash-settled European options clearinghouse on Stacks. Every contract is backed, in full, by collateral locked on-chain - in sBTC or native STX."
+      lead="Covault is a fully collateralized, cash-settled European options clearinghouse on Stacks. Every contract is backed, in full, by collateral locked on-chain, in sBTC or native STX."
     >
       <H2 id="one-idea">One idea, carried all the way</H2>
       <p>
@@ -25,21 +25,21 @@ export function Introduction() {
         At settlement, the holder&apos;s payoff and the writer&apos;s leftover are two cuts of one
         escrow: <code>payoff + leftover = collateral</code>, exactly, in integer arithmetic
         with no rounding. Every completed series on testnet has returned its escrow to
-        zero - to the unit.
+        zero, to the unit.
       </p>
 
       <H2 id="what-you-can-do">What you can do</H2>
       <ul>
         <li>
-          <strong>Write options</strong> - lock collateral, mint matched long + short
+          <strong>Write options</strong>: lock collateral, mint matched long + short
           positions, and sell the longs for premium on the built-in order book.
         </li>
         <li>
-          <strong>Buy options</strong> - fill an offer to hold a claim on the settlement
+          <strong>Buy options</strong>: fill an offer to hold a claim on the settlement
           payoff, with your maximum loss fixed at the premium you paid.
         </li>
         <li>
-          <strong>Settle permissionlessly</strong> - after expiry, anyone can trigger
+          <strong>Settle permissionlessly</strong>: after expiry, anyone can trigger
           settlement; the price is derived on-chain from DIA&apos;s feeds. Nobody, including
           the operator, chooses the number.
         </li>
@@ -47,7 +47,7 @@ export function Introduction() {
       <p>
         Each series picks its collateral asset at creation: <strong>sBTC</strong> (quoted in
         sats) or <strong>native STX</strong> (quoted in microSTX). Strike, settlement price,
-        and payoff all live in that one unit - USD never enters the contract.
+        and payoff all live in that one unit. USD never enters the contract.
       </p>
 
       <H2 id="lifecycle-at-a-glance">The lifecycle at a glance</H2>
@@ -58,7 +58,7 @@ export function Introduction() {
   [writers holding a matched pair can also exit early via close-pair]`}
       </CodeBlock>
       <p>
-        The full walkthrough - who acts, what the contract does, what everyone sees - is in{" "}
+        The full walkthrough (who acts, what the contract does, what everyone sees) is in{" "}
         <Link to="/docs/lifecycle">The lifecycle</Link>.
       </p>
 
@@ -68,13 +68,13 @@ export function Introduction() {
       <H2 id="trust">What you trust, stated honestly</H2>
       <ul>
         <li>
-          <strong>DIA&apos;s price feeds</strong>, for the settlement price - bounded per
+          <strong>DIA&apos;s price feeds</strong>, for the settlement price, bounded per
           series: a wrong price can only ever affect the single series it settles, and no
           payoff can exceed that series&apos; locked collateral. See{" "}
           <Link to="/docs/settlement">Settlement</Link>.
         </li>
         <li>
-          <strong>The operator&apos;s governance key</strong> - which can pause <em>new</em>{" "}
+          <strong>The operator&apos;s governance key</strong>, which can pause <em>new</em>{" "}
           writes and curate series, but can never block an exit or touch escrow.
         </li>
       </ul>
@@ -90,7 +90,7 @@ export function Introduction() {
       <Callout tone="warn" title="Testnet software">
         <p className="!text-paper-dim">
           Covault currently runs on Stacks testnet. It is experimental software under
-          active development - not investment advice, and not yet for funds you cannot
+          active development, not investment advice, and not yet for funds you cannot
           afford to lose.
         </p>
       </Callout>

@@ -141,8 +141,8 @@ export function PayoffDemo() {
         </div>
         <p className="tnum mt-2.5 text-xs text-paper-dim">
           {kind === "put"
-            ? `Cash-secured put - strike ${c.f(g.K)} ${c.label}, ${c.f(g.cap)} ${c.label} locked`
-            : `Capped call - strike ${c.f(g.K)} ${c.label}, cap +${c.f(g.cap)} ${c.label} locked`}
+            ? `Cash-secured put: strike ${c.f(g.K)} ${c.label}, ${c.f(g.cap)} ${c.label} locked`
+            : `Capped call: strike ${c.f(g.K)} ${c.label}, cap +${c.f(g.cap)} ${c.label} locked`}
         </p>
 
         <svg viewBox={`0 0 ${W} ${H}`} className="mt-2 w-full" aria-hidden="true">

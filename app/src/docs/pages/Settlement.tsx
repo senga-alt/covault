@@ -5,20 +5,20 @@ export function Settlement() {
     <DocArticle
       slug="settlement"
       title="Settlement"
-      lead="One price per series, recorded once, derived on-chain from DIA's feeds - permissionless to trigger, impossible to choose."
+      lead="One price per series, recorded once, derived on-chain from DIA's feeds: permissionless to trigger, impossible to choose."
     >
       <H2 id="who-settles">Who settles</H2>
       <p>
         Anyone. Once a series passes its expiry block, its page shows{" "}
         <strong>Settle from DIA</strong> to every connected wallet. The transaction goes
         through a small settler contract that is the clearinghouse&apos;s sole authorized
-        oracle. The caller contributes only gas - there is no code path in which a caller
+        oracle. The caller contributes only gas; there is no code path in which a caller
         supplies a price or a price source.
       </p>
 
       <H2 id="cross-rate">The price, in collateral units</H2>
       <p>
-        Covault contracts are denominated in their collateral asset - sats or microSTX -
+        Covault contracts are denominated in their collateral asset (sats or microSTX)
         and USD never enters the math. DIA publishes USD quotes; the settler derives the
         cross-rate on-chain:
       </p>
@@ -30,7 +30,7 @@ STX-collateralized (SBTC-STX):
   price = sbtc_usd * 1,000,000 / stx_usd       -> microSTX per sBTC`}
       </CodeBlock>
       <p>
-        Integer floor division truncates at most one unit - orders of magnitude below the
+        Integer floor division truncates at most one unit, orders of magnitude below the
         feed&apos;s own deviation threshold, applied identically to every series.
       </p>
 
@@ -41,7 +41,7 @@ STX-collateralized (SBTC-STX):
         settle if either feed is older than the freshness window (default six hours):
       </p>
       <ul>
-        <li>Stale feeds mean the series simply stays unsettled - it never settles on a bad price.</li>
+        <li>Stale feeds mean the series simply stays unsettled; it never settles on a bad price.</li>
         <li>
           Nothing is lost by waiting: exercising and reclaiming have no deadline, so a
           delayed settlement delays claims without forfeiting them.
@@ -52,7 +52,7 @@ STX-collateralized (SBTC-STX):
       <H2 id="preview">The preview cannot lie</H2>
       <p>
         The &quot;Would record N from feeds Xs old&quot; line in the settle panel calls the
-        settler&apos;s own read-only derivation with the live feeds - the same code that runs
+        settler&apos;s own read-only derivation with the live feeds, the same code that runs
         in the transaction. Preview and chain cannot disagree.
       </p>
 
@@ -91,7 +91,7 @@ STX-collateralized (SBTC-STX):
         <p className="!text-paper-dim">
           DIA&apos;s feed operators (for price correctness inside the freshness window,
           bounded per series as above) and the protocol owner (who can re-point the
-          oracle - a public, on-chain transaction). That is the entire list.
+          oracle: a public, on-chain transaction). That is the entire list.
         </p>
       </Callout>
     </DocArticle>

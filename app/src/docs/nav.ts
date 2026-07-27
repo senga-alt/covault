@@ -20,7 +20,7 @@ export const DOCS_NAV: DocsNavSection[] = [
   {
     label: "Concepts",
     items: [
-      { slug: "lifecycle", title: "The lifecycle", description: "Create, write, trade, settle, claim - in depth" },
+      { slug: "lifecycle", title: "The lifecycle", description: "Create, write, trade, settle, claim, in depth" },
       { slug: "settlement", title: "Settlement", description: "The DIA oracle, cross-rates, and freshness" },
       { slug: "fees", title: "Fees", description: "What using Covault costs" },
     ],
