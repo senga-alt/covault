@@ -5,7 +5,19 @@ const DECIMALS: Record<Asset, number> = { stx: 6, sbtc: 8 };
 const SYMBOL: Record<Asset, string> = { stx: "STX", sbtc: "sBTC" };
 const UNIT: Record<Asset, string> = { stx: "uSTX", sbtc: "sats" };
 
+/**
+ * Below 0.01 sBTC, decimals stop being readable ("0.000003 sBTC") while sats
+ * read exactly right ("300 sats"). Covault's sBTC series live in the hundreds
+ * to thousands of sats - one STX is ~200 sats - so that is the natural unit for
+ * strikes, collateral and payoffs. Larger holdings still read as sBTC.
+ */
+const SATS_DISPLAY_BELOW = 1_000_000n; // 0.01 sBTC
+
 export function formatAmount(raw: bigint, asset: Asset, opts?: { withUnit?: boolean }): string {
+  if (asset === "sbtc" && raw < SATS_DISPLAY_BELOW) {
+    const human = raw.toLocaleString();
+    return opts?.withUnit === false ? human : `${human} sats`;
+  }
   const d = DECIMALS[asset];
   const base = 10n ** BigInt(d);
   const whole = raw / base;
