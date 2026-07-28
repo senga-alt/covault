@@ -1,0 +1,22 @@
+{
+  "name": "covault-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Stacks.js lifecycle scripts for the deployed covault-core contract.",
+  "scripts": {
+    "lifecycle": "tsx lifecycle.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stacks/network": "^7.5.0",
+    "@stacks/transactions": "^7.5.0",
+    "@stacks/wallet-sdk": "^7.5.0",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3"
+  }
+}

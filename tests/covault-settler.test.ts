@@ -219,6 +219,34 @@ describe("DIA freshness window", () => {
     expect(r.result).toBeOk(Cl.uint(400));
   });
 
+  it("accepts millisecond-precision timestamps (the live testnet DIA format)", () => {
+    // live DIA emits 13-digit ms timestamps; a current one must read as fresh
+    const now = Number((simnet.callReadOnlyFn(SETTLER, "current-time", [], anyone).result as any).value);
+    simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint(now * 1000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    pinDia();
+    simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
+    const id = createSbtcPut("STX-SBTC", 1000, 5);
+    simnet.mineEmptyBurnBlocks(5);
+
+    const r = simnet.callPublicFn(SETTLER, "settle-from-dia", [Cl.uint(id), diaArg], anyone);
+    expect(r.result).toBeOk(Cl.uint(400));
+  });
+
+  it("rejects a stale millisecond-precision timestamp", () => {
+    // 8 hours old in ms: normalization must still catch it as stale
+    const now = Number((simnet.callReadOnlyFn(SETTLER, "current-time", [], anyone).result as any).value);
+    simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint((now - 8 * 3600) * 1000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    pinDia();
+    simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
+    const id = createSbtcPut("STX-SBTC", 1000, 5);
+    simnet.mineEmptyBurnBlocks(5);
+
+    const r = simnet.callPublicFn(SETTLER, "settle-from-dia", [Cl.uint(id), diaArg], anyone);
+    expect(r.result).toBeErr(Cl.uint(ERR_STALE_PRICE));
+  });
+
   it("future-dated timestamps count as fresh (block time can trail a push)", () => {
     const farFuture = 4_000_000_000; // year 2096, > any simnet block time
     simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint(farFuture)], deployer);

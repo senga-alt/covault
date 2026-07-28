@@ -1,0 +1,35 @@
+id: 0
+name: Covault settler v2 (testnet) - DIA timestamp normalization
+# Publishes covault-settler-v2 (same source file, fixed freshness handling for
+# DIA's millisecond timestamps) and pins the canonical DIA principal on it.
+# The traits are already on-chain from the v1 plan and are NOT republished.
+# covault-settler (v1) remains on-chain but is never wired; covault-core's
+# oracle should be pointed at covault-settler-v2.
+# Apply with:
+#   clarinet deployments apply --testnet --deployment-plan-path deployments/settler-v2.testnet-plan.yaml
+network: testnet
+stacks-node: https://api.testnet.hiro.so
+bitcoin-node: http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332
+plan:
+  batches:
+  - id: 0
+    transactions:
+    - transaction-type: contract-publish
+      contract-name: covault-settler-v2
+      expected-sender: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+      cost: 1000000
+      path: contracts/covault-settler.clar
+      anchor-block-only: true
+      clarity-version: 4
+    epoch: '3.4'
+  - id: 1
+    transactions:
+    # pin the canonical testnet DIA principal - settle-from-dia refuses any other source
+    - transaction-type: contract-call
+      contract-id: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2
+      expected-sender: ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+      method: set-dia-oracle
+      parameters:
+      - "'ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle"
+      cost: 100000
+    epoch: '3.4'

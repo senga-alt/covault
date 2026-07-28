@@ -58,10 +58,13 @@ direction is applied identically to every series.
 
 ## 2. Freshness checks
 
-DIA returns `{ timestamp, value }` per feed (Unix seconds). The settler
-rejects quotes older than `max-price-age` seconds, measured against
-`stacks-block-time` (the Clarity 4 keyword for the current Stacks block's
-Unix time):
+DIA returns `{ timestamp, value }` per feed. Deployments differ in
+timestamp precision - the live testnet feed emits milliseconds - so the
+settler first normalizes: any timestamp at or above 10^11 (a date beyond
+the year 5000 if read as seconds) is treated as milliseconds and divided
+by 1000. The normalized timestamp is compared against `stacks-block-time`
+(the Clarity 4 keyword for the current Stacks block's Unix time), and
+quotes older than `max-price-age` seconds are rejected:
 
 - Both feeds are checked independently; if either is stale, settlement
   fails with `ERR-STALE-PRICE (u206)` and the series stays unsettled.
@@ -143,7 +146,7 @@ not-oracle u101) apply unchanged underneath.
 
 ## 7. Verification
 
-- `npm test` - 41 passing tests, including: cross-rate derivation for both
+- `npm test` - 43 passing tests, including: cross-rate derivation for both
   pair orientations, end-to-end DIA settlement driving exercise/reclaim
   payoffs, pre-expiry rejection, stale-feed rejection with fail-closed
   state, recovery after a feed resumes, future-dated timestamp tolerance,

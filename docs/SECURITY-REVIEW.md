@@ -14,7 +14,7 @@ Reproduce everything here from a clean checkout:
 
 ```bash
 npm install
-npm test         # 41 example-based unit tests (Clarinet JS SDK)
+npm test         # 43 example-based unit tests (Clarinet JS SDK)
 npm run fuzz     # Rendezvous property-based fuzzing of covault-core
 clarinet check   # static analysis (check-checker pass)
 ```
@@ -102,7 +102,7 @@ annotated `;; #[env(simnet)]`, which strips them on any real-network deploy.
 
 ## 3. Adversarial tests (example-based)
 
-41 unit tests (Clarinet JS SDK, `npm test`) exercise the negative and
+43 unit tests (Clarinet JS SDK, `npm test`) exercise the negative and
 adversarial paths that fuzzing the pure function does not reach - authorization,
 timing, double-spend, and the settlement trust boundary. The security-relevant
 cases:
@@ -202,6 +202,22 @@ The settler's on-chain cross-rate uses integer floor division, truncating at
 most one unit (1 sat or 1 microSTX) per contract - orders of magnitude below
 DIA's own deviation threshold, and applied identically to every series.
 Documented in the methodology. **Status: Accepted.**
+
+### F-6. Freshness check assumed second-precision timestamps - Medium - Resolved
+
+The live testnet DIA feed reports Unix timestamps in milliseconds, while the
+settler compared them directly against `stacks-block-time` (seconds). A
+millisecond timestamp always reads as far in the future, so the
+future-dated-counts-as-fresh rule made the freshness window pass
+unconditionally against the real feed - the check was vacuous in production
+while passing every unit test (the mock used seconds).
+
+Caught during pre-wiring verification against the live testnet feeds, before
+the settler became core's oracle. Fixed by normalizing timestamps (values at
+or above 10^11 are treated as milliseconds and divided by 1000) and covered
+by two tests: a current millisecond timestamp settles, a stale millisecond
+timestamp is rejected. The corrected settler ships as `covault-settler-v2`;
+the unwired v1 remains on-chain but is never referenced. **Status: Resolved.**
 
 No Critical findings remain open. All High and Medium findings are Resolved.
 
