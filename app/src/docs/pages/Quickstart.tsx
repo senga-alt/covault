@@ -29,10 +29,20 @@ export function Quickstart() {
         </li>
         <li>
           <strong>Testnet sBTC</strong> (needed to write into, or buy from,
-          sBTC-collateralized series): request it from the sBTC testnet bridge/faucet.
-          Amounts in Covault demos are hundreds of sats, so a little goes far.
+          sBTC-collateralized series): the sBTC testnet bridge issues it, and if you are
+          joining an organised test session the team can send you some directly - just
+          share your testnet address. Amounts here are hundreds of sats per contract, so
+          a little goes a long way.
         </li>
       </ul>
+      <Callout title="Which asset do I actually need?">
+        <p className="!text-paper-dim">
+          Every transaction costs a small STX fee, so you always need some testnet STX.
+          Beyond that, you only need the collateral asset of the series you want to use:
+          sats for an sBTC series, STX for an STX series. The Write panel checks your
+          balance and tells you before you sign, rather than letting the chain reject it.
+        </p>
+      </Callout>
 
       <H2 id="connect">3. Connect and look around</H2>
       <p>
