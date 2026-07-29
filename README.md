@@ -14,7 +14,7 @@ collateralized and settled in **sBTC** or **native STX**.
 
 [Live testnet app](https://covault-testnet.vercel.app) ·
 [Clearinghouse contract](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet) ·
-[Settler contract](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler?chain=testnet) ·
+[Settler contract](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet) ·
 [Security review](docs/SECURITY-REVIEW.md) ·
 [Settlement methodology](docs/SETTLEMENT-METHODOLOGY.md)
 
@@ -123,7 +123,7 @@ and resolution status. Highlights:
   collateral; payoff + leftover equals collateral exactly - are fuzzed against
   thousands of random inputs with **zero discards**, and re-proven in CI on
   every push (`npm run fuzz`).
-- **41 unit tests** (Clarinet JS SDK + Vitest) cover the full lifecycle in both
+- **43 unit tests** (Clarinet JS SDK + Vitest) cover the full lifecycle in both
   collateral assets plus the adversarial paths: authorization, timing,
   double-claim, pause behavior, fees, and the settlement trust boundary.
 - **Findings log**: the review caught and resolved a High-severity issue
@@ -193,7 +193,7 @@ Its error codes and guards are tabulated in the
 | Contract | Address | Notes |
 | --- | --- | --- |
 | `covault-core` | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet) | Deployed at burn block 191855; full lifecycles completed in both STX and sBTC |
-| `covault-settler` | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler?chain=testnet) | Canonical DIA principal pinned on-chain |
+| `covault-settler-v2` | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet) | Core's authorized oracle. Canonical DIA principal pinned on-chain. |
 | dApp | [covault-testnet.vercel.app](https://covault-testnet.vercel.app) | Full lifecycle UI + operator console |
 
 Every completed lifecycle - deployment, writes, trades, settlement, exercise,
@@ -211,10 +211,43 @@ contracts/
 app/                       the dApp: Vite + React + @stacks/connect
 scripts/                   lifecycle CLI - drive the deployed contract end to end
 security/                  Rendezvous fuzzing harness (property tests + build script)
-tests/                     41 unit tests (Clarinet JS SDK + Vitest)
+tests/                     43 unit tests (Clarinet JS SDK + Vitest)
 deployments/               hand-authored testnet deployment plans
 docs/                      product, technical, and milestone documentation
 ```
+
+## Verify this yourself
+
+Nothing here asks to be taken on trust. Three independent ways to check it:
+
+**1. Read the CI runs** - every push runs `clarinet check`, the full unit suite,
+and the property-based fuzzer:
+[github.com/senga-alt/covault/actions](https://github.com/senga-alt/covault/actions)
+
+**2. Run the checks locally** - a clean clone, no keys or configuration needed:
+
+```bash
+git clone https://github.com/senga-alt/covault && cd covault
+npm install
+clarinet check     # static analysis: 8 contracts, no errors
+npm test           # 43 unit tests, both collateral assets
+npm run fuzz       # 1,000 randomized runs against the solvency invariant
+```
+
+**3. Query the live contracts** - read-only, no wallet required. Any settled
+series can be checked against the identity `payoff + leftover = collateral`:
+
+```bash
+curl -s -X POST -H "Content-Type: application/json" \
+  -d '{"sender":"ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R","arguments":[]}' \
+  https://api.testnet.hiro.so/v2/contracts/call-read/\
+ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R/covault-core/get-config
+```
+
+Or open any series in [the app](https://covault-testnet.vercel.app/app) - the
+settled ones print the identity on screen. Every transaction behind the
+milestone evidence is linked in
+[docs/M1-EVIDENCE.md](docs/M1-EVIDENCE.md).
 
 ## Develop
 
@@ -223,7 +256,7 @@ Requires [Clarinet](https://docs.stacks.co/clarinet) >= 3 and Node >= 20.
 ```bash
 npm install
 clarinet check        # static analysis - 8 contracts, no errors
-npm test              # 41 unit tests (Vitest + clarinet-sdk)
+npm test              # 43 unit tests (Vitest + clarinet-sdk)
 npm run fuzz          # property-based fuzzing (Rendezvous, 1000 runs)
 clarinet console      # interactive REPL
 ```
@@ -269,7 +302,7 @@ principal:
 
 ```bash
 clarinet deployments apply --testnet \
-  --deployment-plan-path deployments/settler.testnet-plan.yaml
+  --deployment-plan-path deployments/settler-v2.testnet-plan.yaml
 ```
 
 > Do not run a bare `clarinet deployments generate/apply --testnet` here: the
@@ -295,12 +328,19 @@ clarinet deployments apply --testnet \
 
 ## Status
 
-Grant prototype, live on **Stacks testnet**. Complete today: the clearinghouse
-with built-in order book, full lifecycles executed on-chain in both collateral
-assets, the DIA settler (deployed, pinned, tested), the full-lifecycle dApp, the
-structured security review with CI-enforced fuzzing, and this documentation set.
-Next: oracle-wired settlement demo on testnet, then mainnet launch with first
-real usage - see [docs/ROADMAP.md](docs/ROADMAP.md).
+Grant prototype, live on **Stacks testnet**.
+
+Complete today: the clearinghouse with its built-in order book; full lifecycles
+executed on-chain in both collateral assets; a live market in which independent
+wallets wrote options, listed them, and traded peer-to-peer; **settlement from
+the DIA oracle across four series and both collateral assets**, each reconciling
+exactly to its locked collateral; the full-lifecycle dApp; a structured security
+review with CI-enforced fuzzing; and this documentation set.
+
+Walkthrough: **<https://youtu.be/cj7HO-ge1jA>** · Transaction-level evidence:
+[docs/M1-EVIDENCE.md](docs/M1-EVIDENCE.md)
+
+Next: mainnet launch with first real usage - see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
