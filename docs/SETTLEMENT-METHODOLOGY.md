@@ -40,6 +40,17 @@ STX-SBTC:  price = stx_usd * 100,000,000 / sbtc_usd   (sats per STX)
 SBTC-STX:  price = sbtc_usd * 1,000,000  / stx_usd    (microSTX per sBTC)
 ```
 
+**Which Bitcoin feed, and why.** DIA publishes both `BTC/USD` and `sBTC/USD`;
+Covault reads **`sBTC/USD`**. The collateral locked in an sBTC series *is* sBTC,
+so pricing it with the sBTC feed keeps the settlement price denominated in the
+same asset the payoff is paid in. Using `BTC/USD` would introduce the sBTC peg
+basis between the recorded price and the collateral actually held - observed at
+roughly 1.2% on testnet at the time of writing ($63,848 vs $63,077). Where
+grant documentation refers to the "BTC/USD" feed, this is the feed meant: the
+Bitcoin price leg of the cross-rate, taken from DIA's sBTC series. If the
+Endowment prefers the `BTC/USD` key, it is a one-line change in the settler and
+a redeploy, disclosed and approved in advance per section 5.
+
 Integer division (floor). Both inputs must be positive or the settler
 returns `ERR-BAD-PRICE (u205)`; an unknown pair label returns
 `ERR-UNSUPPORTED-PAIR (u204)`.
@@ -153,5 +164,17 @@ not-oracle u101) apply unchanged underneath.
   owner gating of the freshness window, and DIA principal pinning (unpinned
   and lookalike-source calls both rejected, fail closed).
 - `clarinet check` - 8 contracts, no errors.
-- The derivation was verified against the live testnet DIA feeds before
-  deployment planning (observed cross-rate at the time: 259 sats per STX).
+- **Settled on testnet against the live feeds.** Four series settled through
+  `settle-from-dia`, at four different prices, each reconciling exactly to its
+  locked collateral:
+
+| Series | Settled at | Payoff | Leftover | Collateral |
+| --- | --- | --- | --- | --- |
+| #3 | 213 sats | 0 | 190 | 190 sats |
+| #4 | 216 sats | 24 | 216 | 240 sats |
+| #5 | 213 sats | 13 | 47 | 60 sats |
+| #6 | 468,526.442 STX | 0 | 50 STX | 50 STX |
+
+  Both collateral assets are represented, and after all claims the settled
+  series returned every unit they held. Transaction links:
+  [M1 Evidence](./M1-EVIDENCE.md).

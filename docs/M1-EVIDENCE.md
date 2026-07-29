@@ -1,16 +1,22 @@
 # Milestone 1 - Testnet Deployment Evidence
 
-Status: complete. Deployment, both collateral assets, order listing and
+**Status: complete.** Deployment, both collateral assets, order listing and
 purchase by independent wallets, oracle settlement, exercise and reclaim - all
 on-chain and linked below.
 
-**Demo video: <https://youtu.be/cj7HO-ge1jA>** - a two-minute walkthrough
-recorded live on testnet: writing options against locked collateral, the order
-book with independent participants, permissionless settlement from the DIA
-oracle, and the claims that follow.
-Network: Stacks testnet
-Contract: `ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core` (Clarity 4)
-Explorer: <https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet>
+**Demo video:** <https://youtu.be/cj7HO-ge1jA>
+
+A walkthrough recorded live on testnet: writing options against
+locked collateral, the order book with independent participants, permissionless
+settlement from the DIA oracle, and the claims that follow.
+
+| | |
+| --- | --- |
+| Network | Stacks testnet |
+| Clearinghouse | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet) (Clarity 4) |
+| Oracle settler | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet) |
+| Application | <https://covault-testnet.vercel.app> |
+| Repository | <https://github.com/senga-alt/covault> |
 
 ## What this documents
 
