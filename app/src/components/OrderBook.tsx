@@ -244,7 +244,7 @@ export function OrderBook({ series, long, status }: { series: Series; long: bigi
   const offersQ = useQuery({
     queryKey: ["offers", series.id],
     queryFn: () => getOpenOffers(series.id),
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
   });
   const configQ = useQuery({ queryKey: ["config"], queryFn: getConfig });
   const feeBps = configQ.data?.feeBps ?? 0;

@@ -35,6 +35,62 @@ export const hasSettler = SETTLER_ID.includes(".");
 
 export const API_BASE = NETWORK === "mainnet" ? "https://api.hiro.so" : "https://api.testnet.hiro.so";
 
+/**
+ * Hiro's public API allows 20 requests/second and 50/minute per IP. A busy page
+ * can exceed that - Portfolio alone fans out one call per series per side - and
+ * an over-limit response surfaces in the browser as an opaque CORS failure
+ * rather than a legible rate-limit error, because the 429 carries no CORS
+ * headers.
+ *
+ * Two mitigations: send an API key when one is configured (which raises the
+ * ceiling substantially), and retry 429s with backoff so a burst degrades into
+ * momentary slowness instead of a broken screen. Set VITE_HIRO_API_KEY from a
+ * free key at platform.hiro.so.
+ */
+const HIRO_API_KEY = (import.meta.env.VITE_HIRO_API_KEY ?? "") as string;
+const MAX_RETRIES = 3;
+
+// Reads fan out with Promise.all (one call per series, two per position), which
+// without a gate arrives as one burst and trips the per-second limit. Cap the
+// number in flight so the same work arrives as a steady stream instead.
+const MAX_IN_FLIGHT = 6;
+let inFlight = 0;
+const waiting: (() => void)[] = [];
+
+async function acquire(): Promise<void> {
+  if (inFlight < MAX_IN_FLIGHT) { inFlight++; return; }
+  await new Promise<void>((resolve) => waiting.push(resolve));
+  inFlight++;
+}
+
+function release(): void {
+  inFlight--;
+  waiting.shift()?.();
+}
+
+export async function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers);
+  if (HIRO_API_KEY) headers.set("x-api-key", HIRO_API_KEY);
+
+  await acquire();
+  try {
+    for (let attempt = 0; ; attempt++) {
+      const res = await fetch(url, { ...init, headers });
+      if (res.status !== 429 || attempt >= MAX_RETRIES) return res;
+      // Honour Retry-After when present, otherwise back off 0.4s, 0.8s, 1.6s.
+      const retryAfter = Number(res.headers.get("retry-after"));
+      const waitMs =
+        Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 400 * 2 ** attempt;
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+  } finally {
+    release();
+  }
+}
+
+/** Injected into every Stacks.js call so read-only reads share the same limiter. */
+const stacksClient = { fetch: apiFetch };
+
 export const explorerTxUrl = (txid: string) =>
   `https://explorer.hiro.so/txid/${txid.startsWith("0x") ? txid : `0x${txid}`}?chain=${NETWORK}`;
 
@@ -65,6 +121,7 @@ async function ro(fn: string, args: ClarityValue[]): Promise<any> {
     functionArgs: args,
     senderAddress: CONTRACT_ADDRESS,
     network: NETWORK,
+    client: stacksClient,
   });
   return cvToJSON(cv);
 }
@@ -72,10 +129,17 @@ async function ro(fn: string, args: ClarityValue[]): Promise<any> {
 // cvToJSON tuple fields arrive as { type, value } - unwrap one level
 const field = (tuple: any, name: string) => tuple[name]?.value;
 
+// getAllSeries and getAllOpenOffers both need the counters, and pages often run
+// them together. A short-lived cache collapses that into one request without
+// making the UI feel stale.
+let configCache: { at: number; value: ProtocolConfig } | null = null;
+const CONFIG_TTL_MS = 5_000;
+
 export async function getConfig(): Promise<ProtocolConfig> {
+  if (configCache && Date.now() - configCache.at < CONFIG_TTL_MS) return configCache.value;
   const j = await ro("get-config", []);
   const t = j.value;
-  return {
+  const cfg: ProtocolConfig = {
     owner: field(t, "owner"),
     oracle: field(t, "oracle"),
     paused: field(t, "paused"),
@@ -85,6 +149,8 @@ export async function getConfig(): Promise<ProtocolConfig> {
     seriesCount: Number(field(t, "series-count")),
     offerCount: Number(field(t, "offer-count")),
   };
+  configCache = { at: Date.now(), value: cfg };
+  return cfg;
 }
 
 export async function getSeries(id: number): Promise<Series | null> {
@@ -166,14 +232,14 @@ export async function quotePayoff(id: number, price: bigint): Promise<bigint> {
 }
 
 export async function getBurnHeight(): Promise<number> {
-  const r = await fetch(`${API_BASE}/v2/info`);
+  const r = await apiFetch(`${API_BASE}/v2/info`);
   const j = await r.json();
   return j.burn_block_height as number;
 }
 
 /** STX + sBTC balances for an address, for pre-flight sufficiency checks. */
 export async function getBalances(address: string): Promise<{ stx: bigint; sbtc: bigint }> {
-  const r = await fetch(`${API_BASE}/extended/v1/address/${address}/balances`);
+  const r = await apiFetch(`${API_BASE}/extended/v1/address/${address}/balances`);
   if (!r.ok) throw new Error("Could not load wallet balances.");
   const j = await r.json();
   const key = Object.keys(j.fungible_tokens ?? {}).find((k) => k.startsWith(SBTC_CONTRACT));
@@ -210,7 +276,7 @@ export async function getContractActivityDays(days: number): Promise<ActivityIte
   const start = Date.now() - days * 86_400_000;
   const out: ActivityItem[] = [];
   for (let offset = 0; offset < 300; offset += 50) {
-    const r = await fetch(
+    const r = await apiFetch(
       `${API_BASE}/extended/v1/address/${CONTRACT_ID}/transactions?limit=50&offset=${offset}`
     );
     if (!r.ok) throw new Error("Could not load contract activity.");
@@ -241,6 +307,7 @@ async function roAt(contractId: string, fn: string, args: ClarityValue[]): Promi
     functionArgs: args,
     senderAddress: contractAddress,
     network: NETWORK,
+    client: stacksClient,
   });
   return cvToJSON(cv);
 }

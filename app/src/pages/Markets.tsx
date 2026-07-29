@@ -113,9 +113,9 @@ type AssetFilter = "all" | "stx" | "sbtc";
 
 
 export function Markets() {
-  const seriesQ = useQuery({ queryKey: ["series"], queryFn: getAllSeries, refetchInterval: 30_000 });
-  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
-  const offersQ = useQuery({ queryKey: ["all-offers"], queryFn: getAllOpenOffers, refetchInterval: 30_000 });
+  const seriesQ = useQuery({ queryKey: ["series"], queryFn: getAllSeries, refetchInterval: 60_000 });
+  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 60_000 });
+  const offersQ = useQuery({ queryKey: ["all-offers"], queryFn: getAllOpenOffers, refetchInterval: 60_000 });
 
   const [status, setStatus] = useState<StatusFilter>("all");
   const [asset, setAsset] = useState<AssetFilter>("all");

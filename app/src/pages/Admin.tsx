@@ -825,7 +825,7 @@ export function Admin() {
   const { address } = useWallet();
   const configQ = useQuery({ queryKey: ["config"], queryFn: getConfig });
   const seriesQ = useQuery({ queryKey: ["series"], queryFn: getAllSeries });
-  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
+  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 60_000 });
 
   const cfg = configQ.data;
   const isOwner = !!address && !!cfg && address === cfg.owner;

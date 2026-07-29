@@ -75,9 +75,9 @@ export function Portfolio() {
     queryKey: ["holdings", address],
     queryFn: () => loadHoldings(address!),
     enabled: !!address,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
   });
-  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
+  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 60_000 });
   const burn = burnQ.data ?? 0;
 
   const totals = useMemo(() => {

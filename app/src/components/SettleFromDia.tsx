@@ -32,7 +32,7 @@ export function SettleFromDia({ id, underlying }: { id: number; underlying: stri
     queryKey: ["dia-preview", underlying],
     queryFn: () => getDiaSettlePreview(underlying),
     enabled: hasSettler,
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     retry: 1,
   });
 

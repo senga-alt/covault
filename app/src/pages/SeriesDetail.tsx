@@ -29,7 +29,7 @@ export function SeriesDetail() {
   const { address } = useWallet();
 
   const seriesQ = useQuery({ queryKey: ["series", id], queryFn: () => getSeries(id), enabled: validId });
-  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
+  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 60_000 });
   const posQ = useQuery({
     queryKey: ["position", id, address],
     queryFn: () => getPosition(id, address!),

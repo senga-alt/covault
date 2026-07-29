@@ -20,7 +20,7 @@ function networkMismatch(address: string | null): boolean {
 export function Layout() {
   const { address } = useWallet();
   const configQ = useQuery({ queryKey: ["config"], queryFn: getConfig });
-  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 30_000 });
+  const burnQ = useQuery({ queryKey: ["burn-height"], queryFn: getBurnHeight, refetchInterval: 60_000 });
   const isOwner = !!address && address === configQ.data?.owner;
   const mismatch = networkMismatch(address);
   return (
