@@ -110,7 +110,7 @@
       (ok price))))
 
 ;; ---------------------------------------------------------------------------
-;; DIA-backed settlement (the real, testnet-live price source)
+;; DIA-backed settlement (STX/USD + BTC/USD, per the milestone spec)
 ;; ---------------------------------------------------------------------------
 
 ;; Derive a series' settlement price, in its collateral units, from two DIA
@@ -118,16 +118,22 @@
 ;; price is produced directly in the unit the payoff math expects.
 ;;  STX-SBTC (sBTC-collateralized STX option): sats per STX
 ;;  SBTC-STX (STX-collateralized sBTC option):  microSTX per sBTC
+;;
+;; btc-usd is DIA's BTC/USD feed, used as the reference for sBTC. This is the
+;; feed pair the milestone specifies. It carries the sBTC/BTC peg basis as a
+;; documented assumption: sBTC is 1:1 Bitcoin-backed, so BTC/USD is the
+;; reference price, and any deviation of the peg is a disclosed risk rather
+;; than something this contract can observe. See docs/SETTLEMENT-METHODOLOGY.md.
 (define-read-only (derive-price
     (label (string-ascii 16))
     (stx-usd uint)
-    (sbtc-usd uint))
+    (btc-usd uint))
   (begin
-    (asserts! (and (> stx-usd u0) (> sbtc-usd u0)) ERR-BAD-PRICE)
+    (asserts! (and (> stx-usd u0) (> btc-usd u0)) ERR-BAD-PRICE)
     (if (is-eq label "STX-SBTC")
-      (ok (/ (* stx-usd SATS-PER-BTC) sbtc-usd))
+      (ok (/ (* stx-usd SATS-PER-BTC) btc-usd))
       (if (is-eq label "SBTC-STX")
-        (ok (/ (* sbtc-usd USTX-PER-STX) stx-usd))
+        (ok (/ (* btc-usd USTX-PER-STX) stx-usd))
         ERR-UNSUPPORTED-PAIR))))
 
 ;; Permissionlessly settle an expired series from DIA. `dia` is the DIA oracle
@@ -142,12 +148,16 @@
     (let (
         (s (unwrap! (contract-call? .covault-core get-series id) ERR-SERIES-NOT-FOUND))
         (stx-quote (try! (contract-call? dia get-value "STX/USD")))
-        (sbtc-quote (try! (contract-call? dia get-value "sBTC/USD")))
-        (price (try! (derive-price (get underlying s) (get value stx-quote) (get value sbtc-quote))))
+        (btc-quote (try! (contract-call? dia get-value "BTC/USD")))
       )
-      (asserts! (and (is-fresh (get timestamp stx-quote)) (is-fresh (get timestamp sbtc-quote)))
+      ;; Freshness is checked BEFORE deriving. A dead feed that also reports a
+      ;; zeroed value must fail as ERR-STALE-PRICE, not be masked by
+      ;; ERR-BAD-PRICE from derive-price. This ordering keeps the diagnostic
+      ;; honest about which guard actually stopped the settlement.
+      (asserts! (and (is-fresh (get timestamp stx-quote)) (is-fresh (get timestamp btc-quote)))
         ERR-STALE-PRICE)
-      (try! (as-contract? () (try! (contract-call? .covault-core settle id price))))
-      (print { event: "settle-from-dia", id: id, price: price,
-               stx-usd: (get value stx-quote), sbtc-usd: (get value sbtc-quote) })
-      (ok price))))
+      (let ((price (try! (derive-price (get underlying s) (get value stx-quote) (get value btc-quote)))))
+        (try! (as-contract? () (try! (contract-call? .covault-core settle id price))))
+        (print { event: "settle-from-dia", id: id, price: price,
+                 stx-usd: (get value stx-quote), btc-usd: (get value btc-quote) })
+        (ok price)))))

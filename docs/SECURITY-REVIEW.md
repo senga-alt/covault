@@ -216,7 +216,10 @@ Caught during pre-wiring verification against the live testnet feeds, before
 the settler became core's oracle. Fixed by normalizing timestamps (values at
 or above 10^11 are treated as milliseconds and divided by 1000) and covered
 by two tests: a current millisecond timestamp settles, a stale millisecond
-timestamp is rejected. The corrected settler ships as `covault-settler-v2`;
+timestamp is rejected. The corrected settler shipped on testnet as
+`covault-settler-v2`; the mainnet deployment carries the same fix under the
+unsuffixed name `covault-settler`, the version suffixes having been testnet
+artifacts of iterating before launch;
 the unwired v1 remains on-chain but is never referenced. **Status: Resolved.**
 
 No Critical findings remain open. All High and Medium findings are Resolved.

@@ -120,9 +120,9 @@ function pinDia() {
   simnet.callPublicFn(SETTLER, "set-dia-oracle", [Cl.principal(`${deployer}.mock-dia`)], deployer);
 }
 
-function setDia(stxUsd: number, sbtcUsd: number) {
+function setDia(stxUsd: number, btcUsd: number) {
   simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("STX/USD"), Cl.uint(stxUsd)], deployer);
-  simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(sbtcUsd)], deployer);
+  simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("BTC/USD"), Cl.uint(btcUsd)], deployer);
 }
 
 describe("DIA price derivation", () => {
@@ -186,9 +186,9 @@ describe("DIA freshness window", () => {
   const ERR_NOT_OWNER = 200;
 
   it("rejects settlement when a feed value is older than max-price-age", () => {
-    // STX/USD pinned to unix epoch 1 second = ancient; sBTC/USD fresh
+    // STX/USD pinned to unix epoch 1 second = ancient; BTC/USD fresh
     simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint(1)], deployer);
-    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("BTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
     pinDia();
     simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
     const id = createSbtcPut("STX-SBTC", 1000, 5);
@@ -202,9 +202,28 @@ describe("DIA freshness window", () => {
     expect((s.result as any).value.value["settled"]).toEqual(Cl.bool(false));
   });
 
+  // Regression for the v3 ordering change. A feed that has been abandoned can
+  // report BOTH a stale timestamp and a zeroed value. Deriving before checking
+  // freshness would surface ERR-BAD-PRICE and hide the real cause, which is
+  // exactly the diagnostic we need when a feed dies the way sBTC/USD did.
+  it("reports a dead feed as stale, not as a bad price", () => {
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("BTC/USD"), Cl.uint(0), Cl.uint(1)], deployer);
+    pinDia();
+    simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
+    const id = createSbtcPut("STX-SBTC", 1000, 5);
+    simnet.mineEmptyBurnBlocks(5);
+
+    const r = simnet.callPublicFn(SETTLER, "settle-from-dia", [Cl.uint(id), diaArg], anyone);
+    expect(r.result).toBeErr(Cl.uint(ERR_STALE_PRICE));
+
+    const s = simnet.callReadOnlyFn(CORE, "get-series", [Cl.uint(id)], anyone);
+    expect((s.result as any).value.value["settled"]).toEqual(Cl.bool(false));
+  });
+
   it("settles once the feed is fresh again", () => {
     simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint(1)], deployer);
-    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("BTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
     pinDia();
     simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
     const id = createSbtcPut("STX-SBTC", 1000, 5);
@@ -223,7 +242,7 @@ describe("DIA freshness window", () => {
     // live DIA emits 13-digit ms timestamps; a current one must read as fresh
     const now = Number((simnet.callReadOnlyFn(SETTLER, "current-time", [], anyone).result as any).value);
     simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint(now * 1000)], deployer);
-    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("BTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
     pinDia();
     simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
     const id = createSbtcPut("STX-SBTC", 1000, 5);
@@ -237,7 +256,7 @@ describe("DIA freshness window", () => {
     // 8 hours old in ms: normalization must still catch it as stale
     const now = Number((simnet.callReadOnlyFn(SETTLER, "current-time", [], anyone).result as any).value);
     simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint((now - 8 * 3600) * 1000)], deployer);
-    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("BTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
     pinDia();
     simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
     const id = createSbtcPut("STX-SBTC", 1000, 5);
@@ -250,7 +269,7 @@ describe("DIA freshness window", () => {
   it("future-dated timestamps count as fresh (block time can trail a push)", () => {
     const farFuture = 4_000_000_000; // year 2096, > any simnet block time
     simnet.callPublicFn(MOCK_DIA, "set-value-at", [Cl.stringAscii("STX/USD"), Cl.uint(20_000_000), Cl.uint(farFuture)], deployer);
-    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("sBTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
+    simnet.callPublicFn(MOCK_DIA, "set-value", [Cl.stringAscii("BTC/USD"), Cl.uint(5_000_000_000_000)], deployer);
     pinDia();
     simnet.callPublicFn(CORE, "set-oracle", [Cl.principal(settlerPrincipal)], deployer);
     const id = createSbtcPut("STX-SBTC", 1000, 5);
