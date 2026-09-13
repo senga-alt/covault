@@ -15,7 +15,7 @@ settlement from the DIA oracle, and the claims that follow.
 | Network | Stacks testnet |
 | Clearinghouse | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet) (Clarity 4) |
 | Oracle settler | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet) |
-| Application | <https://covault-testnet.vercel.app> |
+| Application | <https://covault.org> |
 | Repository | <https://github.com/senga-alt/covault> |
 
 ## What this documents

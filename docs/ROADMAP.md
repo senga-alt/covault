@@ -31,7 +31,7 @@ This is the high-level view.
    disclosures: [Settlement methodology](./SETTLEMENT-METHODOLOGY.md). A DEX TWAP can
    replace DIA later with no change to core.
 3. Full dApp UI (Stacks.js): browse, write, trade, settle, exercise, reclaim, and an owner
-   panel. **Live** at <https://covault-testnet.vercel.app>, used on testnet by wallets
+   panel. **Live** at <https://covault.org>, used on testnet by wallets
    outside the project.
 4. Mainnet launch with the first sBTC and native-STX series, and first real usage (M3).
 

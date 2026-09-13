@@ -5,4 +5,4 @@ Allow: /
 # useful to a crawler, and they render empty without JS.
 Disallow: /app
 
-Sitemap: https://covault-testnet.vercel.app/sitemap.xml
+Sitemap: https://covault.org/sitemap.xml

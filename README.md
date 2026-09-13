@@ -12,7 +12,7 @@ collateralized and settled in **sBTC** or **native STX**.
 
 [![CI](https://github.com/senga-alt/covault/actions/workflows/ci.yml/badge.svg)](https://github.com/senga-alt/covault/actions/workflows/ci.yml)
 
-[Live app](https://covault-testnet.vercel.app) ·
+[Live app](https://covault.org) ·
 [Clearinghouse contract](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core?chain=mainnet) ·
 [Settler contract](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler?chain=mainnet) ·
 [Security review](docs/SECURITY-REVIEW.md) ·
@@ -195,7 +195,7 @@ Its error codes and guards are tabulated in the
 | --- | --- | --- |
 | `covault-core` | [`SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core`](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core?chain=mainnet) | The clearinghouse. Holds every sat of escrow; frozen ABI. |
 | `covault-settler` | [`SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler`](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler?chain=mainnet) | Core's authorized oracle. Canonical DIA principal pinned on-chain; derives prices from DIA STX/USD + BTC/USD. |
-| dApp | [covault-testnet.vercel.app](https://covault-testnet.vercel.app) | Full lifecycle UI + operator console |
+| dApp | [covault.org](https://covault.org) | Full lifecycle UI + operator console |
 
 Every completed lifecycle - deployment, writes, trades, settlement, exercise,
 reclaim, with exact conservation checks - is documented transaction-by-transaction
@@ -245,7 +245,7 @@ curl -s -X POST -H "Content-Type: application/json" \
 SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q/covault-core/get-config
 ```
 
-Or open any series in [the app](https://covault-testnet.vercel.app/app) - the
+Or open any series in [the app](https://covault.org/app) - the
 settled ones print the identity on screen. Every transaction behind the
 milestone evidence is linked in
 [docs/M1-EVIDENCE.md](docs/M1-EVIDENCE.md).

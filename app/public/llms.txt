@@ -12,13 +12,13 @@ collateral they lock, and the holder's maximum gain can never exceed it.
 
 ## Docs
 
-- [Introduction](https://covault-testnet.vercel.app/docs): what Covault is and the solvency argument
-- [Quickstart](https://covault-testnet.vercel.app/docs/quickstart): write or buy a first option
-- [Lifecycle](https://covault-testnet.vercel.app/docs/lifecycle): create, write, trade, settle, claim
-- [Settlement](https://covault-testnet.vercel.app/docs/settlement): oracle price source, freshness checks, fallbacks
-- [Fees](https://covault-testnet.vercel.app/docs/fees): protocol fee model
-- [Contract](https://covault-testnet.vercel.app/docs/contract): public functions and read-only entry points
-- [Error codes](https://covault-testnet.vercel.app/docs/errors): every contract error and what triggers it
+- [Introduction](https://covault.org/docs): what Covault is and the solvency argument
+- [Quickstart](https://covault.org/docs/quickstart): write or buy a first option
+- [Lifecycle](https://covault.org/docs/lifecycle): create, write, trade, settle, claim
+- [Settlement](https://covault.org/docs/settlement): oracle price source, freshness checks, fallbacks
+- [Fees](https://covault.org/docs/fees): protocol fee model
+- [Contract](https://covault.org/docs/contract): public functions and read-only entry points
+- [Error codes](https://covault.org/docs/errors): every contract error and what triggers it
 
 ## Source
 
