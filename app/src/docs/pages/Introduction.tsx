@@ -88,7 +88,7 @@ export function Introduction() {
         .
       </p>
 
-      <Callout tone="warn" title={NETWORK === "mainnet" ? "Unaudited software" : "Testnet software"}>
+      <Callout tone="warn" title={NETWORK === "mainnet" ? "Experimental software" : "Testnet software"}>
         <p className="!text-paper-dim">
           {NETWORK === "mainnet" ? (
             <>
