@@ -1,3 +1,4 @@
+import { NETWORK } from "../../lib/config";
 import { Link } from "react-router-dom";
 import { DocArticle, H2, Callout, CodeBlock, ContentsPlate } from "../ui";
 
@@ -24,8 +25,8 @@ export function Introduction() {
       <p>
         At settlement, the holder&apos;s payoff and the writer&apos;s leftover are two cuts of one
         escrow: <code>payoff + leftover = collateral</code>, exactly, in integer arithmetic
-        with no rounding. Every completed series on testnet has returned its escrow to
-        zero, to the unit.
+        with no rounding. The contract enforces it; a property-based suite fuzzes it over
+        a thousand randomized cases on every commit.
       </p>
 
       <H2 id="what-you-can-do">What you can do</H2>
@@ -87,11 +88,22 @@ export function Introduction() {
         .
       </p>
 
-      <Callout tone="warn" title="Testnet software">
+      <Callout tone="warn" title={NETWORK === "mainnet" ? "Unaudited software" : "Testnet software"}>
         <p className="!text-paper-dim">
-          Covault currently runs on Stacks testnet. It is experimental software under
-          active development, not investment advice, and not yet for funds you cannot
-          afford to lose.
+          {NETWORK === "mainnet" ? (
+            <>
+              Covault runs on Stacks mainnet, with real funds. It has had a structured
+              security review with a published findings log, but it has not had an
+              external audit. It is experimental software under active development, not
+              investment advice, and not for funds you cannot afford to lose.
+            </>
+          ) : (
+            <>
+              Covault is running on Stacks testnet here. It is experimental software under
+              active development, not investment advice, and not for funds you cannot
+              afford to lose.
+            </>
+          )}
         </p>
       </Callout>
     </DocArticle>

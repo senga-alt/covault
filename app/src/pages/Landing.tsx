@@ -446,7 +446,7 @@ function LandingFooter() {
             </nav>
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-6 text-xs text-paper-dim">
-            <span>Testnet software. Not investment advice.</span>
+            <span>{NETWORK === "mainnet" ? "Unaudited software" : "Testnet software"}. Not investment advice.</span>
             <span>Built on Stacks, settled in Bitcoin.</span>
           </div>
         </div>

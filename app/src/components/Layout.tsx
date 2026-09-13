@@ -92,7 +92,7 @@ export function Layout() {
         <span>Solvent by construction: every payoff is capped at its locked collateral.</span>
         <span className="flex items-center gap-4">
           <Link to="/docs" className="transition-colors duration-150 hover:text-paper">Docs</Link>
-          <span>Testnet software. Not investment advice.</span>
+          <span>{NETWORK === "mainnet" ? "Unaudited software" : "Testnet software"}. Not investment advice.</span>
         </span>
       </footer>
     </div>

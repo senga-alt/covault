@@ -1,3 +1,4 @@
+import { NETWORK } from "../../lib/config";
 import { Link } from "react-router-dom";
 import { DocArticle, H2, Callout } from "../ui";
 
@@ -6,41 +7,54 @@ export function Quickstart() {
     <DocArticle
       slug="quickstart"
       title="Quickstart"
-      lead="From nothing to your first option position on testnet, in about ten minutes."
+      lead="From nothing to your first option position, in about ten minutes."
     >
       <H2 id="wallet">1. Get a Stacks wallet</H2>
       <p>
         Covault works with any wallet that speaks the Stacks connect protocol -{" "}
         <a href="https://leather.io" target="_blank" rel="noreferrer">Leather</a> and{" "}
         <a href="https://www.xverse.app" target="_blank" rel="noreferrer">Xverse</a> are the
-        common choices. Install one and switch it to <strong>Testnet</strong> in its network
-        settings.
+        common choices. Install one and make sure it is set to{" "}
+        <strong>{NETWORK === "mainnet" ? "Mainnet" : "Testnet"}</strong> in its network
+        settings - Covault will warn you if the connected address is on the wrong network,
+        because transactions would simply fail.
       </p>
 
-      <H2 id="funds">2. Fund it with testnet assets</H2>
-      <ul>
-        <li>
-          <strong>Testnet STX</strong> (needed for every transaction fee, and for
-          STX-collateralized series):{" "}
-          <a href="https://explorer.hiro.so/sandbox/faucet?chain=testnet" target="_blank" rel="noreferrer">
-            the Hiro faucet
-          </a>{" "}
-          sends it free.
-        </li>
-        <li>
-          <strong>Testnet sBTC</strong> (needed to write into, or buy from,
-          sBTC-collateralized series): the sBTC testnet bridge issues it, and if you are
-          joining an organised test session the team can send you some directly - just
-          share your testnet address. Amounts here are hundreds of sats per contract, so
-          a little goes a long way.
-        </li>
-      </ul>
+      <H2 id="funds">2. Fund it</H2>
+      {NETWORK === "mainnet" ? (
+        <ul>
+          <li>
+            <strong>STX</strong> (needed for every transaction fee, and as collateral for
+            STX-collateralized series). Available on most exchanges, and on Stacks DEXs
+            such as Bitflow and ALEX.
+          </li>
+          <li>
+            <strong>sBTC</strong> (needed to write into, or buy from, sBTC-collateralized
+            series). Either bridge Bitcoin through the sBTC deposit flow, or swap STX for
+            it on a Stacks DEX. Positions here are denominated in sats, and a series can
+            be meaningful at a few thousand sats, so you do not need much.
+          </li>
+        </ul>
+      ) : (
+        <ul>
+          <li>
+            <strong>Testnet STX</strong>:{" "}
+            <a href="https://explorer.hiro.so/sandbox/faucet?chain=testnet" target="_blank" rel="noreferrer">
+              the Hiro faucet
+            </a>{" "}
+            sends it free.
+          </li>
+          <li>
+            <strong>Testnet sBTC</strong>: the sBTC testnet bridge issues it.
+          </li>
+        </ul>
+      )}
       <Callout title="Which asset do I actually need?">
         <p className="!text-paper-dim">
-          Every transaction costs a small STX fee, so you always need some testnet STX.
-          Beyond that, you only need the collateral asset of the series you want to use:
-          sats for an sBTC series, STX for an STX series. The Write panel checks your
-          balance and tells you before you sign, rather than letting the chain reject it.
+          Every transaction costs a small STX fee, so you always need some STX. Beyond
+          that, you only need the collateral asset of the series you want to use: sats for
+          an sBTC series, STX for an STX series. The Write panel checks your balance and
+          tells you before you sign, rather than letting the chain reject it.
         </p>
       </Callout>
 

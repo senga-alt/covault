@@ -1,3 +1,4 @@
+import { NETWORK } from "../lib/config";
 import { useEffect } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
@@ -65,7 +66,7 @@ export function DocsLayout() {
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-paper-dim sm:flex-row lg:px-6">
           <p>Solvent by construction: every payoff is capped at its locked collateral.</p>
-          <p>Testnet software. Not investment advice.</p>
+          <p>{NETWORK === "mainnet" ? "Unaudited software" : "Testnet software"}. Not investment advice.</p>
         </div>
       </footer>
     </div>

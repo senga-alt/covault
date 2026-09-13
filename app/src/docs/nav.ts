@@ -14,7 +14,7 @@ export const DOCS_NAV: DocsNavSection[] = [
     label: "Get started",
     items: [
       { slug: "", title: "Introduction", description: "What Covault is and why it cannot go insolvent" },
-      { slug: "quickstart", title: "Quickstart", description: "Wallet, testnet funds, and your first option" },
+      { slug: "quickstart", title: "Quickstart", description: "Wallet, funds, and your first option" },
     ],
   },
   {
