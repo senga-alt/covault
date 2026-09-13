@@ -62,7 +62,7 @@ export function Errors() {
       <H2 id="core">Clearinghouse (covault-core)</H2>
       <ErrorRows rows={CORE} />
 
-      <H2 id="settler">Settler (covault-settler-v2)</H2>
+      <H2 id="settler">Settler (covault-settler)</H2>
       <ErrorRows rows={SETTLER} />
 
       <H2 id="post-conditions">Wallet-level aborts (u1 / u2)</H2>

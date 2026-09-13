@@ -12,9 +12,9 @@ collateralized and settled in **sBTC** or **native STX**.
 
 [![CI](https://github.com/senga-alt/covault/actions/workflows/ci.yml/badge.svg)](https://github.com/senga-alt/covault/actions/workflows/ci.yml)
 
-[Live testnet app](https://covault-testnet.vercel.app) ·
-[Clearinghouse contract](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet) ·
-[Settler contract](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet) ·
+[Live app](https://covault-testnet.vercel.app) ·
+[Clearinghouse contract](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core?chain=mainnet) ·
+[Settler contract](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler?chain=mainnet) ·
 [Security review](docs/SECURITY-REVIEW.md) ·
 [Settlement methodology](docs/SETTLEMENT-METHODOLOGY.md)
 
@@ -66,7 +66,7 @@ flowchart LR
     subgraph chain [Stacks]
         CORE["covault-core\nclearinghouse + order book\n(escrow, frozen ABI)"]
         SET["covault-settler\nauthorized oracle"]
-        DIA["DIA oracle\nSTX/USD + sBTC/USD"]
+        DIA["DIA oracle\nSTX/USD + BTC/USD"]
     end
     APP[Covault dApp] --> CORE
     W -->|write / trade / exercise / reclaim| CORE
@@ -180,9 +180,10 @@ Its error codes and guards are tabulated in the
 - The token side uses the canonical **SIP-010** trait, so any SIP-010 token (sBTC by
   default) works as collateral. Value-moving functions take a `(token (optional <sip010>))`
   argument: pass `(some sBTC)` for a token series, or `none` for a native-STX series.
-- **DIA oracle** - the deployed on-chain price feeds (testnet
-  `ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle`), consumed through a
-  minimal trait that matches DIA's `get-value` interface.
+- **DIA oracle** - the deployed on-chain price feeds (mainnet
+  `SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle`, serving `STX/USD` and
+  `BTC/USD`), consumed through a minimal trait that matches DIA's `get-value`
+  interface.
 - **Clarity 4** asset handling: `current-contract` for the escrow principal,
   `as-contract?` with `(with-stx amount)` allowances for native-STX payouts,
   `stacks-block-time` for oracle freshness checks, and expiry measured in
@@ -192,8 +193,8 @@ Its error codes and guards are tabulated in the
 
 | Contract | Address | Notes |
 | --- | --- | --- |
-| `covault-core` | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet) | Deployed at burn block 191855; full lifecycles completed in both STX and sBTC |
-| `covault-settler-v2` | [`ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2`](https://explorer.hiro.so/txid/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet) | Core's authorized oracle. Canonical DIA principal pinned on-chain. |
+| `covault-core` | [`SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core`](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core?chain=mainnet) | The clearinghouse. Holds every sat of escrow; frozen ABI. |
+| `covault-settler` | [`SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler`](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler?chain=mainnet) | Core's authorized oracle. Canonical DIA principal pinned on-chain; derives prices from DIA STX/USD + BTC/USD. |
 | dApp | [covault-testnet.vercel.app](https://covault-testnet.vercel.app) | Full lifecycle UI + operator console |
 
 Every completed lifecycle - deployment, writes, trades, settlement, exercise,
@@ -239,9 +240,9 @@ series can be checked against the identity `payoff + leftover = collateral`:
 
 ```bash
 curl -s -X POST -H "Content-Type: application/json" \
-  -d '{"sender":"ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R","arguments":[]}' \
-  https://api.testnet.hiro.so/v2/contracts/call-read/\
-ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R/covault-core/get-config
+  -d '{"sender":"SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q","arguments":[]}' \
+  https://api.hiro.so/v2/contracts/call-read/\
+SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q/covault-core/get-config
 ```
 
 Or open any series in [the app](https://covault-testnet.vercel.app/app) - the

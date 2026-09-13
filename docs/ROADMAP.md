@@ -20,8 +20,8 @@ This is the high-level view.
    fuzzing (M1). **Done.** Full lifecycles executed on-chain in both collateral assets,
    plus a live multi-party market with independent wallets writing, listing and trading.
    Every transaction is linked in [M1 Evidence](./M1-EVIDENCE.md).
-2. Oracle integration (M2). **Deployed and in use.** `covault-settler-v2` is covault-core's
-   authorized oracle: `settle-from-dia` reads DIA's STX/USD and sBTC/USD feeds, derives the
+2. Oracle integration (M2). `covault-settler` is covault-core's
+   authorized oracle: `settle-from-dia` reads DIA's STX/USD and BTC/USD feeds, derives the
    collateral-unit cross-price on-chain (sats-per-STX for STX-SBTC series, which keeps
    settlement quanto-free), enforces a freshness window, and settles permissionlessly - no
    manual price entry, and no change to the deployed core. Four series have settled through

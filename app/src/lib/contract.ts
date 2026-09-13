@@ -8,20 +8,23 @@ import {
   type SeriesStatus,
 } from "./series";
 
-// --- deployment config (env-overridable, defaults = live testnet deployment) ---
+// --- deployment config (env-overridable, defaults = live mainnet deployment) ---
 // NETWORK lives in ./config (no @stacks import) so brand/landing code can read it
 // without dragging the SDK into the initial bundle; re-exported here for app callers.
 export { NETWORK };
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS ?? "ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R";
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS ?? "SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q";
 export const CONTRACT_NAME = import.meta.env.VITE_CONTRACT_NAME ?? "covault-core";
 export const CONTRACT_ID = `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`;
 
 export const SBTC_CONTRACT =
   NETWORK === "mainnet"
     ? "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"
-    : "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token";
+    : "SN3VMHXEN64ZZF71JQ5VESXDWTR301XTTXGF4J8F1.sbtc-token";
 
-// DIA on-chain oracle (price source for permissionless settlement).
+// DIA on-chain oracle (price source for permissionless settlement). DIA maintains
+// STX/USD and BTC/USD on mainnet; its sBTC/USD feed has been frozen since 5 Aug 2026.
+// The testnet entry is retained for completeness but that deployment was removed by
+// the 7 Aug 2026 reset and has not returned.
 export const DIA_CONTRACT =
   NETWORK === "mainnet"
     ? "SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle"
@@ -30,7 +33,7 @@ export const DIA_CONTRACT =
 // Optional settler deployment. When set, settlement is permissionless via DIA
 // (settle-from-dia); when unset, the app falls back to the operator's manual
 // settle on core. Set VITE_SETTLER_CONTRACT once the settler is deployed.
-export const SETTLER_ID = (import.meta.env.VITE_SETTLER_CONTRACT ?? "") as string;
+export const SETTLER_ID = (import.meta.env.VITE_SETTLER_CONTRACT ?? "SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler") as string;
 export const hasSettler = SETTLER_ID.includes(".");
 
 export const API_BASE = NETWORK === "mainnet" ? "https://api.hiro.so" : "https://api.testnet.hiro.so";
@@ -317,23 +320,23 @@ async function roAt(contractId: string, fn: string, args: ClarityValue[]): Promi
 const normTs = (t: number) => (t >= 1e11 ? Math.floor(t / 1000) : t);
 
 export async function getDiaSettlePreview(underlying: string): Promise<DiaPreview> {
-  const [stxQ, sbtcQ, ageJ] = await Promise.all([
+  const [stxQ, btcQ, ageJ] = await Promise.all([
     roAt(DIA_CONTRACT, "get-value", [Cl.stringAscii("STX/USD")]),
-    roAt(DIA_CONTRACT, "get-value", [Cl.stringAscii("sBTC/USD")]),
+    roAt(DIA_CONTRACT, "get-value", [Cl.stringAscii("BTC/USD")]),
     roAt(SETTLER_ID, "get-max-price-age", []),
   ]);
   const stx = stxQ.value.value;
-  const sbtc = sbtcQ.value.value;
+  const btc = btcQ.value.value;
   const priceJ = await roAt(SETTLER_ID, "derive-price", [
     Cl.stringAscii(underlying),
     Cl.uint(stx.value.value),
-    Cl.uint(sbtc.value.value),
+    Cl.uint(btc.value.value),
   ]);
   if (!priceJ.success) throw new Error("This series' pair label cannot settle from DIA.");
   const now = Math.floor(Date.now() / 1000);
   const age = Math.max(
     now - normTs(Number(stx.timestamp.value)),
-    now - normTs(Number(sbtc.timestamp.value)),
+    now - normTs(Number(btc.timestamp.value)),
     0
   );
   const maxAge = Number(ageJ.value);

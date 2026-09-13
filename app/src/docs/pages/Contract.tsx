@@ -1,6 +1,35 @@
 import { DocArticle, H2, Callout, DocTable } from "../ui";
+import { CONTRACT_ID, SETTLER_ID, DIA_CONTRACT, SBTC_CONTRACT, NETWORK, hasSettler } from "../../lib/contract";
 
 const EXPLORER = "https://explorer.hiro.so/txid";
+
+// Addresses are read from the same config the app transacts with, rather than
+// written out here. A hardcoded table silently rots the moment a deployment
+// moves, which is exactly what the 7 Aug 2026 testnet reset did to the last one.
+const chain = NETWORK === "mainnet" ? "mainnet" : "testnet";
+const deployed: { label: string; id: string }[] = [
+  { label: "covault-core", id: CONTRACT_ID },
+  ...(hasSettler ? [{ label: "covault-settler", id: SETTLER_ID }] : []),
+  { label: "DIA oracle", id: DIA_CONTRACT },
+  { label: "sBTC token", id: SBTC_CONTRACT },
+];
+
+function AddressRows() {
+  return (
+    <>
+      {deployed.map(({ label, id }) => (
+        <tr key={label}>
+          <td>{label}</td>
+          <td>
+            <a href={`${EXPLORER}/${id}?chain=${chain}`} target="_blank" rel="noreferrer">
+              {id}
+            </a>
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
 
 export function Contract() {
   return (
@@ -9,45 +38,14 @@ export function Contract() {
       title="Contracts"
       lead="Two small contracts: the clearinghouse that holds every sat of escrow, and the settler that turns DIA quotes into settlement prices."
     >
-      <H2 id="addresses">Deployed addresses (testnet)</H2>
+      <H2 id="addresses">Deployed addresses ({chain})</H2>
       <DocTable>
         <table>
           <thead>
             <tr><th>Contract</th><th>Address</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td>covault-core</td>
-              <td>
-                <a href={`${EXPLORER}/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core?chain=testnet`} target="_blank" rel="noreferrer">
-                  ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td>covault-settler-v2</td>
-              <td>
-                <a href={`${EXPLORER}/ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2?chain=testnet`} target="_blank" rel="noreferrer">
-                  ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-settler-v2
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td>DIA oracle</td>
-              <td>
-                <a href={`${EXPLORER}/ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle?chain=testnet`} target="_blank" rel="noreferrer">
-                  ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle
-                </a>
-              </td>
-            </tr>
-            <tr>
-              <td>sBTC token</td>
-              <td>
-                <a href={`${EXPLORER}/ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token?chain=testnet`} target="_blank" rel="noreferrer">
-                  ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token
-                </a>
-              </td>
-            </tr>
+            <AddressRows />
           </tbody>
         </table>
       </DocTable>
@@ -86,7 +84,7 @@ export function Contract() {
         counters. Everything the app displays is served by these.
       </p>
 
-      <H2 id="settler-functions">covault-settler-v2</H2>
+      <H2 id="settler-functions">covault-settler</H2>
       <DocTable>
         <table>
           <thead>

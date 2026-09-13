@@ -4,4 +4,4 @@
  * SDK stays out of the initial bundle. contract.ts re-exports from here, so app
  * callers importing NETWORK from "../lib/contract" are unaffected.
  */
-export const NETWORK = (import.meta.env.VITE_NETWORK ?? "testnet") as "testnet" | "mainnet";
+export const NETWORK = (import.meta.env.VITE_NETWORK ?? "mainnet") as "testnet" | "mainnet";

@@ -352,7 +352,7 @@ function Settle({ series, burnHeight, isOracle }: { series: Series[]; burnHeight
             </button>
           </div>
           <p className="mt-2 text-xs text-paper-dim">
-            Reads STX/USD and sBTC/USD from DIA and records the derived collateral-unit price on-chain.
+            Reads STX/USD and BTC/USD from DIA and records the derived collateral-unit price on-chain.
           </p>
         </form>
       ) : (

@@ -18,10 +18,11 @@ application. Percentages are of the $10,000 request.
 
 Goal: a live testnet contract and a public demo of one full lifecycle.
 
-> Progress: deployed and demonstrated. `covault-core` is live on testnet at
-> `ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R.covault-core`, and the full lifecycle has been
-> executed on-chain in both native STX and sBTC - see [M1 Evidence](./M1-EVIDENCE.md) for
-> every transaction. Remaining: public repo with CI green, and the demo video.
+> Progress: deployed and demonstrated. `covault-core` is live on **mainnet** at
+> `SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core`, alongside `covault-settler`. The full
+> lifecycle was executed on-chain in both native STX and sBTC during Milestone 1 - see
+> [M1 Evidence](./M1-EVIDENCE.md), noting those transactions predate the 7 August 2026
+> testnet reset and their explorer links no longer resolve.
 
 Tasks
 1. Deployment prep
@@ -90,9 +91,9 @@ two non-team wallets participating, and at least one series settled at expiry.
 
 What actually gets published to testnet: only the SIP-010 trait (a small interface,
 republished under our deployer) and `covault-core`. covault-core's sole deploy-time
-dependency is that trait - it never references sBTC in code (callers pass the real testnet
-sBTC, `ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token`, as a trait argument at call
-time). The sBTC contracts already exist on testnet, so Clarinet skips them on apply.
+dependency is that trait - it never references sBTC in code (callers pass the real
+sBTC token, `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token` on mainnet, as a trait argument at
+call time). The sBTC contracts already exist on chain, so Clarinet skips them on apply.
 
 Estimated cost: about 3.4 STX (covault-core ~3.35 STX + trait ~0.008 STX) plus tx fees.
 Fund the deployer with roughly 5-10 testnet STX to be safe.
@@ -121,10 +122,10 @@ clarinet deployments apply --testnet
 #    write -> settle -> exercise cycle (this is the M1 demo).
 ```
 
-Getting testnet sBTC to actually exercise the contract: use the sBTC testnet
-faucet/bridge to receive `ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token`, then pass
-`(some 'ST1F7...sbtc-token)` as the `token` argument to `write-options` / `fill-offer` /
-`exercise` / `reclaim`. Native-STX series need no token (pass `none`).
+Getting sBTC to actually exercise the contract: on mainnet, acquire real sBTC
+(`SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`); on testnet, use the sBTC faucet/bridge. Then
+pass `(some 'SM3VDXK3...sbtc-token)` as the `token` argument to `write-options` /
+`fill-offer` / `exercise` / `reclaim`. Native-STX series need no token (pass `none`).
 
 ## Oracle-settlement deploy + wire runbook (M2)
 
@@ -141,24 +142,24 @@ clarinet deployments apply --testnet \
   --deployment-plan-path deployments/settler-v2.testnet-plan.yaml
 
 # 1b. Verify the pin (read-only, no keys needed):
-#     get-dia-oracle on ST3XC6...covault-settler-v2 must return
-#     (some 'ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle)
+#     get-dia-oracle on SP1MY48S...covault-settler must return
+#     (some 'SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle)
 #     If the plan's contract-call batch was skipped for any reason, call
 #     set-dia-oracle from the deployer via the explorer sandbox before step 2.
 
 # 2. Point covault-core's oracle at the settler (owner tx). UI-driven: connect the
 #    owner wallet -> Operator panel -> Protocol controls -> Settlement oracle ->
 #    "use the configured settler" -> Set oracle. (Or via console/explorer:
-#    (contract-call? 'ST3XC6...covault-core set-oracle 'ST3XC6...covault-settler-v2))
+#    (contract-call? 'SP1MY48S...covault-core set-oracle 'SP1MY48S...covault-settler))
 
 # 3. Point the dApp at the settler so the DIA settle UI activates:
-#    app/.env.local ->  VITE_SETTLER_CONTRACT=ST3XC6...covault-settler-v2
+#    app/.env.local ->  VITE_SETTLER_CONTRACT=SP1MY48S...covault-settler
 #    (and the same value in the Vercel env, then redeploy)
 #    then rebuild. Settlement becomes permissionless (settle-from-dia); the manual
 #    price field disappears.
 
 # 4. Verify: create + expire a series, click "Settle from DIA". The settler reads
-#    DIA STX/USD + sBTC/USD, derives the collateral-unit price, checks freshness
+#    DIA STX/USD + BTC/USD, derives the collateral-unit price, checks freshness
 #    (default window 6 h, owner-tunable via set-max-price-age), and records it.
 
 # 5. Update the landing FAQ ("Where does the settlement price come from?") so the

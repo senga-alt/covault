@@ -1,0 +1,75 @@
+---
+id: 0
+name: Covault mainnet deployment - core, settler, DIA wiring
+# Hand-authored, NOT the output of `clarinet deployments generate`. The generated
+# plan publishes contracts/mocks/* as well; mock-oracle and mock-dia must never
+# reach mainnet, so they are omitted here deliberately.
+#
+# Settler reads DIA's STX/USD and BTC/USD feeds, which is the pair the Milestone 2
+# deliverable specifies. See docs/SETTLEMENT-METHODOLOGY.md.
+#
+# Apply with (-d is required: without it Clarinet recomputes the plan and would
+# re-add contracts/mocks/*, which must never reach mainnet):
+#   clarinet deployments apply -p deployments/mainnet-plan.yaml -d
+network: mainnet
+stacks-node: https://api.hiro.so
+bitcoin-node: http://blockstack:blockstacksystem@bitcoin.blockstack.com:8332
+plan:
+  batches:
+  # Traits and the clearinghouse first: covault-settler references .oracle-trait,
+  # .dia-trait and .covault-core, so all three must already be on-chain.
+  - id: 0
+    transactions:
+    - transaction-type: contract-publish
+      contract-name: dia-trait
+      expected-sender: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
+      cost: 517966
+      path: contracts/traits/dia-trait.clar
+      anchor-block-only: true
+      clarity-version: 4
+    - transaction-type: contract-publish
+      contract-name: oracle-trait
+      expected-sender: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
+      cost: 517966
+      path: contracts/traits/oracle-trait.clar
+      anchor-block-only: true
+      clarity-version: 4
+    - transaction-type: contract-publish
+      contract-name: covault-core
+      expected-sender: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
+      cost: 520865
+      path: contracts/covault-core.clar
+      anchor-block-only: true
+      clarity-version: 4
+    epoch: '4.0'
+  - id: 1
+    transactions:
+    - transaction-type: contract-publish
+      contract-name: covault-settler
+      expected-sender: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
+      cost: 519042
+      path: contracts/covault-settler.clar
+      anchor-block-only: true
+      clarity-version: 4
+    epoch: '4.0'
+  - id: 2
+    transactions:
+    # Pin the canonical mainnet DIA principal. settle-from-dia refuses any other
+    # source, so this must be set before the settler is of any use.
+    - transaction-type: contract-call
+      contract-id: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler
+      expected-sender: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
+      method: set-dia-oracle
+      parameters:
+      - "'SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle"
+      cost: 100000
+    # Authorize the settler as covault-core's oracle. Until this lands, nothing
+    # can record a settlement price.
+    - transaction-type: contract-call
+      contract-id: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core
+      expected-sender: SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
+      method: set-oracle
+      parameters:
+      - "'SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler"
+      cost: 100000
+    epoch: '4.0'

@@ -16,9 +16,10 @@ npm run dev     # defaults to the live testnet deployment
 Configuration (optional `.env`):
 
 ```bash
-VITE_NETWORK=testnet                                   # or mainnet
-VITE_CONTRACT_ADDRESS=ST3XC6XFFZQZ6BRYBZRJWRF2Z790TX9GB67KBQW0R
+VITE_NETWORK=mainnet                                   # or testnet
+VITE_CONTRACT_ADDRESS=SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q
 VITE_CONTRACT_NAME=covault-core
+VITE_SETTLER_CONTRACT=SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler
 ```
 
 ## Current slice
