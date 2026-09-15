@@ -30,6 +30,7 @@ docs/INFO-REQUEST-RESPONSE.md
 dist
 docs/MILESTONE-RESPONSE.md
 docs/M1-VIDEO-SCRIPT.md
+docs/M2-VIDEO-SCRIPT.md
 
 # fuzzing: generated target (rebuilt from covault-core.clar + security/rv-tests.clar
 # via `npm run fuzz:build`) and Rendezvous's failure-replay cache. The SOURCE of the
