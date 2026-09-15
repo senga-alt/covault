@@ -15,6 +15,7 @@ collateralized and settled in **sBTC** or **native STX**.
 [Live app](https://covault.org) ·
 [Clearinghouse contract](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-core?chain=mainnet) ·
 [Settler contract](https://explorer.hiro.so/txid/SP1MY48S0Y1W4436P0VDTZCD9EW3EJPAW1WV3SA4Q.covault-settler?chain=mainnet) ·
+[M2 evidence](docs/M2-EVIDENCE.md) ·
 [Security review](docs/SECURITY-REVIEW.md) ·
 [Settlement methodology](docs/SETTLEMENT-METHODOLOGY.md)
 
