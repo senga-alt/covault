@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Covault share card</title>
+<!--
+  Source for the 1200x630 share card. Render: serve this folder, open at a
+  1200x630 viewport, wait for window.ready, screenshot. The plate is a
+  Higgsfield nano_banana_pro generation (text-free); all type is set here.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Besley:wght@700;800&family=JetBrains+Mono:wght@400;500&display=block" rel="stylesheet" />
+<style>
+  /* Tokens mirror app/src/index.css */
+  :root {
+    --ink: oklch(0.145 0.005 75);
+    --paper: oklch(0.94 0.013 85);
+    --paper-dim: oklch(0.72 0.018 82);
+    --rule: oklch(0.315 0.01 78);
+    --gilt: oklch(0.78 0.08 85);
+    --seal: oklch(0.6 0.19 38);
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: var(--ink); }
+  .card { position: relative; width: 1200px; height: 630px; overflow: hidden; background: var(--ink); }
+
+  /* The plate's flat brown-black background is levelled to pure black, then
+     screened onto the ink field: the field stays exactly --ink, the engraving keeps full strength. */
+  .plate { position: absolute; top: 16px; right: 18px; height: 590px; filter: url(#levels); mix-blend-mode: screen; }
+
+  .copy { position: absolute; left: 72px; top: 64px; width: 640px; }
+  .wordmark { font: 700 34px/1 "Besley", serif; color: var(--paper); letter-spacing: -0.01em; }
+  h1 {
+    margin-top: 64px;
+    font: 800 60px/1.04 "Besley", serif; letter-spacing: -0.022em; color: var(--paper);
+  }
+  .sub { margin-top: 20px; font: 700 32px/1.1 "Besley", serif; letter-spacing: -0.012em; color: var(--seal); }
+
+  .facts { position: absolute; left: 72px; bottom: 106px; display: flex; gap: 8px; }
+  .fact {
+    border: 1px solid var(--rule); background: color-mix(in oklch, var(--ink) 70%, transparent);
+    padding: 10px 13px 9px; font: 500 14px/1 "JetBrains Mono", monospace; letter-spacing: 0.02em;
+    color: var(--paper); white-space: nowrap;
+  }
+  .fact span { color: var(--paper-dim); font-weight: 400; margin-right: 8px; }
+
+  .band { position: absolute; left: 0; right: 0; bottom: 0; height: 66px; }
+  .band-rule { position: absolute; left: 0; right: 0; bottom: 66px; height: 1px; background: var(--rule); opacity: 0.7; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="levels" color-interpolation-filters="sRGB">
+    <feComponentTransfer>
+      <feFuncR type="linear" slope="1.103" intercept="-0.103" />
+      <feFuncG type="linear" slope="1.056" intercept="-0.056" />
+      <feFuncB type="linear" slope="1.016" intercept="-0.016" />
+    </feComponentTransfer>
+  </filter>
+</svg>
+<div class="card">
+  <img class="plate" id="plate" src="og-plate-engraved-c.png" alt="" />
+
+  <div class="copy">
+    <div class="wordmark">Covault</div>
+    <h1>Every option is backed in full before it trades.</h1>
+    <p class="sub">No margin calls. No liquidations.</p>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span>Built on</span>Stacks mainnet</div>
+    <div class="fact"><span>Settles in</span>sBTC or STX</div>
+    <div class="fact">Cash-settled</div>
+  </div>
+
+  <div class="band-rule"></div>
+  <svg class="band" id="band" viewBox="0 0 1200 66" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+</div>
+<script>
+  // Same engine-turned band as app/src/components/Guilloche.tsx, fitted to a 66px strip.
+  const W = 1200, H = 66, MID = H / 2, NS = "http://www.w3.org/2000/svg";
+  const band = document.getElementById("band");
+  for (const dir of [1, -1]) {
+    for (let k = 0; k < 9; k++) {
+      let d = "";
+      for (let i = 0; i <= 720; i++) {
+        const x = (i / 720) * W;
+        const env = 22 * (0.6 + 0.4 * Math.cos((2 * Math.PI * x) / W));
+        const y = MID + env * Math.sin((dir * 2 * Math.PI * 11 * x) / W + (2 * Math.PI * k) / 9);
+        d += (i ? "L" : "M") + x.toFixed(1) + "," + y.toFixed(1);
+      }
+      const p = document.createElementNS(NS, "path");
+      p.setAttribute("d", d);
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", "var(--gilt)");
+      p.setAttribute("stroke-width", "0.75");
+      p.setAttribute("opacity", (0.22 + 0.1 * Math.abs(Math.sin(k * 1.3))).toFixed(3));
+      band.appendChild(p);
+    }
+  }
+  window.ready = Promise.all([document.fonts.ready, document.getElementById("plate").decode()]);
+</script>
+</body>
+</html>
