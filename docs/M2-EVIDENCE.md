@@ -111,6 +111,13 @@ The dead feed also demonstrates the freshness check working: a settler pointed
 at `sBTC/USD` would refuse every settlement with `ERR-STALE-PRICE` rather than
 settle on a month-old price. That is observable on-chain today by anyone.
 
+> **Note added 22 October 2026.** The `sBTC/USD` description above was accurate
+> when this evidence was submitted on 15 September. The feed has since resumed
+> updating, but with its value held fixed for days at a time under a refreshing
+> timestamp. Its full history is in
+> [SETTLEMENT-METHODOLOGY.md](./SETTLEMENT-METHODOLOGY.md) section 1. Covault's
+> settler reads `BTC/USD` and `STX/USD`, not `sBTC/USD`.
+
 ## Verify without trusting this document
 
 Read-only, no wallet, no keys:

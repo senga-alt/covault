@@ -21,10 +21,11 @@ export const SBTC_CONTRACT =
     ? "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token"
     : "SN3VMHXEN64ZZF71JQ5VESXDWTR301XTTXGF4J8F1.sbtc-token";
 
-// DIA on-chain oracle (price source for permissionless settlement). DIA maintains
-// STX/USD and BTC/USD on mainnet; its sBTC/USD feed has been frozen since 5 Aug 2026.
-// The testnet entry is retained for completeness but that deployment was removed by
-// the 7 Aug 2026 reset and has not returned.
+// DIA on-chain oracle (price source for permissionless settlement). The settler reads
+// STX/USD and BTC/USD. It does not read sBTC/USD: that feed froze on 5 Aug 2026, and
+// when it resumed it refreshed its timestamp while holding one value for days at a
+// time (docs/SETTLEMENT-METHODOLOGY.md section 1). The testnet deployment was removed
+// by the 7 Aug 2026 reset and has since returned at the same address.
 export const DIA_CONTRACT =
   NETWORK === "mainnet"
     ? "SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle"

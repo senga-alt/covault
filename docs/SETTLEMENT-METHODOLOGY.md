@@ -15,9 +15,9 @@ Contracts involved:
 - DIA oracle - the on-chain price source, pinned per network:
   - mainnet: `SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle` - live,
     maintaining `STX/USD` and `BTC/USD`
-  - testnet: previously `ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle`,
-    removed by the 7 August 2026 testnet reset and not redeployed at the time of
-    writing. Oracle-backed settlement is therefore demonstrated on mainnet.
+  - testnet: `ST1S5ZGRZV5K4S9205RWPRTX9RGS9JV40KQMR4G1J.dia-oracle`, removed by
+    the 7 August 2026 testnet reset and since redeployed at the same address.
+    Oracle-backed settlement was demonstrated on mainnet while it was absent.
 
   The principal is pinned on the settler (`set-dia-oracle`) and checked before
   any external call, so the settler can never be induced to read a lookalike
@@ -59,11 +59,16 @@ avoided the peg basis entirely. That was the better choice while both feeds were
 maintained, and it was documented as a deliberate deviation from the milestone
 wording.
 
-DIA stopped maintaining `sBTC/USD`. On Stacks mainnet the feed has not moved a
-single unit since **5 August 2026**: it still reports $63,077 while `BTC/USD`
-reports live prices tens of percent higher. `STX/USD` and `BTC/USD` are the only
-two feeds DIA currently maintains on Stacks. A feed frozen for over a month
-cannot settle anything, and should not.
+On Stacks mainnet, `sBTC/USD` stopped updating on **5 August 2026** and held
+$63,077.12 until 19 September. It then resumed, but its value stopped tracking
+the market. Twice it republished a single value under a refreshing timestamp for
+about ten days: exactly `8,052,984,394,506` ($80,529.84) from 20 to 30 September,
+and exactly `8,576,459,781,045` ($85,764.60) from 4 to 14 October, identical to
+the last digit, while `BTC/USD` carried a new value at every update. Readings carrying a
+fresh timestamp sat as much as 6.4% away from `BTC/USD`. It has not updated since
+14 October. A feed whose value can stall behind a live timestamp is not a
+settlement source, so Covault stays on `BTC/USD`, which is also the pair the
+milestone specifies.
 
 The change was disclosed to and approved by the Stacks Endowment before it
 shipped, per section 5.
@@ -71,11 +76,12 @@ shipped, per section 5.
 **The cost of the change, stated plainly.** Reading `BTC/USD` reintroduces the
 sBTC peg basis. The recorded settlement price is the price of Bitcoin, while the
 collateral actually held is sBTC. sBTC is 1:1 Bitcoin-backed and the two track
-closely - the last measurement taken while both feeds were live put the gap at
-roughly 1.2% - but they are not the same instrument, the contract cannot observe
-the difference, and that figure cannot be re-measured while the sBTC feed is
-dead. If the peg deviates materially, a series settles against Bitcoin rather
-than against the asset in escrow.
+closely: the last measurement taken while both feeds were live put the gap at
+roughly 1.2%. They are not the same instrument, though, and the contract cannot
+observe the difference. That figure cannot be re-measured from DIA's sBTC feed,
+whose value has not tracked the market since August. If the peg deviates
+materially, a series settles against Bitcoin rather than against the asset in
+escrow.
 
 What this does **not** affect: the conservation invariant. `payoff + leftover =
 collateral` holds exactly at any settlement price, because the payoff is capped
@@ -127,12 +133,19 @@ asserts freshness on both quotes before calling `derive-price`. The error a
 caller sees names the guard that actually stopped the settlement. This ordering
 is covered by a regression test that fails against the previous arrangement.
 
-**This is not hypothetical.** DIA's `sBTC/USD` feed on Stacks mainnet has been
-frozen since 5 August 2026. A settler still pointed at it would refuse every
-settlement with `ERR-STALE-PRICE`, indefinitely, rather than settle a month-old
-price roughly twenty percent away from the market. That is the intended
-behaviour, observable on-chain by anyone, and it is the reason the freshness
-window exists at all.
+**What the check catches, and what it cannot.** From 5 August to 19 September
+2026, DIA's `sBTC/USD` feed on mainnet sat at one value under a stale timestamp. A
+settler reading it would have refused every settlement with `ERR-STALE-PRICE`
+rather than record a price weeks out of date, which is exactly what the window is
+for. The same feed then showed the failure a freshness check cannot see: after it
+resumed, its timestamp kept refreshing while its value moved rarely or not at all,
+so a timestamp check would have passed a price as much as 6.4% away from the
+market. The check measures how recently a quote was published, not whether its
+value still moves.
+
+Covault's settler does not read `sBTC/USD`. Across the same period, the two feeds
+it does read, `STX/USD` and `BTC/USD`, carried a new value at every update in 71
+readings taken at historical blocks. The residual risk is listed in section 3.
 
 Fail-closed is the design: no payout ever happens on a stale price. There
 is no deadline race on the other side, because exercising and reclaiming
@@ -147,7 +160,8 @@ never forfeits them.
 | DIA feed halted indefinitely | Series cannot settle via the settler | Governance re-points `core.set-oracle` (a public, on-chain transaction) to a replacement oracle contract. Escrow is untouched throughout. |
 | Wrong price pushed by DIA | Mispriced settlement of series expiring inside that window | Bounded by construction: one price affects only the series it settles, and no payoff can exceed that series' locked collateral. Other series, other expiries, and the escrow invariant are unaffected. |
 | Settler bug | Settlement blocked or wrong price submitted | Same two bounds as above (per-series blast radius, capped payoff), plus the same governance path: re-point `core.set-oracle`. |
-| Feed abandoned without notice | Every settlement refuses with u206 until a replacement source is wired | Observed: DIA's `sBTC/USD` froze on 5 Aug 2026 with no announcement. Escrow is untouched and claims never expire, so the cost is delay, not loss. Recovery is the governance path above, or the TWAP path in section 5. |
+| Feed abandoned without notice | Every settlement refuses with u206 until a replacement source is wired | Observed: DIA's `sBTC/USD` froze on 5 Aug 2026 with no announcement and stayed frozen until 19 Sep. Escrow is untouched and claims never expire, so the cost is delay, not loss. Recovery is the governance path above, or the TWAP path in section 5. |
+| Feed value stalls while its timestamp refreshes | Settlement passes the freshness check at a price that has stopped tracking the market | Observed on DIA's `sBTC/USD`, which the settler does not read, between 19 Sep and 14 Oct 2026. Not detectable by a timestamp check. Bounded by the conservation invariant: a stale value changes who receives the collateral, never how much leaves escrow. The DEX TWAP path in section 5 would add an independent price to check against. |
 | sBTC depegs from BTC | Settlement prices the series off Bitcoin, not off the collateral held | Not recoverable in-contract and disclosed rather than mitigated: the contract cannot observe the peg. Bounded by the conservation invariant - a deviation changes who receives the collateral, never how much leaves escrow. |
 
 What no oracle failure can cause, in any combination: collateral leaving
