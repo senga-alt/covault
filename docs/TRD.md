@@ -158,8 +158,9 @@ Clarinet handles requirement download and per-network principal remapping during
 
 ## 5. Testing strategy
 
-- Unit/integration: Clarinet SDK + Vitest. Current suite: 43 tests, 0 warnings, run against
-  real sBTC and native STX in simnet (no mocks).
+- Unit/integration: Clarinet SDK + Vitest. Current suite: 44 tests. The 24 clearinghouse
+  tests run against real sBTC and native STX in simnet with no mocks; the 20 settler tests
+  use two test doubles, `mock-dia` and `mock-oracle`, which are never deployed to mainnet.
 - Coverage includes: series creation + validation, writing/collateral, order book (list/fill/
   cancel, partial fills), close-pair, settlement auth/timing, exercise/reclaim payoffs, the
   conservation invariant, native-STX end-to-end, wrong-token guard, fee, pause, curated

@@ -102,7 +102,7 @@ annotated `;; #[env(simnet)]`, which strips them on any real-network deploy.
 
 ## 3. Adversarial tests (example-based)
 
-43 unit tests (Clarinet JS SDK, `npm test`) exercise the negative and
+44 unit tests (Clarinet JS SDK, `npm test`) exercise the negative and
 adversarial paths that fuzzing the pure function does not reach - authorization,
 timing, double-spend, and the settlement trust boundary. The security-relevant
 cases:
@@ -144,11 +144,16 @@ cases:
 ## 4. Static analysis
 
 `clarinet check` runs on every commit (CI) with the check-checker pass enabled.
-8 contracts, no errors. The remaining warnings are `unchecked_data` notices on
-governance/setter inputs that are intentionally unconstrained (principals, fee
-recipient) and annotated `;; #[allow(unchecked_data)]` at the call sites where
+The project's 6 contracts check with no errors and three warnings. One is an
+`unchecked_data` notice on the settler's `set-price-oracle`, an owner-gated
+governance setter whose input is intentionally unconstrained. The other
+`unchecked_data` sites are annotated `;; #[allow(unchecked_data)]` where
 validation is deliberately delegated to the caller or bounded elsewhere (e.g.
-the fee is hard-capped at MAX-FEE-BPS regardless of input).
+the fee is hard-capped at MAX-FEE-BPS regardless of input). The last two are
+`unused_data_var` notices on `contract-owner` in the two test doubles, which are
+never deployed to mainnet. `clarinet check` sometimes reports 7 contracts rather
+than 6, because it also checks the external SIP-010 trait that the clearinghouse
+imports.
 
 ## 5. Findings log
 

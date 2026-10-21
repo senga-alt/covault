@@ -124,7 +124,7 @@ and resolution status. Highlights:
   collateral; payoff + leftover equals collateral exactly - are fuzzed against
   thousands of random inputs with **zero discards**, and re-proven in CI on
   every push (`npm run fuzz`).
-- **43 unit tests** (Clarinet JS SDK + Vitest) cover the full lifecycle in both
+- **44 unit tests** (Clarinet JS SDK + Vitest) cover the full lifecycle in both
   collateral assets plus the adversarial paths: authorization, timing,
   double-claim, pause behavior, fees, and the settlement trust boundary.
 - **Findings log**: the review caught and resolved a High-severity issue
@@ -213,7 +213,7 @@ contracts/
 app/                       the dApp: Vite + React + @stacks/connect
 scripts/                   lifecycle CLI - drive the deployed contract end to end
 security/                  Rendezvous fuzzing harness (property tests + build script)
-tests/                     43 unit tests (Clarinet JS SDK + Vitest)
+tests/                     44 unit tests (Clarinet JS SDK + Vitest)
 deployments/               hand-authored testnet deployment plans
 docs/                      product, technical, and milestone documentation
 ```
@@ -231,8 +231,8 @@ and the property-based fuzzer:
 ```bash
 git clone https://github.com/senga-alt/covault && cd covault
 npm install
-clarinet check     # static analysis: 8 contracts, no errors
-npm test           # 43 unit tests, both collateral assets
+clarinet check     # static analysis: 6 contracts, no errors
+npm test           # 44 unit tests, both collateral assets
 npm run fuzz       # 1,000 randomized runs against the solvency invariant
 ```
 
@@ -257,8 +257,8 @@ Requires [Clarinet](https://docs.stacks.co/clarinet) >= 3 and Node >= 20.
 
 ```bash
 npm install
-clarinet check        # static analysis - 8 contracts, no errors
-npm test              # 43 unit tests (Vitest + clarinet-sdk)
+clarinet check        # static analysis: 6 contracts, no errors
+npm test              # 44 unit tests (Vitest + clarinet-sdk)
 npm run fuzz          # property-based fuzzing (Rendezvous, 1000 runs)
 clarinet console      # interactive REPL
 ```

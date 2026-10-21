@@ -10,7 +10,7 @@ This is the high-level view.
 - On-chain order book for trading long positions (list / fill / cancel, partial fills).
 - Early netting (`close-pair`) to reclaim collateral before expiry.
 - Governance and safety: pause new writes, curated series creation (toggleable), capped taker fee.
-- Full Vitest + clarinet-sdk suite (43 tests) against real sBTC and native STX; `clarinet check` clean, 0 warnings.
+- Full Vitest + clarinet-sdk suite (44 tests) against real sBTC and native STX; `clarinet check` passes with no errors.
 - Clarity 4 correct (`current-contract`, `as-contract?` with `with-stx`, `burn-block-height`).
 - Product/technical docs: PRD, TRD, UX brief, app flow, implementation plan.
 
