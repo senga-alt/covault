@@ -14,7 +14,7 @@ Reproduce everything here from a clean checkout:
 
 ```bash
 npm install
-npm test         # 43 example-based unit tests (Clarinet JS SDK)
+npm test         # 44 example-based unit tests (Clarinet JS SDK)
 npm run fuzz     # Rendezvous property-based fuzzing of covault-core
 clarinet check   # static analysis (check-checker pass)
 ```
