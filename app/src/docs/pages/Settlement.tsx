@@ -5,7 +5,7 @@ export function Settlement() {
     <DocArticle
       slug="settlement"
       title="Settlement"
-      lead="One price per series, recorded once, derived on-chain from DIA's feeds: permissionless to trigger, impossible to choose."
+      lead="One price per series, recorded once, derived on-chain from DIA's feeds at the moment it settles. Anyone can trigger it; no caller can supply the price."
     >
       <H2 id="who-settles">Who settles</H2>
       <p>
@@ -16,6 +16,26 @@ export function Settlement() {
         supplies a price or a price source.
       </p>
 
+      <H2 id="timing">When the price is taken</H2>
+      <p>
+        The settlement price is not the price at the expiry block. It comes from the DIA
+        quotes current when the first settlement transaction lands, at any time after
+        expiry. If a series expires at noon and the first settlement lands at 3 pm, the
+        payout is calculated from the 3 pm quotes.
+      </p>
+      <ul>
+        <li>
+          Whoever settles first after expiry decides when the price is taken. If you hold
+          or wrote an option and want the price closest to expiry, settle as soon as the
+          series expires rather than leave the timing to the other side.
+        </li>
+        <li>
+          The settle panel previews the price at that moment. If DIA publishes a new quote
+          before your transaction is included in a block, the recorded price uses the newer
+          quote.
+        </li>
+      </ul>
+
       <H2 id="cross-rate">The price, in collateral units</H2>
       <p>
         Covault contracts are denominated in their collateral asset (sats or microSTX)
@@ -24,10 +44,10 @@ export function Settlement() {
       </p>
       <CodeBlock label="cross-rate derivation (8-decimal DIA values)">
 {`sBTC-collateralized (STX-SBTC):
-  price = stx_usd * 100,000,000 / sbtc_usd     -> sats per STX
+  price = stx_usd * 100,000,000 / btc_usd      -> sats per STX
 
 STX-collateralized (SBTC-STX):
-  price = sbtc_usd * 1,000,000 / stx_usd       -> microSTX per sBTC`}
+  price = btc_usd * 1,000,000 / stx_usd        -> microSTX per sBTC`}
       </CodeBlock>
       <p>
         Integer floor division truncates at most one unit, orders of magnitude below the
@@ -43,17 +63,18 @@ STX-collateralized (SBTC-STX):
       <ul>
         <li>Stale feeds mean the series simply stays unsettled; it never settles on a bad price.</li>
         <li>
-          Nothing is lost by waiting: exercising and reclaiming have no deadline, so a
-          delayed settlement delays claims without forfeiting them.
+          Claims never expire: exercising and reclaiming have no deadline. Waiting does
+          change the price, though, because settlement uses the quotes current when it lands.
         </li>
-        <li>The app previews the exact price and feed age before you sign, and disables the button while feeds are stale.</li>
+        <li>The app previews the current price and feed age before you sign, and disables the button while feeds are stale.</li>
       </ul>
 
-      <H2 id="preview">The preview cannot lie</H2>
+      <H2 id="preview">What the preview shows</H2>
       <p>
         The &quot;Would record N from feeds Xs old&quot; line in the settle panel calls the
         settler&apos;s own read-only derivation with the live feeds, the same code that runs
-        in the transaction. Preview and chain cannot disagree.
+        in the transaction, so the math cannot disagree. The inputs can: if DIA publishes a
+        new quote before your transaction lands, the recorded price uses that quote.
       </p>
 
       <H2 id="bounded">What a bad price can and cannot do</H2>
@@ -73,6 +94,14 @@ STX-collateralized (SBTC-STX):
                 Bounded by construction: one price affects only the series it settles, and
                 no payoff can exceed that series&apos; locked collateral. Other series and the
                 escrow invariant are untouched.
+              </td>
+            </tr>
+            <tr>
+              <td>Settlement lands late</td>
+              <td>
+                The series settles at the price current when it lands, not the price at
+                expiry. Bounded the same way: the timing changes who receives that
+                series&apos; collateral, never how much leaves escrow.
               </td>
             </tr>
             <tr>

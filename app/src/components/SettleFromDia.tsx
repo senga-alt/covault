@@ -16,9 +16,10 @@ const fmtPrice = (price: bigint, underlying: string) =>
 
 /**
  * Permissionless settlement trigger. Visible only when a settler is configured
- * and a wallet is connected. Previews the exact price the settler would record
- * (via its own read-only derive-price, so preview and chain cannot disagree)
- * and fails closed in the UI when the DIA quotes are stale.
+ * and a wallet is connected. Previews the price the settler would record right
+ * now (via its own read-only derive-price, so the math matches the chain; the
+ * feeds can still move before the transaction lands) and fails closed in the UI
+ * when the DIA quotes are stale.
  */
 export function SettleFromDia({ id, underlying }: { id: number; underlying: string }) {
   const { address } = useWallet();

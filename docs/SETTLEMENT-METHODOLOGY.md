@@ -11,7 +11,8 @@ Contracts involved:
   only after expiry (`burn-block-height >= expiry`).
 - `covault-settler` - a small contract that becomes core's authorized oracle.
   It derives the price from DIA feeds and calls `core.settle`. Anyone can
-  trigger it; nobody can choose the price.
+  trigger it, and no caller can supply the price. The price is taken from the
+  feeds when the settlement lands, not at the expiry block (section 2).
 - DIA oracle - the on-chain price source, pinned per network:
   - mainnet: `SP1G48FZ4Y7JY8G2Z0N51QTCYGBQ6F4J43J77BQC0.dia-oracle` - live,
     maintaining `STX/USD` and `BTC/USD`
@@ -147,10 +148,34 @@ Covault's settler does not read `sBTC/USD`. Across the same period, the two feed
 it does read, `STX/USD` and `BTC/USD`, carried a new value at every update in 71
 readings taken at historical blocks. The residual risk is listed in section 3.
 
-Fail-closed is the design: no payout ever happens on a stale price. There
-is no deadline race on the other side, because exercising and reclaiming
-have no expiry in covault-core - a delayed settlement delays claims, it
-never forfeits them.
+Fail-closed is the design: no payout ever happens on a stale price.
+Exercising and reclaiming have no expiry in covault-core, so a delayed
+settlement never forfeits a claim. It does change the price, as the next
+part explains.
+
+**When the price is taken.** The settlement price is not the price at the
+expiry block. It is derived from the DIA quotes current when the first
+settlement transaction lands, at any time after expiry. Core checks only that
+the series has expired and has not already settled; nothing ties the quotes
+to the expiry moment.
+
+Example: a series expires at noon. If the first settlement lands at 3 pm, the
+payout is calculated from the DIA quotes available at 3 pm, not the noon
+price.
+
+Two consequences follow:
+
+- Because anyone can settle, whoever settles first after expiry decides when
+  the price is taken. Holders and writers who want the price closest to
+  expiry should settle as soon as the series expires, rather than leave the
+  timing to the other side.
+- The app previews the price the settler would derive from the feeds at that
+  moment. If DIA publishes a new quote before the transaction is included in
+  a block, the recorded price uses the newer quote.
+
+Like a wrong price, a late settlement is bounded by the conservation
+invariant: it changes who receives a series' collateral, never how much
+leaves escrow.
 
 ## 3. Risk disclosures: failure modes and fallbacks
 
@@ -161,6 +186,7 @@ never forfeits them.
 | Wrong price pushed by DIA | Mispriced settlement of series expiring inside that window | Bounded by construction: one price affects only the series it settles, and no payoff can exceed that series' locked collateral. Other series, other expiries, and the escrow invariant are unaffected. |
 | Settler bug | Settlement blocked or wrong price submitted | Same two bounds as above (per-series blast radius, capped payoff), plus the same governance path: re-point `core.set-oracle`. |
 | Feed abandoned without notice | Every settlement refuses with u206 until a replacement source is wired | Observed: DIA's `sBTC/USD` froze on 5 Aug 2026 with no announcement and stayed frozen until 19 Sep. Escrow is untouched and claims never expire, so the cost is delay, not loss. Recovery is the governance path above, or the TWAP path in section 5. |
+| Settlement lands well after expiry | The series settles at the price current when the transaction lands, which can differ from the price at expiry | By design: anyone can settle as soon as a series expires, so neither side has to wait on the other. Bounded by the conservation invariant: the timing changes who receives the collateral, never how much leaves escrow. |
 | Feed value stalls while its timestamp refreshes | Settlement passes the freshness check at a price that has stopped tracking the market | Observed on DIA's `sBTC/USD`, which the settler does not read, between 19 Sep and 14 Oct 2026. Not detectable by a timestamp check. Bounded by the conservation invariant: a stale value changes who receives the collateral, never how much leaves escrow. The DEX TWAP path in section 5 would add an independent price to check against. |
 | sBTC depegs from BTC | Settlement prices the series off Bitcoin, not off the collateral held | Not recoverable in-contract and disclosed rather than mitigated: the contract cannot observe the peg. Bounded by the conservation invariant - a deviation changes who receives the collateral, never how much leaves escrow. |
 
@@ -179,12 +205,13 @@ The complete list of trusted parties at settlement time:
 2. The covault-core owner, who can re-point the oracle. Every such change
    is a public on-chain transaction.
 
-The settler adds no discretion: `settle-from-dia` takes a series id and
-the DIA principal, which must equal the owner-pinned canonical deployment
-(`set-dia-oracle`, readable via `get-dia-oracle`) or the call fails with
-`ERR-WRONG-ORACLE` before any external call is made. It then reads the two
+The settler adds no discretion over the price itself: `settle-from-dia` takes
+a series id and the DIA principal, which must equal the owner-pinned canonical
+deployment (`set-dia-oracle`, readable via `get-dia-oracle`) or the call fails
+with `ERR-WRONG-ORACLE` before any external call is made. It then reads the two
 feeds, derives the price by the fixed formula, and submits it. There is no
-code path in which a caller supplies a price or a price source.
+code path in which a caller supplies a price or a price source. A caller
+chooses only when to settle, and with it which quotes are current (section 2).
 
 ## 5. Future price sources
 

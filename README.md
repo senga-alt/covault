@@ -82,7 +82,9 @@ flowchart LR
 - **`covault-settler`** is that oracle: a small contract that derives the
   settlement price on-chain from DIA's USD feeds (cross-rate in collateral
   units), enforces a freshness window, and submits it. Settlement becomes
-  **permissionless** - anyone can trigger it, nobody can choose the price.
+  **permissionless** - anyone can trigger it, and no caller can supply the price.
+  The price is the one current when the settlement lands, so settle promptly
+  after expiry.
   Full derivation, freshness rules, failure modes, and risk disclosures:
   [docs/SETTLEMENT-METHODOLOGY.md](docs/SETTLEMENT-METHODOLOGY.md).
 - **The dApp** (in [`app/`](app/)) covers the full lifecycle: markets, series
@@ -274,7 +276,7 @@ guards, and the collateral-conservation invariant.
 ```bash
 cd app
 npm install
-npm run dev           # defaults target the live testnet deployment
+npm run dev           # defaults target the live mainnet deployment (real funds)
 ```
 
 Optional `app/.env.local` overrides (all have working defaults):
