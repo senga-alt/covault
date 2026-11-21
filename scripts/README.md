@@ -73,7 +73,10 @@ npm run lifecycle -- demo --asset=sbtc    # sBTC series (check funds first: npm 
 
 ## Notes
 
-- Post-conditions: this script uses allow-mode for brevity. The dApp will attach strict
-  post-conditions (exact STX/sBTC amounts) on every write.
+- Post-conditions: every transaction runs in deny mode with exact post-conditions, as the
+  dApp does. Writes and fills bind what you send; exercise and reclaim bind what the
+  contract pays out. Any other token movement aborts the transaction.
+- `--dry-run` on a single command builds and signs the transaction and prints its
+  post-conditions without broadcasting it. Use it before running anything on mainnet.
 - On mainnet (`NETWORK=mainnet`), the sBTC principal switches automatically to
   `SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token`.

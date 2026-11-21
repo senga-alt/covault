@@ -9,6 +9,11 @@
  *
  * Select the asset with --asset=stx (default) or --asset=sbtc on any command.
  *
+ * Every transaction is sent in deny mode with exact post-conditions, as the dApp does: it
+ * aborts on-chain unless each token movement matches the amount computed here from the
+ * series and offer on chain. Add --dry-run to a single command to build and sign the
+ * transaction and print its post-conditions without broadcasting it.
+ *
  * Usage (after `npm install` and copying .env.example to .env):
  *   npm run lifecycle -- whoami
  *   npm run lifecycle -- balance
@@ -22,6 +27,7 @@
  *   npm run lifecycle -- exercise <id> <qty> [--asset=sbtc]
  *   npm run lifecycle -- reclaim <id> <qty> [--asset=sbtc]
  *   npm run lifecycle -- demo [--asset=sbtc]   # create + write, wait for expiry, settle + exercise + reclaim
+ *   npm run lifecycle -- exercise <id> <qty> --dry-run   # any single command: print, do not send
  *
  * Units are the asset's smallest units: microSTX for STX, sats for sBTC.
  * IMPORTANT: the --asset flag must match the series' collateral asset, or the contract
@@ -36,6 +42,8 @@ import {
   fetchCallReadOnlyFunction,
   makeContractCall,
   broadcastTransaction,
+  Pc,
+  PostCondition,
   PostConditionMode,
 } from "@stacks/transactions";
 import { generateWallet, getStxAddress } from "@stacks/wallet-sdk";
@@ -48,6 +56,7 @@ const NETWORK = (process.env.NETWORK ?? "testnet") as "testnet" | "mainnet";
 const CONTRACT_ADDRESS = required("CONTRACT_ADDRESS");
 const CONTRACT_NAME = process.env.CONTRACT_NAME ?? "covault-core";
 const MNEMONIC = required("MNEMONIC");
+const CORE = `${CONTRACT_ADDRESS}.${CONTRACT_NAME}`;
 const API = NETWORK === "mainnet" ? "https://api.hiro.so" : "https://api.testnet.hiro.so";
 
 // Canonical sBTC per network (Clarinet remaps the same way at deploy time).
@@ -59,6 +68,10 @@ const SBTC_CONTRACT =
 // --asset=stx (default) | --asset=sbtc, allowed on any command.
 type Asset = "stx" | "sbtc";
 const ASSET: Asset = process.argv.includes("--asset=sbtc") ? "sbtc" : "stx";
+
+// --dry-run builds and signs the transaction, prints its post-conditions, and stops
+// before broadcasting. Single commands only.
+const DRY_RUN = process.argv.includes("--dry-run");
 
 // --underlying=NAME sets the series' underlying pair label (<= 16 printable ASCII chars,
 // the contract's string-ascii limit). NOT just cosmetic: covault-settler derives the
@@ -120,7 +133,10 @@ async function readOnly(fn: string, args: ClarityValue[], sender: string): Promi
   return cvToJSON(cv);
 }
 
-async function callPublic(fn: string, args: ClarityValue[]): Promise<string> {
+// Deny mode, as in the dApp: the transaction aborts on-chain unless every token movement
+// is covered by `postConditions` at exactly the stated amount. Calls that move no tokens
+// pass an empty list, so any unexpected transfer aborts them too.
+async function callPublic(fn: string, args: ClarityValue[], postConditions: PostCondition[]): Promise<string> {
   const { privateKey } = await loadSender();
   const tx = await makeContractCall({
     contractAddress: CONTRACT_ADDRESS,
@@ -129,9 +145,18 @@ async function callPublic(fn: string, args: ClarityValue[]): Promise<string> {
     functionArgs: args,
     senderKey: privateKey,
     network: NETWORK,
-    // A testnet demo uses allow-mode for simplicity; the dApp adds strict post-conditions.
-    postConditionMode: PostConditionMode.Allow,
+    postConditionMode: PostConditionMode.Deny,
+    postConditions,
   });
+  if (DRY_RUN) {
+    console.log(`  -> ${fn} built and signed, not broadcast (--dry-run)`);
+    console.log(
+      postConditions.length
+        ? `     post-conditions: ${JSON.stringify(postConditions, (_, v) => (typeof v === "bigint" ? v.toString() : v))}`
+        : "     post-conditions: none (the call must move no tokens)"
+    );
+    return "";
+  }
   const res = await broadcastTransaction({ transaction: tx, network: NETWORK });
   if ("error" in res && res.error) {
     throw new Error(`broadcast failed: ${res.error} ${(res as any).reason ?? ""}`);
@@ -143,6 +168,7 @@ async function callPublic(fn: string, args: ClarityValue[]): Promise<string> {
 }
 
 async function waitForTx(txid: string, label: string): Promise<void> {
+  if (DRY_RUN) return;
   process.stdout.write(`  waiting for ${label} to confirm`);
   for (let i = 0; i < 120; i++) {
     const r = await fetch(`${API}/extended/v1/tx/0x${txid.replace(/^0x/, "")}`);
@@ -169,6 +195,52 @@ async function getBurnHeight(): Promise<number> {
 }
 
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+// ---------------------------------------------------------------------------
+// post-conditions
+// ---------------------------------------------------------------------------
+
+interface SeriesInfo {
+  isCall: boolean;
+  strike: bigint;
+  maxPayoff: bigint;
+  settled: boolean;
+  settlementPrice: bigint;
+}
+
+// Read a series and confirm --asset matches its collateral, so post-conditions name the
+// token the contract will actually move.
+async function getSeries(id: number): Promise<SeriesInfo> {
+  const { address } = await loadSender();
+  const r = await readOnly("get-series", [Cl.uint(id)], address);
+  if (r.value === null) throw new Error(`series ${id} does not exist`);
+  const f = r.value.value;
+  const quote = f["quote-token"].value; // null = native STX, else the SIP-010 principal
+  const asset: Asset | null = quote === null ? "stx" : quote.value === SBTC_CONTRACT ? "sbtc" : null;
+  if (asset === null) throw new Error(`series ${id} is collateralized in ${quote.value}, which this script does not handle`);
+  if (asset !== ASSET) throw new Error(`series ${id} is collateralized in ${asset.toUpperCase()}; rerun with --asset=${asset}`);
+  return {
+    isCall: f["is-call"].value,
+    strike: BigInt(f.strike.value),
+    maxPayoff: BigInt(f["max-payoff"].value),
+    settled: f.settled.value,
+    settlementPrice: BigInt(f["settlement-price"].value),
+  };
+}
+
+// Mirror of the contract's calc-payoff: intrinsic value, capped at max-payoff.
+function payoffPerContract(s: SeriesInfo): bigint {
+  const p = s.settlementPrice;
+  const intrinsic = s.isCall ? (p > s.strike ? p - s.strike : 0n) : s.strike > p ? s.strike - p : 0n;
+  return intrinsic > s.maxPayoff ? s.maxPayoff : intrinsic;
+}
+
+// `principal` sends exactly `amount` of the selected asset (the dApp's sendExactPc).
+function sendExactPc(principal: string, amount: bigint): PostCondition {
+  return ASSET === "sbtc"
+    ? Pc.principal(principal).willSendEq(amount).ft(SBTC_CONTRACT as `${string}.${string}`, "sbtc-token")
+    : Pc.principal(principal).willSendEq(amount).ustx();
+}
 
 // ---------------------------------------------------------------------------
 // commands
@@ -202,6 +274,7 @@ async function create(strike: number, expiryAhead: number): Promise<{ id: number
   const countBefore = Number((await readOnly("get-series-count", [], address)).value);
   const expiry = (await getBurnHeight()) + expiryAhead;
   console.log(`Creating ${ASSET.toUpperCase()} put "${UNDERLYING}": strike=${strike} ${UNIT}, expiry=burn#${expiry} (id will be ${countBefore})`);
+  // Creating a series moves no tokens.
   const txid = await callPublic("create-series", [
     tokenArg(), // none = native STX, (some sbtc-token) = sBTC collateral
     Cl.stringAscii(UNDERLYING),
@@ -209,7 +282,7 @@ async function create(strike: number, expiryAhead: number): Promise<{ id: number
     Cl.uint(strike),
     Cl.uint(strike), // put: max-payoff == strike
     Cl.uint(expiry),
-  ]);
+  ], []);
   await waitForTx(txid, "create-series");
   return { id: countBefore, expiry };
 }
@@ -226,41 +299,78 @@ async function status(id: number) {
 }
 
 async function write(id: number, qty: number) {
-  const txid = await callPublic("write-options", [Cl.uint(id), Cl.uint(qty), tokenArg()]);
+  const s = await getSeries(id);
+  const { address } = await loadSender();
+  // The writer locks max-payoff per contract as collateral.
+  const collateral = BigInt(qty) * s.maxPayoff;
+  const txid = await callPublic("write-options", [Cl.uint(id), Cl.uint(qty), tokenArg()], [
+    sendExactPc(address, collateral),
+  ]);
   await waitForTx(txid, `write ${qty}`);
 }
 
 async function settle(id: number, price: number) {
-  const txid = await callPublic("settle", [Cl.uint(id), Cl.uint(price)]);
+  // Recording a price moves no tokens.
+  const txid = await callPublic("settle", [Cl.uint(id), Cl.uint(price)], []);
   await waitForTx(txid, `settle @ ${price}`);
 }
 
 // List `qty` of your long position for sale at `price` per contract (collateral units).
+// Longs are an internal balance, so listing moves no tokens.
 async function list(id: number, qty: number, price: number) {
   const countBefore = Number((await readOnly("get-offer-count", [], (await loadSender()).address)).value);
-  const txid = await callPublic("list-offer", [Cl.uint(id), Cl.uint(qty), Cl.uint(price)]);
+  const txid = await callPublic("list-offer", [Cl.uint(id), Cl.uint(qty), Cl.uint(price)], []);
   await waitForTx(txid, `list ${qty} @ ${price} (offer id will be ${countBefore})`);
 }
 
 // Buy `qty` contracts from an open offer. Premium moves in the series' collateral
 // asset, so run with the matching --asset flag when the series is sBTC-collateralized.
 async function fill(offerId: number, qty: number) {
-  const txid = await callPublic("fill-offer", [Cl.uint(offerId), Cl.uint(qty), tokenArg()]);
+  const { address } = await loadSender();
+  const o = await readOnly("get-offer", [Cl.uint(offerId)], address);
+  if (o.value === null) throw new Error(`offer ${offerId} does not exist`);
+  const offer = o.value.value;
+  await getSeries(Number(offer["series-id"].value)); // confirms --asset matches the series
+  const feeBps = BigInt((await readOnly("get-config", [], address)).value["fee-bps"].value);
+  // The buyer pays the premium to the maker plus any taker fee, using the contract's floor
+  // division. One aggregate post-condition covers both, as in the dApp.
+  const cost = BigInt(qty) * BigInt(offer.price.value);
+  const total = cost + (cost * feeBps) / 10000n;
+  const txid = await callPublic("fill-offer", [Cl.uint(offerId), Cl.uint(qty), tokenArg()], [
+    sendExactPc(address, total),
+  ]);
   await waitForTx(txid, `fill offer ${offerId} x${qty}`);
 }
 
 async function cancel(offerId: number) {
-  const txid = await callPublic("cancel-offer", [Cl.uint(offerId)]);
+  // Escrowed longs return to the maker as an internal balance; no tokens move.
+  const txid = await callPublic("cancel-offer", [Cl.uint(offerId)], []);
   await waitForTx(txid, `cancel offer ${offerId}`);
 }
 
+// The contract pays exercise and reclaim from escrow. A zero amount makes no transfer,
+// so it carries no post-condition.
 async function exercise(id: number, qty: number) {
-  const txid = await callPublic("exercise", [Cl.uint(id), Cl.uint(qty), tokenArg()]);
+  const s = await getSeries(id);
+  if (!s.settled) throw new Error(`series ${id} is not settled yet`);
+  const amount = BigInt(qty) * payoffPerContract(s);
+  const txid = await callPublic(
+    "exercise",
+    [Cl.uint(id), Cl.uint(qty), tokenArg()],
+    amount > 0n ? [sendExactPc(CORE, amount)] : []
+  );
   await waitForTx(txid, `exercise ${qty}`);
 }
 
 async function reclaim(id: number, qty: number) {
-  const txid = await callPublic("reclaim", [Cl.uint(id), Cl.uint(qty), tokenArg()]);
+  const s = await getSeries(id);
+  if (!s.settled) throw new Error(`series ${id} is not settled yet`);
+  const amount = BigInt(qty) * (s.maxPayoff - payoffPerContract(s));
+  const txid = await callPublic(
+    "reclaim",
+    [Cl.uint(id), Cl.uint(qty), tokenArg()],
+    amount > 0n ? [sendExactPc(CORE, amount)] : []
+  );
   await waitForTx(txid, `reclaim ${qty}`);
 }
 
@@ -301,6 +411,9 @@ async function demo() {
 async function main() {
   const [cmd, ...rest] = ARGS;
   const n = (i: number) => Number(rest[i]);
+  if (DRY_RUN && cmd === "demo") {
+    throw new Error("--dry-run works with single commands; demo needs each step to land before the next.");
+  }
   switch (cmd) {
     case "whoami": return whoami();
     case "balance": return balance();
@@ -316,7 +429,7 @@ async function main() {
     case "demo": return demo();
     default:
       console.log("commands: whoami | balance | create <strike> <expiryAhead> | status <id> | write <id> <qty> | list <id> <qty> <price> | fill <offerId> <qty> | cancel <offerId> | settle <id> <price> | exercise <id> <qty> | reclaim <id> <qty> | demo");
-      console.log("asset flag (any command): --asset=stx (default) | --asset=sbtc");
+      console.log("flags (any command): --asset=stx (default) | --asset=sbtc | --dry-run (not demo)");
   }
 }
 
