@@ -6,7 +6,7 @@ milestone asks for, each with a heading below: threat model, invariant test
 suite, adversarial tests, static checks, and a findings log with severity and
 resolution status.
 
-Scope: `covault-core` (the clearinghouse, deployed and frozen on testnet),
+Scope: `covault-core` (the clearinghouse, deployed on mainnet with a frozen ABI),
 `covault-settler` (DIA settlement), and the `oracle-trait` / `dia-trait`
 interfaces. Mocks are test-only and out of scope for deployment.
 
@@ -227,13 +227,42 @@ unsuffixed name `covault-settler`, the version suffixes having been testnet
 artifacts of iterating before launch;
 the unwired v1 remains on-chain but is never referenced. **Status: Resolved.**
 
-No Critical findings remain open. All High and Medium findings are Resolved.
+### F-7. Settlement price is taken when the first settlement lands, not at expiry - Medium - Accepted
+
+`covault-core` accepts a settlement at any time after expiry and checks only
+that the series has expired and has not already settled. The settler's
+freshness check is relative to the current block, not to the expiry. The
+recorded price is therefore the DIA price when the first `settle-from-dia`
+lands, and whoever calls it chooses that moment. Where one side of a series is
+not watching after expiry, the other can wait for the price to move in its
+favour before settling: a call holder for a rise, a put holder for a fall, a
+writer for the opposite. For the same reason, the settle panel's preview can
+differ from the recorded price if DIA publishes a new quote before the
+transaction lands.
+
+Bounded by construction: the timing changes only who receives a series'
+collateral, never how much leaves escrow, and never touches another series.
+The conservation invariant holds at any settlement time.
+
+Reported independently in external review and confirmed against the
+contracts. The rule, a worked example, and the advice to settle as soon as a
+series expires are documented in
+[SETTLEMENT-METHODOLOGY.md](SETTLEMENT-METHODOLOGY.md) section 2 and on the
+docs site. A contract-level fix (pricing from the quotes nearest expiry, or a
+settlement deadline) needs a new settler and, as a change to the settlement
+methodology, Stacks Endowment approval; it is deferred. **Status: Accepted.**
+
+No Critical findings remain open. All High findings are Resolved. Of the
+Medium findings, F-2 and F-6 are Resolved, and F-7 is Accepted: documented and
+bounded per series, with the contract-level fix deferred.
 
 ## 6. What is verified vs. what remains a trust assumption
 
 Verified by test/fuzz/static analysis: solvency, conservation, settlement
-authorization and timing, no double-claim, exits-always-open, settler price-source
-integrity and freshness.
+authorization and the expiry gate (no settlement before expiry), no
+double-claim, exits-always-open, settler price-source integrity and freshness.
+Not covered by those tests: when after expiry the price is taken, which is
+documented and bounded instead (F-7).
 
 Remaining trust assumptions (documented, bounded, not eliminated): oracle price
 correctness (bounded per series), DIA liveness (fails closed), and owner-key
